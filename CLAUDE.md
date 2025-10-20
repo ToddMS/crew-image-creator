@@ -81,6 +81,63 @@ await createImage.mutateAsync({
 })
 ```
 
+## Git & Version Control
+This is a local git repository with no remote connected yet. To set up GitHub:
+
+```bash
+# Create GitHub repo (if needed)
+gh repo create crew-image-creator --public
+
+# Or connect existing repo
+git remote add origin https://github.com/YOUR_USERNAME/crew-image-creator.git
+
+# First commit and push
+git add .
+git commit -m "Initial commit"
+git push -u origin master
+```
+
+## Current Setup Status
+✅ **Completed Setup:**
+- TanStack Start (full-stack React framework)
+- PostgreSQL database with Prisma ORM
+- tRPC for type-safe APIs
+- TanStack Query for data fetching
+- React Query DevTools
+- Database schema with User and CrewImage models
+- tRPC routers with full CRUD operations
+- Client-side tRPC integration in root route
+- Example component (CrewImagesList) demonstrating usage
+
+✅ **Database Models:**
+- **User**: id, email, name, createdAt, updatedAt + relation to crewImages
+- **CrewImage**: id, title, description, imageUrl, userId, createdAt, updatedAt + relation to user
+
+✅ **API Endpoints (via tRPC):**
+- `user.getAll`, `user.getById`, `user.create`
+- `crewImage.getAll`, `crewImage.getById`, `crewImage.getByUserId`, `crewImage.create`, `crewImage.update`, `crewImage.delete`
+
+✅ **File Structure:**
+- `/src/lib/prisma.ts` - Database client setup
+- `/src/lib/trpc.ts` - tRPC server setup
+- `/src/lib/trpc-client.ts` - tRPC client setup
+- `/src/lib/trpc-provider.tsx` - React provider component
+- `/src/server/routers/_app.ts` - Main tRPC router
+- `/src/server/routers/user.ts` - User API routes
+- `/src/server/routers/crewImage.ts` - CrewImage API routes
+- `/src/routes/api/trpc/$.ts` - API endpoint handler
+- `/src/components/CrewImagesList.tsx` - Example usage component
+- `/prisma/schema.prisma` - Database schema
+
+⚠️ **Background Processes:**
+- Prisma Postgres server running locally (started with `npx prisma dev`)
+- Database URL configured in `.env` file
+
+🔄 **Ready for Development:**
+- Run `npm run dev` to start the application
+- All type-safe database operations work end-to-end
+- DevTools available for debugging (React Query + TanStack Router)
+
 ## Notes
 - This project is being refactored from an older application
 - Focus on code cleanup and modernization
