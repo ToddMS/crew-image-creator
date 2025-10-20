@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
+import '../dashboard.css'
+import './clubs.css'
 
 export const Route = createFileRoute('/clubs')({
   component: ClubsPage,
@@ -14,21 +16,30 @@ interface ClubFormData {
 }
 
 function ClubsPage() {
-  const [isCreating, setIsCreating] = useState(false)
-  const [editingClub, setEditingClub] = useState<string | null>(null)
+  const [isCreatingNew, setIsCreatingNew] = useState(false)
+  const [editingClubId, setEditingClubId] = useState<string | null>(null)
   const [formData, setFormData] = useState<ClubFormData>({
     name: '',
-    primaryColor: '#1e3a8a',
-    secondaryColor: '#ffffff',
+    primaryColor: '#2563eb',
+    secondaryColor: '#1e40af',
     logoUrl: '',
   })
+  const [newClubForm, setNewClubForm] = useState<ClubFormData>({
+    name: '',
+    primaryColor: '#2563eb',
+    secondaryColor: '#1e40af',
+    logoUrl: '',
+  })
+  const [editForm, setEditForm] = useState<{ [key: string]: ClubFormData }>({})
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
-  const { data: clubs, isLoading, refetch } = trpc.club.getAll.useQuery()
+  const { data: clubs = [], isLoading, refetch } = trpc.club.getAll.useQuery()
 
   const createMutation = trpc.club.create.useMutation({
     onSuccess: () => {
-      setIsCreating(false)
-      setFormData({ name: '', primaryColor: '#1e3a8a', secondaryColor: '#ffffff', logoUrl: '' })
+      setIsCreatingNew(false)
+      setNewClubForm({ name: '', primaryColor: '#2563eb', secondaryColor: '#1e40af', logoUrl: '' })
       refetch()
     },
     onError: (error) => {
@@ -38,8 +49,8 @@ function ClubsPage() {
 
   const updateMutation = trpc.club.update.useMutation({
     onSuccess: () => {
-      setEditingClub(null)
-      setFormData({ name: '', primaryColor: '#1e3a8a', secondaryColor: '#ffffff', logoUrl: '' })
+      setEditingClubId(null)
+      setEditForm({})
       refetch()
     },
     onError: (error) => {
@@ -49,6 +60,7 @@ function ClubsPage() {
 
   const deleteMutation = trpc.club.delete.useMutation({
     onSuccess: () => {
+      setShowDeleteConfirm(null)
       refetch()
     },
     onError: (error) => {
@@ -56,303 +68,371 @@ function ClubsPage() {
     },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleEdit = (club: any) => {
+    setEditingClubId(club.id)
+    setEditForm({
+      ...editForm,
+      [club.id]: {
+        name: club.name,
+        primaryColor: club.primaryColor,
+        secondaryColor: club.secondaryColor,
+        logoUrl: club.logoUrl || '',
+      },
+    })
+  }
 
-    if (!formData.name.trim()) {
+  const handleCancelEdit = (clubId: string) => {
+    setEditingClubId(null)
+    const newEditForm = { ...editForm }
+    delete newEditForm[clubId]
+    setEditForm(newEditForm)
+  }
+
+  const handleSaveEdit = async (club: any) => {
+    const editData = editForm[club.id]
+    if (!editData || !editData.name.trim()) {
+      alert('Club name is required')
+      return
+    }
+
+    updateMutation.mutate({
+      id: club.id,
+      ...editData,
+      logoUrl: editData.logoUrl || undefined,
+    })
+  }
+
+  const handleEditFormChange = (clubId: string, field: string, value: string) => {
+    setEditForm({
+      ...editForm,
+      [clubId]: {
+        ...editForm[clubId],
+        [field]: value,
+      },
+    })
+  }
+
+  const handleDelete = async (clubId: string) => {
+    deleteMutation.mutate({ id: clubId })
+  }
+
+  const startNewClub = () => {
+    setIsCreatingNew(true)
+    setNewClubForm({
+      name: '',
+      primaryColor: '#2563eb',
+      secondaryColor: '#1e40af',
+      logoUrl: '',
+    })
+  }
+
+  const cancelNewClub = () => {
+    setIsCreatingNew(false)
+    setNewClubForm({
+      name: '',
+      primaryColor: '#2563eb',
+      secondaryColor: '#1e40af',
+      logoUrl: '',
+    })
+  }
+
+  const saveNewClub = async () => {
+    if (!newClubForm.name.trim()) {
       alert('Club name is required')
       return
     }
 
     const userId = 'demo-user-id' // In a real app, get from auth context
 
-    if (editingClub) {
-      updateMutation.mutate({
-        id: editingClub,
-        ...formData,
-        logoUrl: formData.logoUrl || undefined,
-      })
-    } else {
-      createMutation.mutate({
-        ...formData,
-        logoUrl: formData.logoUrl || undefined,
-        userId,
-      })
-    }
-  }
-
-  const handleEdit = (club: any) => {
-    setEditingClub(club.id)
-    setFormData({
-      name: club.name,
-      primaryColor: club.primaryColor,
-      secondaryColor: club.secondaryColor,
-      logoUrl: club.logoUrl || '',
+    createMutation.mutate({
+      ...newClubForm,
+      logoUrl: newClubForm.logoUrl || undefined,
+      userId,
     })
-    setIsCreating(true)
   }
 
-  const handleDelete = (clubId: string, clubName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${clubName}"? This action cannot be undone.`)) {
-      deleteMutation.mutate({ id: clubId })
-    }
+  const handleNewClubChange = (field: string, value: string) => {
+    setNewClubForm({
+      ...newClubForm,
+      [field]: value,
+    })
   }
 
-  const handleCancel = () => {
-    setIsCreating(false)
-    setEditingClub(null)
-    setFormData({ name: '', primaryColor: '#1e3a8a', secondaryColor: '#ffffff', logoUrl: '' })
+  const filteredClubs = clubs.filter((club) =>
+    club.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  // Mock user state for now - in the original this comes from auth context
+  const user = { name: 'Demo User' }
+
+  if (!user) {
+    return (
+      <div className="club-presets-container">
+        <div className="container">
+          <div className="empty-state">
+            <h2>Clubs</h2>
+            <p>Sign in to manage your club color presets</p>
+            <button className="btn btn-primary">Sign In to Manage Clubs</button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Club Management</h1>
-          <p className="text-gray-600 mt-2">
-            Create and manage your rowing club presets with custom colors
-          </p>
-        </div>
-
-        {/* Create/Edit Form */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">
-              {editingClub ? 'Edit Club' : 'Create New Club'}
-            </h2>
-            {!isCreating && (
-              <button
-                onClick={() => setIsCreating(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Add New Club
-              </button>
-            )}
+    <div className="club-presets-container">
+      <div className="container">
+        <div className="section-header">
+          <div className="section-header-left">
+            <span className="section-title">Clubs</span>
+            <span className="section-badge">{clubs.length}</span>
           </div>
-
-          {(isCreating || editingClub) && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Club Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter club name"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Logo URL (optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.logoUrl}
-                    onChange={(e) => setFormData(prev => ({ ...prev, logoUrl: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="https://example.com/logo.png"
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Primary Color *
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={formData.primaryColor}
-                      onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value }))}
-                      className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={formData.primaryColor}
-                      onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="#1e3a8a"
-                      pattern="^#[0-9A-Fa-f]{6}$"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Secondary Color *
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={formData.secondaryColor}
-                      onChange={(e) => setFormData(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                      className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={formData.secondaryColor}
-                      onChange={(e) => setFormData(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="#ffffff"
-                      pattern="^#[0-9A-Fa-f]{6}$"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Color Preview */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Color Preview</h3>
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-16 h-16 rounded-lg border border-gray-300 flex items-center justify-center text-white font-medium"
-                    style={{ backgroundColor: formData.primaryColor }}
-                  >
-                    Primary
-                  </div>
-                  <div
-                    className="w-16 h-16 rounded-lg border border-gray-300 flex items-center justify-center text-gray-900 font-medium"
-                    style={{ backgroundColor: formData.secondaryColor }}
-                  >
-                    Secondary
-                  </div>
-                  <div
-                    className="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-center font-medium"
-                    style={{
-                      backgroundColor: formData.primaryColor,
-                      color: formData.secondaryColor,
-                    }}
-                  >
-                    Sample Club Banner
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-                >
-                  {createMutation.isPending || updateMutation.isPending ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      {editingClub ? 'Updating...' : 'Creating...'}
-                    </div>
-                  ) : (
-                    editingClub ? 'Update Club' : 'Create Club'
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
+          <div className="section-header-right">
+            <div className="search-bar">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search clubs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={startNewClub}
+                disabled={isCreatingNew}
+              >
+                + Add New
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Clubs List */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Your Clubs</h2>
-
+        <div className="gallery-grid">
           {isLoading ? (
-            <div className="animate-pulse">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
-                ))}
-              </div>
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading clubs...</p>
             </div>
-          ) : clubs && clubs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {clubs.map((club) => (
-                <div key={club.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-medium text-gray-900">{club.name}</h3>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleEdit(club)}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      >
-                        Edit
-                      </button>
-                      <span className="text-gray-300">|</span>
-                      <button
-                        onClick={() => handleDelete(club.id, club.name)}
-                        className="text-red-600 hover:text-red-700 text-sm font-medium"
-                        disabled={deleteMutation.isPending}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Colors:</span>
-                      <div
-                        className="w-6 h-6 rounded-full border border-gray-300"
-                        style={{ backgroundColor: club.primaryColor }}
-                        title={`Primary: ${club.primaryColor}`}
-                      />
-                      <div
-                        className="w-6 h-6 rounded-full border border-gray-300"
-                        style={{ backgroundColor: club.secondaryColor }}
-                        title={`Secondary: ${club.secondaryColor}`}
-                      />
-                    </div>
-
-                    {club.logoUrl && (
-                      <div className="text-sm text-gray-600">
-                        <span>Logo: </span>
-                        <a
-                          href={club.logoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          View
-                        </a>
-                      </div>
-                    )}
-
-                    <div className="text-sm text-gray-500">
-                      {club.crews?.length || 0} crew{(club.crews?.length || 0) !== 1 ? 's' : ''}
-                    </div>
-                  </div>
-
-                  {/* Preview Banner */}
-                  <div
-                    className="mt-3 px-3 py-2 rounded text-center text-sm font-medium"
-                    style={{
-                      backgroundColor: club.primaryColor,
-                      color: club.secondaryColor,
-                    }}
-                  >
-                    {club.name}
-                  </div>
-                </div>
-              ))}
+          ) : filteredClubs.length === 0 ? (
+            <div className="empty-state">
+              {searchTerm ? (
+                <>
+                  <h3>No clubs found</h3>
+                  <p>No clubs match "{searchTerm}"</p>
+                  <button className="btn btn-secondary" onClick={() => setSearchTerm('')}>
+                    Clear Search
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3>No Clubs Yet</h3>
+                  <p>Create your first club preset to get started</p>
+                  <button className="btn btn-primary" onClick={startNewClub}>
+                    Create First Club
+                  </button>
+                </>
+              )}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>No clubs created yet.</p>
-              <p className="text-sm mt-1">Click "Add New Club" to create your first club preset.</p>
-            </div>
+            <>
+              {isCreatingNew && (
+                <div className="preset-card editing new-preset">
+                  <div className="preset-header">
+                    <input
+                      type="text"
+                      className="preset-name-input"
+                      placeholder="Enter club name"
+                      value={newClubForm.name}
+                      onChange={(e) => handleNewClubChange('name', e.target.value)}
+                    />
+                  </div>
+                  <div className="preset-colors">
+                    <div className="preset-color-group">
+                      <div className="preset-color-label">Primary</div>
+                      <input
+                        type="color"
+                        className="preset-color-picker"
+                        value={newClubForm.primaryColor}
+                        onChange={(e) => handleNewClubChange('primaryColor', e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        className="preset-color-hex-input"
+                        value={newClubForm.primaryColor}
+                        onChange={(e) => handleNewClubChange('primaryColor', e.target.value)}
+                      />
+                    </div>
+                    <div className="preset-color-group">
+                      <div className="preset-color-label">Secondary</div>
+                      <input
+                        type="color"
+                        className="preset-color-picker"
+                        value={newClubForm.secondaryColor}
+                        onChange={(e) => handleNewClubChange('secondaryColor', e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        className="preset-color-hex-input"
+                        value={newClubForm.secondaryColor}
+                        onChange={(e) => handleNewClubChange('secondaryColor', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="preset-actions">
+                    <button className="preset-btn" onClick={cancelNewClub}>
+                      Cancel
+                    </button>
+                    <button className="preset-btn primary" onClick={saveNewClub}>
+                      Save
+                    </button>
+                  </div>
+                </div>
+              )}
+              {filteredClubs.map((club) => {
+                const isEditing = editingClubId === club.id
+                const editData = editForm[club.id] || club
+
+                return (
+                  <div
+                    key={club.id}
+                    className={`preset-card ${isEditing ? 'editing' : ''}`}
+                  >
+                    <div className="preset-header">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          className="preset-name-input"
+                          value={editData.name}
+                          onChange={(e) =>
+                            handleEditFormChange(club.id, 'name', e.target.value)
+                          }
+                        />
+                      ) : (
+                        <h3 className="preset-name">{club.name}</h3>
+                      )}
+                    </div>
+                    <div className="preset-colors">
+                      <div className="preset-color-group">
+                        <div className="preset-color-label">Primary</div>
+                        {isEditing ? (
+                          <>
+                            <input
+                              type="color"
+                              className="preset-color-picker"
+                              value={editData.primaryColor}
+                              onChange={(e) =>
+                                handleEditFormChange(club.id, 'primaryColor', e.target.value)
+                              }
+                            />
+                            <input
+                              type="text"
+                              className="preset-color-hex-input"
+                              value={editData.primaryColor}
+                              onChange={(e) =>
+                                handleEditFormChange(club.id, 'primaryColor', e.target.value)
+                              }
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              className="preset-color-swatch"
+                              style={{ background: club.primaryColor }}
+                            ></div>
+                            <div className="preset-color-hex">{club.primaryColor}</div>
+                          </>
+                        )}
+                      </div>
+                      <div className="preset-color-group">
+                        <div className="preset-color-label">Secondary</div>
+                        {isEditing ? (
+                          <>
+                            <input
+                              type="color"
+                              className="preset-color-picker"
+                              value={editData.secondaryColor}
+                              onChange={(e) =>
+                                handleEditFormChange(club.id, 'secondaryColor', e.target.value)
+                              }
+                            />
+                            <input
+                              type="text"
+                              className="preset-color-hex-input"
+                              value={editData.secondaryColor}
+                              onChange={(e) =>
+                                handleEditFormChange(club.id, 'secondaryColor', e.target.value)
+                              }
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              className="preset-color-swatch"
+                              style={{ background: club.secondaryColor }}
+                            ></div>
+                            <div className="preset-color-hex">{club.secondaryColor}</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="preset-actions">
+                      {isEditing ? (
+                        <>
+                          <button
+                            className="preset-btn"
+                            onClick={() => handleCancelEdit(club.id)}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="preset-btn primary"
+                            onClick={() => handleSaveEdit(club)}
+                          >
+                            Save
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="preset-btn"
+                            onClick={() => handleEdit(club)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="preset-btn danger"
+                            onClick={() => setShowDeleteConfirm(club.id)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </>
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Delete Club</h3>
+            <p>Are you sure you want to delete this club? This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowDeleteConfirm(null)}>
+                Cancel
+              </button>
+              <button className="btn btn-danger" onClick={() => handleDelete(showDeleteConfirm)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import '../dashboard.css'
+import './crews.css'
 
 export const Route = createFileRoute('/crews')({
   component: CrewsPage,
