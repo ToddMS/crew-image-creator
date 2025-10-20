@@ -1,172 +1,432 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Eye, EyeOff, Plus } from 'lucide-react'
 import { trpc } from '../lib/trpc-client'
-import CrewForm from '../components/CrewForm'
+import '../dashboard.css'
 
 export const Route = createFileRoute('/crews')({
   component: CrewsPage,
 })
 
+const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+'
+
 function CrewsPage() {
-  const [showForm, setShowForm] = useState(false)
-  const [showBoatTypes, setShowBoatTypes] = useState(false)
+  const [sortBy, setSortBy] = useState<string>('recent')
+  const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set())
+  const [expandedCrewMembers, setExpandedCrewMembers] = useState<Set<string>>(new Set())
+
+  // Mock user state for now - in the original this comes from auth context
+  const user = { name: 'Demo User' }
 
   const {
-    data: crews,
-    isLoading: crewsLoading,
-    refetch: refetchCrews,
+    data: crews = [],
+    isLoading: loading,
+    error,
+    refetch: loadCrews,
   } = trpc.crew.getAll.useQuery()
-  const { data: boatTypes, isLoading: boatTypesLoading } =
-    trpc.boatType.getAll.useQuery()
 
-  // Get demo user (in a real app, this would come from auth)
-  const { data: users } = trpc.user.getAll.useQuery()
-  const demoUser = users?.[0] // Use first user from seed data
+  const deleteCrew = trpc.crew.delete.useMutation({
+    onSuccess: () => loadCrews(),
+  })
 
-  if (crewsLoading || boatTypesLoading) {
-    return <div className="p-6">Loading crews and boat types...</div>
+  // Transform crews data to match the old format
+  const savedCrews = crews.map((crew) => {
+    const getSeatLabel = (idx: number, totalRowers: number, hasCox: boolean) => {
+      if (hasCox && idx === 0) return 'C'
+      const rowerIdx = hasCox ? idx - 1 : idx
+
+      if (totalRowers === 8) {
+        const seats = ['S', '7', '6', '5', '4', '3', '2', 'B']
+        return seats[rowerIdx]
+      } else if (totalRowers === 4) {
+        const seats = ['S', '3', '2', 'B']
+        return seats[rowerIdx]
+      } else if (totalRowers === 2) {
+        const seats = ['S', 'B']
+        return seats[rowerIdx]
+      } else if (totalRowers === 1) {
+        return 'S'
+      }
+      return `${rowerIdx + 1}`
+    }
+
+    const totalRowers = crew.boatType.seats
+    const hasCox = boatClassHasCox(crew.boatType.code)
+
+    return {
+      ...crew,
+      boatClub: crew.club?.name || crew.clubName || 'No Club',
+      boatName: crew.name,
+      boatClass: crew.boatType.code,
+      crewMembers: crew.crewNames.map((name, idx) => ({
+        seat: getSeatLabel(idx, totalRowers, hasCox),
+        name,
+      })),
+    }
+  })
+
+  const getSortedCrews = () => {
+    const crewsCopy = [...savedCrews]
+
+    switch (sortBy) {
+      case 'recent':
+        return crewsCopy.sort(
+          (a, b) =>
+            new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        )
+      case 'club':
+        return crewsCopy.sort((a, b) => a.boatClub.localeCompare(b.boatClub))
+      case 'race':
+        return crewsCopy.sort((a, b) => (a.raceName || '').localeCompare(b.raceName || ''))
+      case 'boat_class':
+        return crewsCopy.sort((a, b) => a.boatClass.localeCompare(b.boatClass))
+      default:
+        return crewsCopy
+    }
   }
 
-  const handleCrewCreated = () => {
-    setShowForm(false)
-    refetchCrews()
+  const distributeCrewsIntoColumns = (crews: any[], columnCount: number = 3) => {
+    const columns: any[][] = Array.from({ length: columnCount }, () => [])
+
+    crews.forEach((crew, index) => {
+      const columnIndex = index % columnCount
+      columns[columnIndex].push(crew)
+    })
+
+    return columns
   }
 
-  if (!demoUser) {
-    return <div className="p-6">Loading user data...</div>
+  const handleDeleteCrew = async (crew: any) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete "${crew.boatName}"?\n\nThis action cannot be undone.`
+    )
+
+    if (!isConfirmed) {
+      return
+    }
+
+    try {
+      await deleteCrew.mutateAsync({ id: crew.id })
+    } catch (error) {
+      console.error('Error deleting crew:', error)
+    }
+  }
+
+  const handleCrewSelection = (crewId: string, checked: boolean) => {
+    const newSelected = new Set(selectedCrews)
+    if (checked) {
+      newSelected.add(crewId)
+    } else {
+      newSelected.delete(crewId)
+    }
+    setSelectedCrews(newSelected)
+  }
+
+  const handleBulkDelete = async () => {
+    const crewsToDelete = Array.from(selectedCrews)
+      .map((crewId) => savedCrews.find((crew) => crew.id === crewId))
+      .filter((crew) => crew !== undefined)
+
+    if (crewsToDelete.length === 0) return
+
+    const crewNames = crewsToDelete.map((crew) => crew.boatName).join(', ')
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}?\n\nCrews: ${crewNames}\n\nThis action cannot be undone.`
+    )
+
+    if (!isConfirmed) {
+      return
+    }
+
+    try {
+      for (const crewId of selectedCrews) {
+        await deleteCrew.mutateAsync({ id: crewId })
+      }
+      setSelectedCrews(new Set())
+    } catch (error) {
+      console.error('Error in bulk delete:', error)
+    }
+  }
+
+  const toggleCrewMembersExpansion = (crewId: string) => {
+    const newExpanded = new Set(expandedCrewMembers)
+    if (newExpanded.has(crewId)) {
+      newExpanded.delete(crewId)
+    } else {
+      newExpanded.add(crewId)
+    }
+    setExpandedCrewMembers(newExpanded)
+  }
+
+  if (!user) {
+    return (
+      <div className="my-crews-container">
+        <div className="container">
+          <div className="empty-state">
+            <h2>Crews</h2>
+            <p>Sign in to view and manage your saved crew lineups</p>
+            <button className="btn btn-primary">Sign In to View Crews</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="my-crews-container">
+        <div className="container">
+          <div className="loading-state">
+            <div className="loading-spinner"></div>
+            <h3>Loading your crews...</h3>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && !loading) {
+    return (
+      <div className="my-crews-container">
+        <div className="container">
+          <div className="alert error">
+            ⚠️ {error.message || 'Failed to load crews. Please try again.'}
+            <button className="alert-close" onClick={() => loadCrews()}>
+              ×
+            </button>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button className="btn btn-primary" onClick={() => loadCrews()}>
+              Retry Loading Crews
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (savedCrews.length === 0 && !loading) {
+    return (
+      <div className="my-crews-container">
+        <div className="container">
+          <div className="empty-state">
+            <h2>No Crews Yet</h2>
+            <p>Create your first crew lineup to get started with generating beautiful rowing images</p>
+            <Link to="/crews/create" className="btn btn-primary">
+              Create Your First Crew
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Crew Management</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        >
-          <Plus size={20} />
-          {showForm ? 'Cancel' : 'Create New Crew'}
-        </button>
-      </div>
-
-      {/* Crew Creation Form */}
-      {showForm && (
-        <div className="mb-8">
-          <CrewForm userId={demoUser.id} onSuccess={handleCrewCreated} />
-        </div>
-      )}
-
-      {/* Boat Types Section */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <button
-            onClick={() => setShowBoatTypes(!showBoatTypes)}
-            className="flex items-center gap-2 text-xl font-semibold hover:text-blue-600"
-          >
-            {showBoatTypes ? <EyeOff size={20} /> : <Eye size={20} />}
-            Available Boat Types ({boatTypes?.length})
-          </button>
-        </div>
-
-        {showBoatTypes && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {boatTypes?.map((boatType) => (
-              <div
-                key={boatType.id}
-                className="bg-white border rounded-lg p-4 shadow-sm"
-              >
-                <div className="font-semibold text-lg">{boatType.code}</div>
-                <div className="text-sm text-gray-600">{boatType.name}</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {boatType.seats} seats • {boatType.category}
-                </div>
+    <div className="my-crews-container">
+      <div className="container">
+        <div className="crews-section">
+          <div className="section-header">
+            <div className="section-header-left">
+              <span className="section-title">Crews</span>
+              <span className="section-badge">{getSortedCrews().length}</span>
+              <div className="crew-count">
+                {selectedCrews.size > 0 ? (
+                  <span className="section-badge selection">
+                    {selectedCrews.size} of {savedCrews.length} crews selected
+                  </span>
+                ) : (
+                  ``
+                )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+            <div className="section-header-right">
+              {selectedCrews.size > 0 && (
+                <div className="selection-actions-inline">
+                  <button
+                    className="btn-text-small"
+                    onClick={() => setSelectedCrews(new Set())}
+                  >
+                    Clear ({selectedCrews.size})
+                  </button>
+                  <button className="btn-outline-danger-small" onClick={handleBulkDelete}>
+                    Delete
+                  </button>
+                  <Link
+                    to="/generate"
+                    className="btn-primary-small"
+                    state={{
+                      selectedCrewIds: Array.from(selectedCrews),
+                    }}
+                  >
+                    Generate
+                  </Link>
+                </div>
+              )}
 
-      {/* Existing Crews Section */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">Current Crews</h2>
-        {crews?.length === 0 ? (
-          <p className="text-gray-500">
-            No crews created yet. Create your first crew!
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {crews?.map((crew) => (
-              <div
-                key={crew.id}
-                className="bg-white border rounded-lg p-6 shadow-sm"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold">{crew.name}</h3>
-                    {crew.club ? (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-4 h-4 rounded border"
-                          style={{ backgroundColor: crew.club.primaryColor }}
-                        />
-                        <div
-                          className="w-4 h-4 rounded border"
-                          style={{ backgroundColor: crew.club.secondaryColor }}
-                        />
-                        <p className="text-gray-600">{crew.club.name}</p>
-                      </div>
-                    ) : (
-                      <p className="text-gray-600">
-                        {crew.clubName || 'No club'}
-                      </p>
-                    )}
-                    {crew.raceName && (
-                      <p className="text-sm text-gray-500">{crew.raceName}</p>
-                    )}
+              <div className="crew-dropdown">
+                {savedCrews.length > 0 && (
+                  <div className="sort-dropdown">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      aria-label="Sort crews by"
+                    >
+                      <option value="recent">Recently Created</option>
+                      <option value="club">Club Name</option>
+                      <option value="race">Race Name</option>
+                      <option value="boat_class">Boat Class</option>
+                    </select>
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium">{crew.boatType.code}</div>
-                    <div className="text-sm text-gray-500">
-                      {crew.boatType.name}
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="crews-grid">
+            {distributeCrewsIntoColumns(getSortedCrews()).map((column, columnIndex) => (
+              <div key={columnIndex} className="crew-column">
+                {column.map((crew) => (
+                  <div
+                    key={crew.id}
+                    className={`crew-card ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
+                    onClick={() => handleCrewSelection(crew.id, !selectedCrews.has(crew.id))}
+                  >
+                    <div className="crew-card-header">
+                      <div className="crew-card-title">
+                        <h3>{crew.boatName}</h3>
+                        <div className="crew-card-subtitle">
+                          <span>{crew.boatClub}</span>
+                          <span>•</span>
+                          <span>{crew.boatClass}</span>
+                        </div>
+                      </div>
+                      <div
+                        className={`crew-card-checkbox ${selectedCrews.has(crew.id) ? 'checked' : ''}`}
+                        onClick={() => handleCrewSelection(crew.id, !selectedCrews.has(crew.id))}
+                      ></div>
+                    </div>
+
+                    <div className="crew-compact-info">
+                      <div className="crew-compact-row">
+                        <span className="crew-compact-label">Race:</span>
+                        <span className="crew-compact-value">{crew.raceName || 'No race'}</span>
+                      </div>
+                    </div>
+
+                    <div className="crew-members">
+                      <div
+                        className="crew-members-header"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleCrewMembersExpansion(crew.id)
+                        }}
+                      >
+                        <span className="crew-members-title">
+                          {crew.crewMembers.length} Crew Members
+                        </span>
+                        <span
+                          className={`crew-members-toggle ${expandedCrewMembers.has(crew.id) ? 'expanded' : ''}`}
+                        >
+                          ▼
+                        </span>
+                      </div>
+
+                      {expandedCrewMembers.has(crew.id) && (
+                        <div
+                          className="crew-boat-layout"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleCrewMembersExpansion(crew.id)
+                          }}
+                        >
+                          {/* Coach floated left */}
+                          {crew.coachName && (
+                            <div className="coach-position">
+                              <div className="crew-member-seat coach">Coach</div>
+                              <div className="crew-member-name">{crew.coachName}</div>
+                            </div>
+                          )}
+
+                          {/* Cox at top center if exists */}
+                          {crew.crewMembers.some((member: any) => member.seat === 'C') && (
+                            <div className="cox-position">
+                              {crew.crewMembers
+                                .filter((member: any) => member.seat === 'C')
+                                .map((member: any, idx: number) => (
+                                  <div key={idx} className="crew-member-boat">
+                                    <div className="crew-member-seat">{member.seat}</div>
+                                    <div className="crew-member-name">{member.name}</div>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+
+                          {/* Rowers in single column */}
+                          <div className="rowers-layout">
+                            {crew.crewMembers
+                              .filter((member: any) => member.seat !== 'C')
+                              .map((member: any, idx: number) => (
+                                <div key={idx} className="rower-position">
+                                  <div className="crew-member-boat">
+                                    <div className="crew-member-seat">{member.seat}</div>
+                                    <div className="crew-member-name">{member.name}</div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="crew-actions">
+                      <div className="crew-actions-left">
+                        <Link
+                          to="/crews/create"
+                          className="crew-action-btn primary"
+                          state={{
+                            editingCrew: {
+                              id: crew.id,
+                              boatClass: crew.boatClass,
+                              clubName: crew.boatClub,
+                              raceName: crew.raceName,
+                              boatName: crew.boatName,
+                              crewNames: crew.crewMembers
+                                .filter((member: any) => member.seat !== 'Cox')
+                                .map((member: any) => member.name),
+                              coxName:
+                                crew.crewMembers.find((member: any) => member.seat === 'Cox')?.name || '',
+                            },
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Edit
+                        </Link>
+                      </div>
+                      <div className="crew-actions-right">
+                        <Link
+                          to="/generate"
+                          className="crew-action-btn secondary"
+                          state={{ selectedCrewIds: [crew.id] }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Generate
+                        </Link>
+                        <button
+                          className="crew-action-btn danger"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteCrew(crew)
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {crew.boatName && (
-                  <p className="text-sm text-gray-600 mb-2">
-                    Boat: <span className="font-medium">{crew.boatName}</span>
-                  </p>
-                )}
-
-                {crew.coachName && (
-                  <p className="text-sm text-gray-600 mb-3">
-                    Coach: <span className="font-medium">{crew.coachName}</span>
-                  </p>
-                )}
-
-                <div>
-                  <h4 className="font-medium mb-2">Crew Members:</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {crew.crewNames.map((name, index) => (
-                      <div
-                        key={index}
-                        className="text-sm bg-gray-50 rounded px-2 py-1"
-                      >
-                        <span className="font-medium">{index + 1}:</span> {name}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-4 text-xs text-gray-400">
-                  Created by {crew.user.name} •{' '}
-                  {new Date(crew.createdAt).toLocaleDateString()}
-                </div>
+                ))}
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
