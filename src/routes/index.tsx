@@ -1,13 +1,47 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { useAuth } from './__root'
 import '../dashboard.css'
 
 export const Route = createFileRoute('/')({
   component: DashboardPage,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      auth: search.auth as string,
+      user: search.user as string,
+      error: search.error as string,
+    }
+  },
 })
 
 function DashboardPage() {
-  // Mock user state for now - in the original this comes from auth context
-  const user = null
+  const { auth, user: userParam, error } = useSearch({ from: '/' })
+  const { user, setUser } = useAuth()
+
+  useEffect(() => {
+    if (auth === 'success' && userParam) {
+      try {
+        // Check if userParam is already an object or a string
+        let userData
+        if (typeof userParam === 'string') {
+          userData = JSON.parse(decodeURIComponent(userParam))
+        } else {
+          userData = userParam
+        }
+        setUser(userData)
+        // Clean up URL
+        window.history.replaceState({}, '', '/')
+      } catch (e) {
+        console.error('Failed to parse user data:', e, 'userParam:', userParam, 'type:', typeof userParam)
+      }
+    }
+
+    if (error) {
+      alert('Authentication failed: ' + error)
+      // Clean up URL
+      window.history.replaceState({}, '', '/')
+    }
+  }, [auth, userParam, error, setUser])
 
   const handleActionClick = (action: string) => {
     // Navigation is handled by the Link components directly

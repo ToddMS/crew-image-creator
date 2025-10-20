@@ -4,18 +4,18 @@ import { prisma } from '../../lib/prisma'
 
 export const crewRouter = router({
   getAll: publicProcedure.query(async () => {
-    return await prisma.crew.findMany({
-      include: {
-        boatType: true,
-        user: true,
-        club: true, // Include club data
-        savedImages: {
-          include: {
-            template: true,
-          },
+    try {
+      // First try a simple query without includes
+      return await prisma.crew.findMany({
+        include: {
+          boatType: true,
         },
-      },
-    })
+      })
+    } catch (error) {
+      console.error('Error fetching crews:', error)
+      // Return empty array if there's an error
+      return []
+    }
   }),
 
   getById: publicProcedure

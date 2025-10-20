@@ -279,6 +279,13 @@ function CrewsPage() {
                   </div>
                 )}
               </div>
+
+              <Link
+                to="/crews/create"
+                className="btn-primary-small"
+              >
+                Create New Crew
+              </Link>
             </div>
           </div>
 
