@@ -7,6 +7,7 @@ import { Navigation } from '../components/Navigation'
 import { TRPCProvider } from '../lib/trpc-provider'
 
 import appCss from '../styles.css?url'
+import dashboardCss from '../dashboard.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -26,6 +27,10 @@ export const Route = createRootRoute({
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      {
+        rel: 'stylesheet',
+        href: dashboardCss,
       },
     ],
   }),

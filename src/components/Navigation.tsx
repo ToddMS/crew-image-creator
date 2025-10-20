@@ -1,43 +1,60 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 
 const navItems = [
-  { href: '/', label: 'Home', icon: '🏠' },
-  { href: '/crews', label: 'Crews', icon: '🚣' },
-  { href: '/clubs', label: 'Clubs', icon: '🏛️' },
-  { href: '/generate', label: 'Generate', icon: '🎨' },
-  { href: '/gallery', label: 'Gallery', icon: '🖼️' },
+  { href: '/', label: 'Dashboard', key: 'dashboard' },
+  { href: '/crews', label: 'My Crews', key: 'crews' },
+  { href: '/clubs', label: 'Club Presets', key: 'clubs' },
+  { href: '/generate', label: 'Generate Images', key: 'generate' },
+  { href: '/gallery', label: 'Gallery', key: 'gallery' },
 ]
 
 export function Navigation() {
-  return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
-          >
-            <span className="text-2xl">🚣‍♂️</span>
-            <span>Crew Image Generator</span>
-          </Link>
+  const router = useRouterState()
+  const currentPath = router.location.pathname
 
-          {/* Navigation items */}
-          <div className="flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                activeProps={{
-                  className: 'bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800',
-                }}
-              >
-                <span className="text-lg">{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            ))}
-          </div>
+  const isActiveRoute = (href: string) => {
+    if (href === '/' && currentPath === '/') return true
+    if (href !== '/' && currentPath.startsWith(href)) return true
+    return false
+  }
+
+  // Mock user state for now
+  const user = null
+
+  return (
+    <nav className="main-nav">
+      <div className="nav-container">
+        {/* Logo */}
+        <Link to="/" className="logo">
+          <div className="logo-icon">R</div>
+          <span>RowGram</span>
+        </Link>
+
+        {/* Navigation Links */}
+        <div className="nav-links">
+          {navItems.map(({ href, label, key }) => (
+            <Link
+              key={key}
+              to={href}
+              className={`nav-link ${isActiveRoute(href) ? 'active' : ''}`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        {/* User Actions */}
+        <div className="nav-actions">
+          {user ? (
+            <div className="user-menu">
+              <span className="user-name">{user.name}</span>
+              <div className="user-avatar">{user.name?.[0] || 'U'}</div>
+            </div>
+          ) : (
+            <button className="login-btn">
+              Sign In
+            </button>
+          )}
         </div>
       </div>
     </nav>
