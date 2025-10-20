@@ -2,8 +2,8 @@ import { Link, useRouterState } from '@tanstack/react-router'
 
 const navItems = [
   { href: '/', label: 'Dashboard', key: 'dashboard' },
-  { href: '/crews', label: 'My Crews', key: 'crews' },
-  { href: '/clubs', label: 'Club Presets', key: 'clubs' },
+  { href: '/crews', label: 'Crews', key: 'crews' },
+  { href: '/clubs', label: 'Clubs', key: 'clubs' },
   { href: '/generate', label: 'Generate Images', key: 'generate' },
   { href: '/gallery', label: 'Gallery', key: 'gallery' },
 ]
