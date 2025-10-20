@@ -14,25 +14,100 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
-  name      String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  // Relations
-  crewImages CrewImage[]
-}
-
-model CrewImage {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  imageUrl    String?
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  avatarUrl   String?
+  preferences Json?    // Theme, defaults, settings
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  userId      Int
+  crews       Crew[]
+  savedImages SavedImage[]
+  clubs       Club[]   // Club presets created by this user
+}
+
+model Club {
+  id             String   @id @default(cuid())
+  name           String
+  primaryColor   String   // Hex color code like "#FF0000"
+  secondaryColor String   // Hex color code like "#FFFFFF"
+  logoUrl        String?  // Optional club logo
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  crews          Crew[]
+
+  // Unique constraint: user can't have duplicate club names
+  @@unique([userId, name])
+}
+
+model BoatType {
+  id       String @id @default(cuid())
+  name     String @unique // "Single Scull", "Eight"
+  code     String @unique // "1x", "8+"
+  seats    Int
+  category String         // "sculling", "sweep"
+  metadata Json?          // Position layouts, cox info
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  crews    Crew[]
+}
+
+model Crew {
+  id          String   @id @default(cuid())
+  name        String
+  clubName    String?  // Fallback club name if not using club preset
+  raceName    String?
+  boatName    String?
+  coachName   String?
+  crewNames   String[] // Array of crew member names
+  boatTypeId  String
+  userId      String
+  clubId      String?  // Optional reference to club preset
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  boatType    BoatType @relation(fields: [boatTypeId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club        Club?    @relation(fields: [clubId], references: [id])
+  savedImages SavedImage[]
+}
+
+model Template {
+  id           String  @id @default(cuid())
+  name         String
+  templateType String  // "classic", "modern", "minimal"
+  previewUrl   String
+  isActive     Boolean @default(true)
+  metadata     Json?   // Dimensions, colors, settings
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  savedImages SavedImage[]
+}
+
+model SavedImage {
+  id          String   @id @default(cuid())
+  filename    String
+  imageUrl    String
+  fileSize    Int?
+  dimensions  Json?    // {width, height}
+  metadata    Json?    // Colors, settings used during generation
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  crewId      String
+  templateId  String
+  userId      String
+  crew        Crew     @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  template    Template @relation(fields: [templateId], references: [id])
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

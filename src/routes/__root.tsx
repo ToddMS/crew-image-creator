@@ -3,7 +3,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-import Header from '../components/Header'
+import { Navigation } from '../components/Navigation'
 import { TRPCProvider } from '../lib/trpc-provider'
 
 import appCss from '../styles.css?url'
@@ -19,7 +19,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Crew Image Generator',
       },
     ],
     links: [
@@ -41,8 +41,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <TRPCProvider>
-          <Header />
-          {children}
+          <Navigation />
+          <main>
+            {children}
+          </main>
           <ReactQueryDevtools initialIsOpen={false} />
           <TanStackDevtools
             config={{
