@@ -118,19 +118,19 @@ await generateImage.mutateAsync({
 
 ## Git & Version Control
 
-This is a local git repository with no remote connected yet. To set up GitHub:
+This is a local git repository with remote connected to GitHub. Current synchronization setup:
 
 ```bash
-# Create GitHub repo (if needed)
-gh repo create crew-image-creator --public
+# Repository is already connected to:
+# https://github.com/ToddMS/crew-image-creator
 
-# Or connect existing repo
-git remote add origin https://github.com/YOUR_USERNAME/crew-image-creator.git
-
-# First commit and push
+# To push changes:
 git add .
-git commit -m "Initial commit"
-git push -u origin master
+git commit -m "Your commit message"
+git push origin master
+
+# To pull latest changes:
+git pull origin master
 ```
 
 ## Current Application Status
