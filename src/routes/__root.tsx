@@ -20,7 +20,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Crew Image Generator',
+        title: 'RowGram',
       },
     ],
     links: [
@@ -31,6 +31,11 @@ export const Route = createRootRoute({
       {
         rel: 'stylesheet',
         href: dashboardCss,
+      },
+      {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: '/RowGramImage.svg',
       },
     ],
   }),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Save, Users, X } from 'lucide-react'
+import { Save, Users } from 'lucide-react'
 import { trpc } from '../lib/trpc-client'
 
 interface CrewFormProps {
@@ -11,7 +11,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     clubId: '',
-    clubName: '', // Fallback for custom club name
+    clubName: '',
     raceName: '',
     boatName: '',
     coachName: '',
@@ -22,14 +22,11 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
   const [useClubPreset, setUseClubPreset] = useState(true)
   const [selectedBoatType, setSelectedBoatType] = useState<any>(null)
 
-  // Fetch data
   const { data: boatTypes } = trpc.boatType.getAll.useQuery()
   const { data: clubs } = trpc.club.getByUserId.useQuery({ userId })
 
-  // Mutations
   const createCrew = trpc.crew.create.useMutation({
     onSuccess: () => {
-      // Reset form
       setFormData({
         name: '',
         clubId: '',
@@ -45,7 +42,6 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
     },
   })
 
-  // Update crew names array when boat type changes
   useEffect(() => {
     if (selectedBoatType) {
       const newCrewNames = Array(selectedBoatType.seats).fill('')
@@ -54,7 +50,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
   }, [selectedBoatType])
 
   const handleBoatTypeChange = (boatTypeId: string) => {
-    const boatType = boatTypes?.find((bt) => bt.id === boatTypeId)
+    const boatType = boatTypesArr.find((bt) => bt.id === boatTypeId) || null
     setSelectedBoatType(boatType)
     setFormData((prev) => ({ ...prev, boatTypeId }))
   }
@@ -71,7 +67,6 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
     const submitData = {
       ...formData,
       userId,
-      // Use club preset or fallback to custom name
       clubId: useClubPreset ? formData.clubId || undefined : undefined,
       clubName: useClubPreset ? undefined : formData.clubName,
     }
@@ -105,7 +100,6 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -176,7 +170,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select club preset...</option>
-              {clubs?.map((club) => (
+              {clubsArr.map((club) => (
                 <option key={club.id} value={club.id}>
                   {club.name}
                 </option>

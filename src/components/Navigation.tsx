@@ -18,15 +18,14 @@ export function Navigation() {
     return false
   }
 
-  // Mock user state for now
-  const user = null
+  // User handling is not implemented yet
 
   return (
     <nav className="main-nav">
       <div className="nav-container">
         {/* Logo */}
         <Link to="/" className="logo">
-          <div className="logo-icon">R</div>
+          <img src="/RowGramImage.svg" alt="RowGram" className="logo-icon" />
           <span>RowGram</span>
         </Link>
 
@@ -45,16 +44,9 @@ export function Navigation() {
 
         {/* User Actions */}
         <div className="nav-actions">
-          {user ? (
-            <div className="user-menu">
-              <span className="user-name">{user.name}</span>
-              <div className="user-avatar">{user.name?.[0] || 'U'}</div>
-            </div>
-          ) : (
-            <button className="login-btn">
-              Sign In
-            </button>
-          )}
+          <button className="login-btn">
+            Sign In
+          </button>
         </div>
       </div>
     </nav>
