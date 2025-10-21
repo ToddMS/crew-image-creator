@@ -136,71 +136,147 @@ export const savedImageRouter = router({
         crewId: z.string(),
         templateId: z.string(),
         userId: z.string(),
+        colors: z.object({
+          primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+          secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+        }).optional(),
       })
     )
     .mutation(async ({ input }) => {
-      // Get crew and template data
-      const crew = await prisma.crew.findUnique({
-        where: { id: input.crewId },
-        include: {
-          boatType: true,
-          club: true,
-        },
+      try {
+        // Get crew and template data
+        const crew = await prisma.crew.findUnique({
+          where: { id: input.crewId },
+          include: {
+            boatType: true,
+            club: true,
+          },
+        })
+
+        if (!crew) {
+          throw new Error('Crew not found')
+        }
+
+        const template = await prisma.template.findUnique({
+          where: { id: input.templateId },
+        })
+
+        if (!template) {
+          throw new Error('Template not found')
+        }
+
+        // Validate input
+        const validation = ImageGenerationService.validateGenerationInput(crew, template)
+        if (!validation.valid) {
+          throw new Error(validation.error)
+        }
+
+        // Generate the image with custom colors if provided
+        const generatedImage = await ImageGenerationService.generateCrewImage(
+          crew,
+          template,
+          input.colors
+        )
+
+        // Save to database
+        const savedImage = await prisma.savedImage.create({
+          data: {
+            crewId: input.crewId,
+            templateId: input.templateId,
+            userId: input.userId,
+            imageUrl: generatedImage.imageUrl,
+            filename: generatedImage.filename,
+            metadata: {
+              width: generatedImage.width,
+              height: generatedImage.height,
+              generatedAt: new Date().toISOString(),
+              colors: input.colors || {
+                primaryColor: crew.club?.primaryColor || '#15803d',
+                secondaryColor: crew.club?.secondaryColor || '#f9a8d4'
+              },
+            },
+          },
+          include: {
+            crew: {
+              include: {
+                boatType: true,
+                club: true,
+              },
+            },
+            template: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        })
+
+        return savedImage
+      } catch (error) {
+        console.error('Image generation error:', error)
+        throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    }),
+
+  generatePreview: publicProcedure
+    .input(
+      z.object({
+        crewId: z.string(),
+        templateId: z.string(),
+        colors: z.object({
+          primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+          secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+        }).optional(),
       })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        // Get crew and template data
+        const crew = await prisma.crew.findUnique({
+          where: { id: input.crewId },
+          include: {
+            boatType: true,
+            club: true,
+          },
+        })
 
-      if (!crew) {
-        throw new Error('Crew not found')
-      }
+        if (!crew) {
+          throw new Error('Crew not found')
+        }
 
-      const template = await prisma.template.findUnique({
-        where: { id: input.templateId },
-      })
+        const template = await prisma.template.findUnique({
+          where: { id: input.templateId },
+        })
 
-      if (!template) {
-        throw new Error('Template not found')
-      }
+        if (!template) {
+          throw new Error('Template not found')
+        }
 
-      // Validate input
-      const validation = ImageGenerationService.validateGenerationInput(crew, template)
-      if (!validation.valid) {
-        throw new Error(validation.error)
-      }
+        // Validate input
+        const validation = ImageGenerationService.validateGenerationInput(crew, template)
+        if (!validation.valid) {
+          throw new Error(validation.error)
+        }
 
-      // Generate the image
-      const generatedImage = await ImageGenerationService.generateCrewImage(crew, template)
+        // Generate preview image (same as regular but not saved to DB)
+        const generatedImage = await ImageGenerationService.generateCrewImage(
+          crew,
+          template,
+          input.colors
+        )
 
-      // Save to database
-      const savedImage = await prisma.savedImage.create({
-        data: {
-          crewId: input.crewId,
-          templateId: input.templateId,
-          userId: input.userId,
+        return {
           imageUrl: generatedImage.imageUrl,
           filename: generatedImage.filename,
-          metadata: {
-            width: generatedImage.width,
-            height: generatedImage.height,
-            generatedAt: new Date().toISOString(),
-          },
-        },
-        include: {
-          crew: {
-            include: {
-              boatType: true,
-              club: true,
-            },
-          },
-          template: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      })
-
-      return savedImage
+          width: generatedImage.width,
+          height: generatedImage.height,
+        }
+      } catch (error) {
+        console.error('Preview generation error:', error)
+        throw new Error(`Failed to generate preview: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
     }),
 })

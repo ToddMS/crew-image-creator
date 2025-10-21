@@ -1,3 +1,8 @@
+import puppeteer from 'puppeteer'
+import fs from 'fs/promises'
+import path from 'path'
+import { TemplateCompiler } from './templateCompiler'
+
 interface Crew {
   id: string
   name: string
@@ -21,107 +26,273 @@ interface GeneratedImage {
   height: number
 }
 
+interface GenerateImageOptions {
+  crew: Crew
+  template: Template
+  colors: {
+    primaryColor: string
+    secondaryColor: string
+  }
+}
+
 export class ImageGenerationService {
   /**
-   * Generate a crew image (placeholder implementation)
-   * In a real implementation, this would call an image generation API
-   * or use a canvas/image manipulation library
+   * Generate a crew image using HTML templates and Puppeteer
    */
   static async generateCrewImage(
     crew: Crew,
-    template: Template
+    template: Template,
+    colors?: { primaryColor: string; secondaryColor: string }
   ): Promise<GeneratedImage> {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000))
+    const filename = `${crew.name.toLowerCase().replace(/\s+/g, '-')}-${template.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`
+    const outputPath = path.join(process.cwd(), 'public', 'uploads', filename)
 
-    // For now, return a placeholder image with dynamic content
-    const placeholderUrl = this.createPlaceholderImageUrl(crew, template)
+    // Ensure output directory exists
+    await this.ensureOutputDirectory(outputPath)
+
+    // Use club colors if no custom colors provided
+    const finalColors = colors || {
+      primaryColor: crew.club?.primaryColor || '#15803d',
+      secondaryColor: crew.club?.secondaryColor || '#f9a8d4'
+    }
+
+    // Generate image
+    await this.generateImageFromTemplate({
+      crew,
+      template,
+      colors: finalColors,
+      outputPath
+    })
 
     return {
-      imageUrl: placeholderUrl,
-      filename: `${crew.name.toLowerCase().replace(/\s+/g, '-')}-${template.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.jpg`,
+      imageUrl: `/uploads/${filename}`,
+      filename,
       width: 1200,
       height: 800,
     }
   }
 
   /**
-   * Create a placeholder image URL with crew and template information
+   * Generate image from HTML template
    */
-  private static createPlaceholderImageUrl(crew: Crew, template: Template): string {
-    const params = new URLSearchParams({
-      width: '1200',
-      height: '800',
-      bg: this.getBackgroundColor(template),
-      text: this.getImageText(crew),
-      fontsize: '24',
-      fontcolor: this.getTextColor(template),
+  private static async generateImageFromTemplate(options: {
+    crew: Crew
+    template: Template
+    colors: { primaryColor: string; secondaryColor: string }
+    outputPath: string
+  }): Promise<void> {
+    const { crew, template, colors, outputPath } = options
+
+    // Load and compile template
+    const templateHtml = await this.loadTemplate(template, crew, colors)
+
+    // Generate image using Puppeteer
+    await this.convertHtmlToImage(templateHtml, outputPath)
+  }
+
+  /**
+   * Load and compile template with crew data and colors
+   */
+  private static async loadTemplate(
+    template: Template,
+    crew: Crew,
+    colors: { primaryColor: string; secondaryColor: string }
+  ): Promise<string> {
+    const templateMap: Record<string, string> = {
+      'Classic Program': 'template1',
+      'Modern Geometric': 'template2',
+      'Dynamic Crew Program': 'template3'
+    }
+
+    const templateName = templateMap[template.name] || 'template1'
+
+    // Load HTML and CSS files
+    const htmlPath = path.join(process.cwd(), 'public', templateName, `${templateName}.html`)
+    const cssPath = path.join(process.cwd(), 'public', templateName, `${templateName}.css`)
+
+    let htmlContent = await fs.readFile(htmlPath, 'utf-8')
+    const cssContent = await fs.readFile(cssPath, 'utf-8')
+
+    // Embed CSS into HTML first
+    const cssTag = `<style>${cssContent}</style>`
+    htmlContent = htmlContent.replace('</head>', `${cssTag}</head>`)
+
+    // Remove external CSS link
+    htmlContent = htmlContent.replace(/<link[^>]*rel=\"stylesheet\"[^>]*>/g, '')
+
+    // Use TemplateCompiler for advanced placeholders if the template supports them
+    if (htmlContent.includes('{{') || htmlContent.includes('{{#')) {
+      const templateData = TemplateCompiler.formatCrewData(crew, template)
+      htmlContent = TemplateCompiler.compileTemplate(htmlContent, templateData, colors)
+    } else {
+      // Fallback to legacy method for simple templates
+      htmlContent = this.applyColorsToTemplate(htmlContent, cssContent, templateName, colors)
+      htmlContent = this.applyCrewDataToTemplate(htmlContent, crew)
+    }
+
+    return htmlContent
+  }
+
+  /**
+   * Apply colors to template based on template type
+   */
+  private static applyColorsToTemplate(
+    html: string,
+    css: string,
+    templateName: string,
+    colors: { primaryColor: string; secondaryColor: string }
+  ): string {
+    let modifiedCss = css
+
+    if (templateName === 'template1') {
+      // Template 1: Corner brackets
+      // Primary color: top-left and bottom-right (pink class)
+      // Secondary color: top-right and bottom-left (green class)
+      modifiedCss = modifiedCss.replace(/\.pink\s*{[^}]*}/g,
+        `.pink { background-color: ${colors.primaryColor}; }`)
+      modifiedCss = modifiedCss.replace(/\.green\s*{[^}]*}/g,
+        `.green { background-color: ${colors.secondaryColor}; }`)
+    } else if (templateName === 'template2') {
+      // Template 2: Diagonal split
+      // Primary color: green triangles
+      // Secondary color: pink background
+      html = html.replace(/fill="#f9a8d4"/g, `fill="${colors.secondaryColor}"`)
+      html = html.replace(/fill="#15803d"/g, `fill="${colors.primaryColor}"`)
+    }
+
+    // Embed CSS into HTML
+    const cssTag = `<style>${modifiedCss}</style>`
+    html = html.replace('</head>', `${cssTag}</head>`)
+
+    // Remove external CSS link
+    html = html.replace(/<link[^>]*rel="stylesheet"[^>]*>/g, '')
+
+    return html
+  }
+
+  /**
+   * Apply crew data to template
+   */
+  private static applyCrewDataToTemplate(html: string, crew: Crew): string {
+    // Create crew content HTML
+    const crewContentHtml = this.generateCrewContentHtml(crew)
+
+    // Insert crew content into the content area
+    html = html.replace(
+      '<!-- Content will be dynamically inserted here -->',
+      crewContentHtml
+    )
+
+    return html
+  }
+
+  /**
+   * Generate HTML for crew content
+   */
+  private static generateCrewContentHtml(crew: Crew): string {
+    const crewNames = crew.crewNames || []
+    const clubName = crew.club?.name || 'Rowing Club'
+    const crewName = crew.name || 'Crew'
+    const boatType = crew.boatType?.name || 'Eight'
+    const raceName = crew.raceName || 'Championship Race'
+
+    return `
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: black;
+        font-family: 'Arial', sans-serif;
+        width: 80%;
+        z-index: 10;
+      ">
+        <h1 style="font-size: 36px; margin: 0 0 20px 0; font-weight: bold;">
+          ${clubName}
+        </h1>
+        <h2 style="font-size: 28px; margin: 0 0 15px 0; font-weight: 600;">
+          ${crewName}
+        </h2>
+        <h3 style="font-size: 22px; margin: 0 0 25px 0; font-weight: 500;">
+          ${boatType} • ${raceName}
+        </h3>
+        <div style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 10px;
+          max-width: 600px;
+          margin: 0 auto;
+        ">
+          ${crewNames.map((name: string, index: number) => {
+            const position = this.getPositionLabel(index + 1, crewNames.length)
+            return `
+              <div style="
+                background: rgba(255, 255, 255, 0.9);
+                padding: 8px;
+                border-radius: 8px;
+                border: 2px solid rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              ">
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 4px;">
+                  ${position}
+                </div>
+                <div style="font-size: 14px; font-weight: 500;">
+                  ${name.replace(/^cox:\s*/i, '')}
+                </div>
+              </div>
+            `
+          }).join('')}
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Get position label for rowing positions
+   */
+  private static getPositionLabel(seatNumber: number, totalSeats: number): string {
+    if (seatNumber === 1) return 'Bow'
+    if (seatNumber === totalSeats) return 'Stroke'
+    return `Seat ${seatNumber}`
+  }
+
+  /**
+   * Convert HTML to image using Puppeteer
+   */
+  private static async convertHtmlToImage(html: string, outputPath: string): Promise<void> {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     })
 
-    // Using a placeholder service (you might want to use a different one or implement your own)
-    return `https://via.placeholder.com/1200x800/${this.getBackgroundColor(template).replace('#', '')}/${this.getTextColor(template).replace('#', '')}?text=${encodeURIComponent(this.getImageText(crew))}`
+    try {
+      const page = await browser.newPage()
+
+      // Set viewport for consistent image size
+      await page.setViewport({ width: 1200, height: 800 })
+
+      // Load HTML content
+      await page.setContent(html, { waitUntil: 'networkidle0' })
+
+      // Take screenshot
+      await page.screenshot({
+        path: outputPath,
+        type: 'png',
+        fullPage: false,
+        clip: { x: 0, y: 0, width: 1200, height: 800 }
+      })
+    } finally {
+      await browser.close()
+    }
   }
 
   /**
-   * Get background color from template metadata
+   * Ensure output directory exists
    */
-  private static getBackgroundColor(template: Template): string {
-    if (template.metadata?.primaryColor) {
-      return template.metadata.primaryColor
-    }
-
-    // Default colors based on template type
-    const defaultColors = {
-      classic: '#1e3a8a',
-      modern: '#dc2626',
-      minimal: '#f8fafc',
-      elegant: '#1e40af',
-    }
-
-    return defaultColors[template.templateType as keyof typeof defaultColors] || '#1e40af'
-  }
-
-  /**
-   * Get text color that contrasts with background
-   */
-  private static getTextColor(template: Template): string {
-    if (template.metadata?.secondaryColor) {
-      return template.metadata.secondaryColor
-    }
-
-    const bg = this.getBackgroundColor(template)
-    // Simple contrast logic - in reality you'd want better color contrast calculation
-    const isLight = ['#f8fafc', '#ffffff', '#f9fafb'].includes(bg)
-    return isLight ? '#000000' : '#ffffff'
-  }
-
-  /**
-   * Generate text content for the image
-   */
-  private static getImageText(crew: Crew): string {
-    const lines = []
-
-    lines.push(crew.name)
-
-    if (crew.raceName) {
-      lines.push(crew.raceName)
-    }
-
-    lines.push(`${crew.boatType.name} (${crew.boatType.code})`)
-
-    if (crew.club) {
-      lines.push(crew.club.name)
-    }
-
-    // Add rower names (limit to avoid too long text)
-    const rowerNames = crew.crewNames
-    if (rowerNames.length <= 8) {
-      lines.push(...rowerNames)
-    } else {
-      lines.push(`${rowerNames.slice(0, 6).join(', ')} +${rowerNames.length - 6} more`)
-    }
-
-    return lines.join(' • ')
+  private static async ensureOutputDirectory(filePath: string): Promise<void> {
+    const dir = path.dirname(filePath)
+    await fs.mkdir(dir, { recursive: true })
   }
 
   /**

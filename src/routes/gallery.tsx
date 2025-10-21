@@ -33,6 +33,11 @@ interface SavedImage {
   metadata?: {
     width?: number
     height?: number
+    colors?: {
+      primaryColor?: string
+      secondaryColor?: string
+    }
+    generatedAt?: string
   }
 }
 
@@ -432,8 +437,44 @@ function GalleryPage() {
                           </span>
                         </div>
                       )}
+                      {fullscreenImage.metadata?.generatedAt && (
+                        <div className="detail-item">
+                          <span className="detail-label">Generated:</span>
+                          <span className="detail-value">
+                            {new Date(fullscreenImage.metadata.generatedAt).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {fullscreenImage.metadata?.colors && (
+                    <div className="detail-section">
+                      <h4>Color Scheme</h4>
+                      <div className="detail-grid">
+                        <div className="detail-item">
+                          <span className="detail-label">Primary Color:</span>
+                          <span className="detail-value">
+                            {fullscreenImage.metadata.colors.primaryColor}
+                            <div
+                              className="color-swatch"
+                              style={{ backgroundColor: fullscreenImage.metadata.colors.primaryColor }}
+                            />
+                          </span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">Secondary Color:</span>
+                          <span className="detail-value">
+                            {fullscreenImage.metadata.colors.secondaryColor}
+                            <div
+                              className="color-swatch"
+                              style={{ backgroundColor: fullscreenImage.metadata.colors.secondaryColor }}
+                            />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="modal-actions">
                     <button
