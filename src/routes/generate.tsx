@@ -3,6 +3,36 @@ import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { TemplateSelector } from '../components/TemplateSelector'
 
+// Custom scrollbar styles
+const scrollbarStyles = `
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+    overflow-y: scroll !important;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 12px;
+    margin-left: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 6px;
+    margin: 2px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 6px;
+    border: 2px solid #f1f5f9;
+    min-height: 20px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  .custom-scrollbar::-webkit-scrollbar-corner {
+    background: #f1f5f9;
+  }
+`
+
 export const Route = createFileRoute('/generate')({
   component: GenerateImagePage,
 })
@@ -54,7 +84,9 @@ function GenerateImagePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      <style>{scrollbarStyles}</style>
+      <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Generate Crew Image</h1>
@@ -77,8 +109,9 @@ function GenerateImagePage() {
                 </div>
               </div>
             ) : crews && crews.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {crews.map((crew) => (
+              <div className="max-h-80 pr-4 custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {crews.map((crew) => (
                   <div
                     key={crew.id}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -115,6 +148,7 @@ function GenerateImagePage() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
@@ -229,6 +263,7 @@ function GenerateImagePage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

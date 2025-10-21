@@ -19,6 +19,7 @@ import { Route as CrewsCreateRouteImport } from './routes/crews_.create'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
+import { Route as ApiUploadClubLogoRouteImport } from './routes/api/upload/club-logo'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
@@ -77,6 +78,11 @@ const DemoApiNamesRoute = DemoApiNamesRouteImport.update({
   path: '/demo/api/names',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUploadClubLogoRoute = ApiUploadClubLogoRouteImport.update({
+  id: '/api/upload/club-logo',
+  path: '/api/upload/club-logo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/crews/create': typeof CrewsCreateRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/upload/club-logo': typeof ApiUploadClubLogoRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/crews/create': typeof CrewsCreateRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/upload/club-logo': typeof ApiUploadClubLogoRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/crews_/create': typeof CrewsCreateRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/upload/club-logo': typeof ApiUploadClubLogoRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/crews/create'
     | '/api/auth/google'
     | '/api/trpc/$'
+    | '/api/upload/club-logo'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/crews/create'
     | '/api/auth/google'
     | '/api/trpc/$'
+    | '/api/upload/club-logo'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/crews_/create'
     | '/api/auth/google'
     | '/api/trpc/$'
+    | '/api/upload/club-logo'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -241,6 +253,7 @@ export interface RootRouteChildren {
   CrewsCreateRoute: typeof CrewsCreateRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
+  ApiUploadClubLogoRoute: typeof ApiUploadClubLogoRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
@@ -322,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoApiNamesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/upload/club-logo': {
+      id: '/api/upload/club-logo'
+      path: '/api/upload/club-logo'
+      fullPath: '/api/upload/club-logo'
+      preLoaderRoute: typeof ApiUploadClubLogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/trpc/$': {
       id: '/api/trpc/$'
       path: '/api/trpc/$'
@@ -396,6 +416,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrewsCreateRoute: CrewsCreateRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
+  ApiUploadClubLogoRoute: ApiUploadClubLogoRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,

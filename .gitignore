@@ -12,3 +12,7 @@ count.txt
 todos.json
 
 /generated/prisma
+
+# Uploaded files
+public/uploads/*
+!public/uploads/*/.gitkeep

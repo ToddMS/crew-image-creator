@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { trpc } from '../lib/trpc-client'
+import { ImageUpload } from '../components/ImageUpload'
+import { useAuth } from './__root'
 import '../dashboard.css'
 import './clubs.css'
 
@@ -16,6 +18,7 @@ interface ClubFormData {
 }
 
 function ClubsPage() {
+  const { user } = useAuth()
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [editingClubId, setEditingClubId] = useState<string | null>(null)
   const [formData, setFormData] = useState<ClubFormData>({
@@ -33,6 +36,8 @@ function ClubsPage() {
   const [editForm, setEditForm] = useState<{ [key: string]: ClubFormData }>({})
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const newLogoInputRef = useRef<HTMLInputElement>(null)
+  const editLogoInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   const { data: clubs = [], isLoading, refetch } = trpc.club.getAll.useQuery()
 
@@ -142,12 +147,15 @@ function ClubsPage() {
       return
     }
 
-    const userId = 'demo-user-id' // In a real app, get from auth context
+    if (!user) {
+      alert('Please sign in to create clubs')
+      return
+    }
 
     createMutation.mutate({
       ...newClubForm,
       logoUrl: newClubForm.logoUrl || undefined,
-      userId,
+      userId: user.id,
     })
   }
 
@@ -158,12 +166,73 @@ function ClubsPage() {
     })
   }
 
+  const handleLogoUpload = async (file: File, clubId?: string) => {
+    try {
+      const formData = new FormData()
+      formData.append('logo', file)
+
+      const response = await fetch('/api/upload/club-logo', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Upload failed')
+      }
+
+      if (clubId) {
+        // Update existing club
+        handleEditFormChange(clubId, 'logoUrl', result.logoUrl)
+      } else {
+        // Update new club form
+        handleNewClubChange('logoUrl', result.logoUrl)
+      }
+    } catch (error) {
+      alert(`Failed to upload logo: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  const handleLogoClick = (clubId?: string) => {
+    if (clubId) {
+      editLogoInputRefs.current[clubId]?.click()
+    } else {
+      newLogoInputRef.current?.click()
+    }
+  }
+
+  const handleLogoFileSelect = async (event: React.ChangeEvent<HTMLInputElement>, clubId?: string) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB')
+      return
+    }
+
+    await handleLogoUpload(file, clubId)
+  }
+
+  const handleLogoRemove = (clubId?: string) => {
+    if (clubId) {
+      handleEditFormChange(clubId, 'logoUrl', '')
+    } else {
+      handleNewClubChange('logoUrl', '')
+    }
+  }
+
   const filteredClubs = clubs.filter((club) =>
     club.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  // Mock user state for now - in the original this comes from auth context
-  const user = { name: 'Demo User' }
+  // User comes from auth context
 
   if (!user) {
     return (
@@ -238,12 +307,32 @@ function ClubsPage() {
               {isCreatingNew && (
                 <div className="preset-card editing new-preset">
                   <div className="preset-header">
+                    <div
+                      className={`logo-section editable ${newClubForm.logoUrl ? 'has-logo' : 'empty'}`}
+                      onClick={() => newClubForm.logoUrl ? handleLogoRemove() : handleLogoClick()}
+                    >
+                      {newClubForm.logoUrl ? (
+                        <img src={newClubForm.logoUrl} alt="Club logo" />
+                      ) : (
+                        '+'
+                      )}
+                    </div>
+                    <div className="name-section">
+                      <input
+                        type="text"
+                        className="preset-name-input"
+                        placeholder="Enter club name"
+                        value={newClubForm.name}
+                        onChange={(e) => handleNewClubChange('name', e.target.value)}
+                        style={{ width: '100%', paddingLeft: '0.5rem' }}
+                      />
+                    </div>
                     <input
-                      type="text"
-                      className="preset-name-input"
-                      placeholder="Enter club name"
-                      value={newClubForm.name}
-                      onChange={(e) => handleNewClubChange('name', e.target.value)}
+                      ref={newLogoInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleLogoFileSelect(e)}
+                      style={{ display: 'none' }}
                     />
                   </div>
                   <div className="preset-colors">
@@ -298,17 +387,43 @@ function ClubsPage() {
                     className={`preset-card ${isEditing ? 'editing' : ''}`}
                   >
                     <div className="preset-header">
-                      {isEditing ? (
+                      <div
+                        className={`logo-section ${isEditing ? 'editable' : ''} ${(isEditing ? editData.logoUrl : club.logoUrl) ? 'has-logo' : 'empty'}`}
+                        onClick={isEditing ? () => editData.logoUrl ? handleLogoRemove(club.id) : handleLogoClick(club.id) : undefined}
+                      >
+                        {(isEditing ? editData.logoUrl : club.logoUrl) ? (
+                          <img src={isEditing ? editData.logoUrl : club.logoUrl} alt={`${club.name} logo`} />
+                        ) : (
+                          isEditing ? '+' : ''
+                        )}
+                      </div>
+                      <div className="name-section">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className="preset-name-input"
+                            value={editData.name}
+                            onChange={(e) =>
+                              handleEditFormChange(club.id, 'name', e.target.value)
+                            }
+                            style={{ width: '100%', paddingLeft: '0.5rem' }}
+                          />
+                        ) : (
+                          <h3 className="preset-name">
+                            {club.name}
+                          </h3>
+                        )}
+                      </div>
+                      {isEditing && (
                         <input
-                          type="text"
-                          className="preset-name-input"
-                          value={editData.name}
-                          onChange={(e) =>
-                            handleEditFormChange(club.id, 'name', e.target.value)
-                          }
+                          ref={(el) => {
+                            editLogoInputRefs.current[club.id] = el
+                          }}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleLogoFileSelect(e, club.id)}
+                          style={{ display: 'none' }}
                         />
-                      ) : (
-                        <h3 className="preset-name">{club.name}</h3>
                       )}
                     </div>
                     <div className="preset-colors">

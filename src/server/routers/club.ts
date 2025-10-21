@@ -51,7 +51,7 @@ export const clubRouter = router({
         secondaryColor: z
           .string()
           .regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color'),
-        logoUrl: z.string().url().optional(),
+        logoUrl: z.string().optional(),
         userId: z.string(),
       }),
     )
@@ -77,7 +77,7 @@ export const clubRouter = router({
           .string()
           .regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color')
           .optional(),
-        logoUrl: z.string().url().optional(),
+        logoUrl: z.string().optional(),
       }),
     )
     .mutation(async ({ input }) => {
