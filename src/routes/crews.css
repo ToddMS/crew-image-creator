@@ -2,7 +2,9 @@
 
 /* My Crews Container */
 .my-crews-container {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
   line-height: 1.5;
   color: var(--gray-900);
   background: var(--gray-50);

@@ -1,210 +1,308 @@
-# Claude Instructions for crew-image-creator
+# CLAUDE.md - RowGram Development Guide
 
-## Project Overview
+> **⚡ Modern TanStack Start Project Setup**
+>
+> This is a production-ready rowing crew image generator built with the latest TanStack ecosystem for maximum type safety, performance, and developer experience.
 
-This is a **Rowing Crew Image Generator** - a modern full-stack web application for creating custom rowing crew images with team information, branding, and multiple template styles. The application has been successfully refactored to use TanStack Start and modern React technologies.
+## 🚀 Quick Start Commands
 
-## Tech Stack & Framework Preferences
+```bash
+# Development
+npm run dev              # Start dev server (localhost:3000)
+npm run build           # Production build
+npm run preview         # Preview production build
 
-- **Frontend**: React 19 with TypeScript
-- **Backend**: TanStack Start (full-stack React framework)
-- **Database**: PostgreSQL with Prisma ORM
-- **API Layer**: tRPC (type-safe APIs)
-- **Router**: TanStack Router (file-based routing)
-- **Data Fetching**: TanStack Query (with tRPC integration)
-- **Styling**: Tailwind CSS v4
-- **Build Tool**: Vite
+# Quality Assurance
+npm run lint            # ESLint checking
+npm run format          # Prettier formatting
+npm run typecheck       # TypeScript checking
+npm run test            # Run test suite
+
+# Database
+npx prisma generate     # Generate Prisma client
+npx prisma dev          # Start local Postgres + run migrations
+npx prisma studio       # Database admin UI
+npx prisma migrate dev  # Create & apply migrations
+
+# Production Deployment
+npm run deploy          # Deploy to production
+```
+
+## 🏗️ Architecture Overview
+
+### Core Stack
+- **Framework**: TanStack Start (Full-stack React with SSR)
+- **Database**: PostgreSQL + Prisma ORM
+- **API**: tRPC for end-to-end type safety
+- **UI**: React 19 + Tailwind CSS v4
+- **State**: TanStack Query + TanStack Router
+- **Auth**: NextAuth.js integration
 - **Testing**: Vitest + Testing Library
-- **Validation**: Zod schemas
 
-## Code Style & Conventions
-
-- Use functional components with hooks
-- Prefer TypeScript strict mode
-- Use ES6+ features and modern JavaScript patterns
-- Follow the existing TanStack conventions from the template
-- Keep components small and focused
-- Use meaningful variable and function names
-
-## File Organization
-
-- Routes go in `src/routes/` (file-based routing)
-- API routes in `src/routes/api/`
-- Components in `src/components/`
-- tRPC routers in `src/server/routers/`
-- Database setup in `src/lib/prisma.ts`
-- tRPC client setup in `src/lib/trpc-client.ts`
-- Utilities in `src/utils/`
-- Types in `src/types/`
-- Database schema in `prisma/schema.prisma`
-
-## Development Workflow
-
-- Always run linting/formatting after changes: `npm run check`
-- Run tests before committing: `npm run test`
-- Use `npm run dev` for development server
-
-## Refactoring Guidelines
-
-- Prioritize cleaning up and modernizing existing code
-- Remove any demo/template files that aren't needed
-- Migrate older patterns to modern React/TanStack approaches
-- Ensure all code is TypeScript compliant
-- Focus on maintainability and readability
-
-## Commands to Remember
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run test         # Run tests
-npm run lint         # Run ESLint
-npm run format       # Run Prettier
-npm run check        # Format + lint fix
-
-# Database commands
-npx prisma dev       # Start local Prisma Postgres server
-npx prisma generate  # Generate Prisma client
-npx prisma migrate dev # Run database migrations
-npx prisma studio    # Open Prisma Studio (database GUI)
+### Project Structure
+```
+src/
+├── app/                     # App configuration & root providers
+│   ├── router.tsx          # Router configuration
+│   └── providers.tsx       # Context providers setup
+├── components/             # Reusable UI components
+│   ├── ui/                 # Base design system components
+│   └── forms/              # Form-specific components
+├── features/              # Domain-specific feature modules
+│   ├── crews/             # Crew management
+│   ├── clubs/             # Club presets
+│   ├── gallery/           # Image gallery
+│   └── auth/              # Authentication
+├── lib/                   # Shared utilities & integrations
+│   ├── db.ts              # Prisma client
+│   ├── trpc.ts            # tRPC client setup
+│   └── utils.ts           # Helper functions
+├── server/                # Backend API & server functions
+│   ├── routers/           # tRPC routers
+│   └── middleware/        # Server middleware
+├── styles/                # Organized styling
+│   ├── globals.css        # Base styles
+│   └── components.css     # Component-specific styles
+└── types/                 # TypeScript definitions
 ```
 
-## Application Features
+## 📋 Development Guidelines
 
-- **Crew Management**: Create/edit/delete rowing crews with detailed information
-- **Club Presets**: Manage club configurations with custom branding colors
-- **Image Generation**: Generate custom crew images using various templates
-- **Gallery**: View, download, and manage generated images
-- **Template System**: Multiple design templates (classic, modern, minimal, elegant)
+### Code Style & Conventions
+- **TypeScript**: Strict mode enabled, prefer explicit types
+- **Components**: Functional components with hooks only
+- **File Naming**: kebab-case for files, PascalCase for components
+- **Import Order**: External → Internal → Relative imports
+- **Error Handling**: Proper error boundaries and loading states
 
-## Database Schema
-
-Current models (fully implemented):
-
-- **User**: User accounts (id, email, name, preferences, timestamps)
-- **Club**: Club presets (id, name, primaryColor, secondaryColor, logoUrl, userId)
-- **BoatType**: Standard rowing boat types (id, name, code, seats, category)
-- **Crew**: Rowing crew details (id, name, crewNames[], boatTypeId, clubId, raceName, etc.)
-- **Template**: Image generation templates (id, name, templateType, previewUrl, metadata)
-- **SavedImage**: Generated image records (id, filename, imageUrl, crewId, templateId, userId)
-
-## tRPC Usage Examples
-
-```typescript
-// In components, use the trpc hooks:
-const { data: crews } = trpc.crew.getAll.useQuery()
-const { data: clubs } = trpc.club.getAll.useQuery()
-const { data: templates } = trpc.template.getAll.useQuery()
-
-const createCrew = trpc.crew.create.useMutation()
-const generateImage = trpc.savedImage.generate.useMutation()
-
-// Type-safe API calls with full autocomplete
-await createCrew.mutateAsync({
-  name: 'Oxford Blue Boat',
-  crewNames: ['John Smith', 'Jane Doe', ...],
-  boatTypeId: 'eight-plus-id',
-  clubId: 'oxford-id',
-  raceName: 'The Boat Race',
-  userId: 'user-id',
-})
-
-await generateImage.mutateAsync({
-  crewId: 'crew-id',
-  templateId: 'template-id',
-  userId: 'user-id',
-})
-```
-
-## Git & Version Control
-
-This is a local git repository with remote connected to GitHub. Current synchronization setup:
-
+### Git Workflow
 ```bash
-# Repository is already connected to:
-# https://github.com/ToddMS/crew-image-creator
-
-# To push changes:
+# Feature development
+git checkout -b feature/crew-management
 git add .
-git commit -m "Your commit message"
-git push origin master
+git commit -m "feat: add crew management functionality"
+git push origin feature/crew-management
 
-# To pull latest changes:
-git pull origin master
+# Production deployment
+git checkout main
+git pull origin main
+git push origin main  # Triggers deployment
 ```
 
-## Current Application Status
+## 🔧 Configuration Files
 
-✅ **Fully Implemented Features:**
+### Environment Variables
+Create `.env.local` for development:
+```env
+# Database
+DATABASE_URL="postgresql://user:pass@localhost:5432/rowgram"
 
-- **Crew Management**: Complete CRUD operations for rowing crews
-- **Club Management**: Full club preset system with color customization
-- **Image Generation**: Template-based image generation with crew data
-- **Gallery**: Generated image viewing, downloading, and management
-- **Navigation**: Clean responsive navigation between all features
-- **Database**: Complete PostgreSQL schema with all relationships
-- **API Layer**: Type-safe tRPC endpoints for all operations
+# Auth
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
 
-✅ **Complete Database Schema:**
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+```
 
-- **User**: User accounts and preferences
-- **Club**: Club presets with branding colors (primaryColor, secondaryColor, logoUrl)
-- **BoatType**: Standard rowing boat configurations (1x, 2x, 4x, 8+, etc.)
-- **Crew**: Rowing crew details with member names, boat types, club associations
-- **Template**: Image generation templates with different styles
-- **SavedImage**: Generated image records with metadata
+For production, use `.env.production`:
+```env
+DATABASE_URL="your-production-db-url"
+NEXTAUTH_URL="https://yourdomain.com"
+```
 
-✅ **API Endpoints (via tRPC):**
+## 🎯 Feature Development Patterns
 
-- `user.*` - User management operations
-- `club.*` - Club preset CRUD operations
-- `crew.*` - Crew management with full details
-- `boatType.*` - Boat type queries
-- `template.*` - Template selection and metadata
-- `savedImage.*` - Image generation and management
+### Adding a New Feature
+1. Create feature directory in `src/features/`
+2. Implement tRPC router in `src/server/routers/`
+3. Create UI components in feature directory
+4. Add routes in `src/routes/`
+5. Write tests and documentation
 
-✅ **Complete Page Structure:**
+### tRPC API Pattern
+```typescript
+// server/routers/crew.ts
+export const crewRouter = createTRPCRouter({
+  create: protectedProcedure
+    .input(createCrewSchema)
+    .mutation(async ({ input, ctx }) => {
+      return await ctx.db.crew.create({
+        data: { ...input, userId: ctx.user.id },
+      })
+    }),
 
-- `/` - Homepage with feature overview
-- `/crews` - Crew management interface with forms
-- `/clubs` - Club management with color pickers
-- `/generate` - Image generation with crew/template selection
-- `/gallery` - Generated image gallery with download/delete
+  getAll: protectedProcedure
+    .query(async ({ ctx }) => {
+      return await ctx.db.crew.findMany({
+        where: { userId: ctx.user.id },
+        include: { boatType: true, club: true },
+      })
+    }),
+})
+```
 
-✅ **Core Components:**
+### Component Pattern
+```typescript
+// components/CrewForm.tsx
+interface CrewFormProps {
+  crew?: Crew
+  onSuccess: () => void
+}
 
-- `CrewForm.tsx` - Dynamic crew creation/editing with boat type adaptation
-- `TemplateSelector.tsx` - Template browsing with previews
-- `ImageGallery.tsx` - Gallery with modal details and actions
-- `Navigation.tsx` - Responsive navigation with active states
+export function CrewForm({ crew, onSuccess }: CrewFormProps) {
+  const createCrew = trpc.crew.create.useMutation()
 
-✅ **Technical Implementation:**
+  const handleSubmit = async (data: CrewFormData) => {
+    try {
+      await createCrew.mutateAsync(data)
+      onSuccess()
+    } catch (error) {
+      // Handle error
+    }
+  }
 
-- Type-safe end-to-end development with TypeScript + tRPC
-- Real-time form validation with Zod schemas
-- Responsive design with Tailwind CSS
-- Proper error handling and loading states
-- Color picker inputs for club branding
-- Dynamic boat position management based on boat types
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form implementation */}
+    </form>
+  )
+}
+```
 
-⚠️ **Background Processes:**
+## 🚀 Production Deployment
 
-- Prisma Postgres server running locally (`npx prisma dev`)
-- Development server with HMR (`npm run dev`)
-- All services fully operational
+### Hosting Options
+- **Recommended**: Vercel (Zero-config deployment)
+- **Alternative**: Netlify, Railway, Docker
 
-🎯 **Application Ready:**
+### Deployment Checklist
+- [ ] Environment variables configured
+- [ ] Database migrations applied
+- [ ] Build succeeds (`npm run build`)
+- [ ] Tests pass (`npm run test`)
+- [ ] Type checking passes (`npm run typecheck`)
+- [ ] Performance optimized
+- [ ] Error monitoring configured
 
-- All major features implemented and working
-- Full type safety across the entire stack
-- Production-ready code architecture
-- Comprehensive documentation in README.md
-- Ready for deployment or further feature development
+### Performance Optimization
+- Route-based code splitting (automatic)
+- Image optimization with Next/Image
+- Database query optimization
+- Caching strategies with TanStack Query
+- Bundle analysis with `npm run analyze`
 
-## Development Notes
+## 📊 Database Schema
 
-- Application successfully refactored to modern TanStack technologies
-- All legacy code patterns replaced with current best practices
-- Database schema optimized for rowing-specific use cases
-- Image generation currently uses placeholder service (can be replaced with real image generation)
-- All tRPC integrations working correctly with proper error handling
+### Core Models
+- **User**: Authentication & user data
+- **Club**: Club presets with branding
+- **Crew**: Rowing crew information
+- **BoatType**: Boat configurations (1x, 2x, 4x, 8+, etc.)
+- **Template**: Image generation templates
+- **SavedImage**: Generated image records
+
+### Relationships
+```prisma
+// Key relationships
+User -> Crews (one-to-many)
+User -> Clubs (one-to-many)
+Crew -> Club (many-to-one, optional)
+Crew -> BoatType (many-to-one)
+Crew -> SavedImages (one-to-many)
+```
+
+## 🛡️ Security & Best Practices
+
+### Authentication
+- Session-based auth with NextAuth.js
+- Protected routes with middleware
+- CSRF protection enabled
+- Secure cookie configuration
+
+### Data Validation
+- Input validation with Zod schemas
+- Server-side validation for all endpoints
+- Sanitization of user inputs
+- Rate limiting on API routes
+
+### Error Handling
+- Global error boundary
+- Graceful fallbacks for failed requests
+- User-friendly error messages
+- Error logging and monitoring
+
+## 🔍 Debugging & Monitoring
+
+### Development Tools
+- TanStack Query Devtools (data fetching)
+- TanStack Router Devtools (routing)
+- Prisma Studio (database)
+- React DevTools
+- Network debugging
+
+### Production Monitoring
+- Error tracking (Sentry recommended)
+- Performance monitoring
+- Database query monitoring
+- User analytics
+
+## 📚 Key Dependencies
+
+### Core Framework
+- `@tanstack/react-start`: Full-stack React framework
+- `@tanstack/react-router`: Type-safe routing
+- `@tanstack/react-query`: Data fetching & caching
+- `@trpc/server` + `@trpc/client`: End-to-end type safety
+
+### Database & Auth
+- `prisma`: Database ORM
+- `@auth/prisma-adapter`: Auth integration
+- `@prisma/client`: Database client
+
+### UI & Styling
+- `react` + `react-dom`: React 19
+- `tailwindcss`: Utility-first CSS
+- `lucide-react`: Icon library
+
+### Development
+- `typescript`: Type checking
+- `eslint` + `prettier`: Code quality
+- `vitest`: Testing framework
+
+## 🎨 Design System
+
+### Colors
+- Primary: Blue (#3B82F6)
+- Secondary: Slate (#64748B)
+- Success: Green (#10B981)
+- Warning: Yellow (#F59E0B)
+- Error: Red (#EF4444)
+
+### Typography
+- Font: Inter (system font fallback)
+- Headings: font-semibold to font-bold
+- Body: font-normal
+- Captions: font-medium
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow code style guidelines
+4. Add tests for new functionality
+5. Ensure all checks pass
+6. Submit pull request
+
+## 📞 Support
+
+- **Issues**: GitHub Issues
+- **Questions**: GitHub Discussions
+- **Documentation**: `/docs` directory
+
+---
+
+> **🎯 Goal**: Create professional rowing crew images with modern web technologies
+>
+> **🏁 Status**: Production-ready with comprehensive feature set

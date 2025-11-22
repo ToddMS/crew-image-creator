@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { ImageUpload } from '../components/ImageUpload'
-import { useAuth } from './__root'
+import { useAuth } from '../lib/auth-context'
 import '../dashboard.css'
 import './clubs.css'
 
@@ -34,17 +34,26 @@ function ClubsPage() {
     logoUrl: '',
   })
   const [editForm, setEditForm] = useState<{ [key: string]: ClubFormData }>({})
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null,
+  )
   const [searchTerm, setSearchTerm] = useState('')
   const newLogoInputRef = useRef<HTMLInputElement>(null)
-  const editLogoInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+  const editLogoInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>(
+    {},
+  )
 
   const { data: clubs = [], isLoading, refetch } = trpc.club.getAll.useQuery()
 
   const createMutation = trpc.club.create.useMutation({
     onSuccess: () => {
       setIsCreatingNew(false)
-      setNewClubForm({ name: '', primaryColor: '#2563eb', secondaryColor: '#1e40af', logoUrl: '' })
+      setNewClubForm({
+        name: '',
+        primaryColor: '#2563eb',
+        secondaryColor: '#1e40af',
+        logoUrl: '',
+      })
       refetch()
     },
     onError: (error) => {
@@ -107,7 +116,11 @@ function ClubsPage() {
     })
   }
 
-  const handleEditFormChange = (clubId: string, field: string, value: string) => {
+  const handleEditFormChange = (
+    clubId: string,
+    field: string,
+    value: string,
+  ) => {
     setEditForm({
       ...editForm,
       [clubId]: {
@@ -190,7 +203,9 @@ function ClubsPage() {
         handleNewClubChange('logoUrl', result.logoUrl)
       }
     } catch (error) {
-      alert(`Failed to upload logo: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(
+        `Failed to upload logo: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
     }
   }
 
@@ -202,7 +217,10 @@ function ClubsPage() {
     }
   }
 
-  const handleLogoFileSelect = async (event: React.ChangeEvent<HTMLInputElement>, clubId?: string) => {
+  const handleLogoFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    clubId?: string,
+  ) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -288,7 +306,10 @@ function ClubsPage() {
                 <>
                   <h3>No clubs found</h3>
                   <p>No clubs match "{searchTerm}"</p>
-                  <button className="btn btn-secondary" onClick={() => setSearchTerm('')}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setSearchTerm('')}
+                  >
                     Clear Search
                   </button>
                 </>
@@ -309,7 +330,11 @@ function ClubsPage() {
                   <div className="preset-header">
                     <div
                       className={`logo-section editable ${newClubForm.logoUrl ? 'has-logo' : 'empty'}`}
-                      onClick={() => newClubForm.logoUrl ? handleLogoRemove() : handleLogoClick()}
+                      onClick={() =>
+                        newClubForm.logoUrl
+                          ? handleLogoRemove()
+                          : handleLogoClick()
+                      }
                     >
                       {newClubForm.logoUrl ? (
                         <img src={newClubForm.logoUrl} alt="Club logo" />
@@ -323,7 +348,9 @@ function ClubsPage() {
                         className="preset-name-input"
                         placeholder="Enter club name"
                         value={newClubForm.name}
-                        onChange={(e) => handleNewClubChange('name', e.target.value)}
+                        onChange={(e) =>
+                          handleNewClubChange('name', e.target.value)
+                        }
                         style={{ width: '100%', paddingLeft: '0.5rem' }}
                       />
                     </div>
@@ -342,13 +369,17 @@ function ClubsPage() {
                         type="color"
                         className="preset-color-picker"
                         value={newClubForm.primaryColor}
-                        onChange={(e) => handleNewClubChange('primaryColor', e.target.value)}
+                        onChange={(e) =>
+                          handleNewClubChange('primaryColor', e.target.value)
+                        }
                       />
                       <input
                         type="text"
                         className="preset-color-hex-input"
                         value={newClubForm.primaryColor}
-                        onChange={(e) => handleNewClubChange('primaryColor', e.target.value)}
+                        onChange={(e) =>
+                          handleNewClubChange('primaryColor', e.target.value)
+                        }
                       />
                     </div>
                     <div className="preset-color-group">
@@ -357,13 +388,17 @@ function ClubsPage() {
                         type="color"
                         className="preset-color-picker"
                         value={newClubForm.secondaryColor}
-                        onChange={(e) => handleNewClubChange('secondaryColor', e.target.value)}
+                        onChange={(e) =>
+                          handleNewClubChange('secondaryColor', e.target.value)
+                        }
                       />
                       <input
                         type="text"
                         className="preset-color-hex-input"
                         value={newClubForm.secondaryColor}
-                        onChange={(e) => handleNewClubChange('secondaryColor', e.target.value)}
+                        onChange={(e) =>
+                          handleNewClubChange('secondaryColor', e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -371,7 +406,10 @@ function ClubsPage() {
                     <button className="preset-btn" onClick={cancelNewClub}>
                       Cancel
                     </button>
-                    <button className="preset-btn primary" onClick={saveNewClub}>
+                    <button
+                      className="preset-btn primary"
+                      onClick={saveNewClub}
+                    >
                       Save
                     </button>
                   </div>
@@ -389,12 +427,24 @@ function ClubsPage() {
                     <div className="preset-header">
                       <div
                         className={`logo-section ${isEditing ? 'editable' : ''} ${(isEditing ? editData.logoUrl : club.logoUrl) ? 'has-logo' : 'empty'}`}
-                        onClick={isEditing ? () => editData.logoUrl ? handleLogoRemove(club.id) : handleLogoClick(club.id) : undefined}
+                        onClick={
+                          isEditing
+                            ? () =>
+                                editData.logoUrl
+                                  ? handleLogoRemove(club.id)
+                                  : handleLogoClick(club.id)
+                            : undefined
+                        }
                       >
                         {(isEditing ? editData.logoUrl : club.logoUrl) ? (
-                          <img src={isEditing ? editData.logoUrl : club.logoUrl} alt={`${club.name} logo`} />
+                          <img
+                            src={isEditing ? editData.logoUrl : club.logoUrl}
+                            alt={`${club.name} logo`}
+                          />
+                        ) : isEditing ? (
+                          '+'
                         ) : (
-                          isEditing ? '+' : ''
+                          ''
                         )}
                       </div>
                       <div className="name-section">
@@ -404,14 +454,16 @@ function ClubsPage() {
                             className="preset-name-input"
                             value={editData.name}
                             onChange={(e) =>
-                              handleEditFormChange(club.id, 'name', e.target.value)
+                              handleEditFormChange(
+                                club.id,
+                                'name',
+                                e.target.value,
+                              )
                             }
                             style={{ width: '100%', paddingLeft: '0.5rem' }}
                           />
                         ) : (
-                          <h3 className="preset-name">
-                            {club.name}
-                          </h3>
+                          <h3 className="preset-name">{club.name}</h3>
                         )}
                       </div>
                       {isEditing && (
@@ -436,7 +488,11 @@ function ClubsPage() {
                               className="preset-color-picker"
                               value={editData.primaryColor}
                               onChange={(e) =>
-                                handleEditFormChange(club.id, 'primaryColor', e.target.value)
+                                handleEditFormChange(
+                                  club.id,
+                                  'primaryColor',
+                                  e.target.value,
+                                )
                               }
                             />
                             <input
@@ -444,7 +500,11 @@ function ClubsPage() {
                               className="preset-color-hex-input"
                               value={editData.primaryColor}
                               onChange={(e) =>
-                                handleEditFormChange(club.id, 'primaryColor', e.target.value)
+                                handleEditFormChange(
+                                  club.id,
+                                  'primaryColor',
+                                  e.target.value,
+                                )
                               }
                             />
                           </>
@@ -454,7 +514,9 @@ function ClubsPage() {
                               className="preset-color-swatch"
                               style={{ background: club.primaryColor }}
                             ></div>
-                            <div className="preset-color-hex">{club.primaryColor}</div>
+                            <div className="preset-color-hex">
+                              {club.primaryColor}
+                            </div>
                           </>
                         )}
                       </div>
@@ -467,7 +529,11 @@ function ClubsPage() {
                               className="preset-color-picker"
                               value={editData.secondaryColor}
                               onChange={(e) =>
-                                handleEditFormChange(club.id, 'secondaryColor', e.target.value)
+                                handleEditFormChange(
+                                  club.id,
+                                  'secondaryColor',
+                                  e.target.value,
+                                )
                               }
                             />
                             <input
@@ -475,7 +541,11 @@ function ClubsPage() {
                               className="preset-color-hex-input"
                               value={editData.secondaryColor}
                               onChange={(e) =>
-                                handleEditFormChange(club.id, 'secondaryColor', e.target.value)
+                                handleEditFormChange(
+                                  club.id,
+                                  'secondaryColor',
+                                  e.target.value,
+                                )
                               }
                             />
                           </>
@@ -485,7 +555,9 @@ function ClubsPage() {
                               className="preset-color-swatch"
                               style={{ background: club.secondaryColor }}
                             ></div>
-                            <div className="preset-color-hex">{club.secondaryColor}</div>
+                            <div className="preset-color-hex">
+                              {club.secondaryColor}
+                            </div>
                           </>
                         )}
                       </div>
@@ -536,12 +608,21 @@ function ClubsPage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Delete Club</h3>
-            <p>Are you sure you want to delete this club? This action cannot be undone.</p>
+            <p>
+              Are you sure you want to delete this club? This action cannot be
+              undone.
+            </p>
             <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setShowDeleteConfirm(null)}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowDeleteConfirm(null)}
+              >
                 Cancel
               </button>
-              <button className="btn btn-danger" onClick={() => handleDelete(showDeleteConfirm)}>
+              <button
+                className="btn btn-danger"
+                onClick={() => handleDelete(showDeleteConfirm)}
+              >
                 Delete
               </button>
             </div>

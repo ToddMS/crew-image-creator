@@ -4,16 +4,86 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 
-const config = defineConfig({
+const config = defineConfig(({ mode }) => ({
   plugins: [
-    // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
     tanstackStart(),
-    viteReact(),
+    viteReact({
+      // Enable React DevTools in development
+      include: '**/*.{jsx,tsx}',
+    }),
   ],
-})
+
+  // Environment variable prefix
+  envPrefix: ['VITE_', 'DATABASE_URL', 'NEXTAUTH_'],
+
+  // Development server configuration
+  server: {
+    port: 3000,
+    host: true,
+    hmr: {
+      overlay: true,
+    },
+  },
+
+  // Preview server configuration
+  preview: {
+    port: 3001,
+    host: true,
+  },
+
+  // Build configuration
+  build: {
+    target: 'esnext',
+    sourcemap: mode === 'development',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production',
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          trpc: ['@trpc/client', '@trpc/server', '@trpc/react-query'],
+          tanstack: [
+            '@tanstack/react-query',
+            '@tanstack/react-router',
+            '@tanstack/react-start',
+          ],
+          utils: ['zod', 'clsx', 'tailwind-merge'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
+
+  // Optimization
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      '@tanstack/react-query',
+      '@tanstack/react-router',
+      '@trpc/client',
+      '@trpc/react-query',
+      'zod',
+      'clsx',
+      'tailwind-merge',
+    ],
+    exclude: ['@prisma/client'],
+  },
+
+  // SSR configuration
+  ssr: {
+    external: ['@prisma/client'],
+    noExternal: [],
+  },
+}))
 
 export default config

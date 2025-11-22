@@ -34,6 +34,7 @@ A modern full-stack web application for generating custom rowing crew images wit
 ### Installation
 
 1. **Clone and install dependencies:**
+
    ```bash
    git clone <repository-url>
    cd crew-image-creator
@@ -41,11 +42,13 @@ A modern full-stack web application for generating custom rowing crew images wit
    ```
 
 2. **Start the database:**
+
    ```bash
    npx prisma dev
    ```
 
 3. **Run the development server:**
+
    ```bash
    npm run dev
    ```
@@ -97,22 +100,26 @@ The application uses a PostgreSQL database with the following main entities:
 ## 🎮 Usage Guide
 
 ### 1. Create Club Presets (Optional)
+
 - Visit `/clubs` to create reusable club configurations
 - Set custom primary and secondary colors
 - Add club logos and branding information
 
 ### 2. Manage Crews
+
 - Visit `/crews` to create and manage your rowing crews
 - Add crew member names, boat types, race information
 - Link crews to club presets for consistent branding
 
 ### 3. Generate Images
+
 - Visit `/generate` to create custom crew images
 - Select a crew and template style
 - Preview the configuration before generating
 - Download the generated image
 
 ### 4. View Gallery
+
 - Visit `/gallery` to see all generated images
 - Download, view details, or delete images
 - Filter and search through your image collection

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import './gallery.css'
 
@@ -45,9 +45,11 @@ function GalleryPage() {
   // Mock user for now - in production this would come from auth context
   const user = { name: 'Demo User' }
 
-  const [filteredImages, setFilteredImages] = useState<SavedImage[]>([])
+  const [filteredImages, setFilteredImages] = useState<Array<SavedImage>>([])
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set())
-  const [fullscreenImage, setFullscreenImage] = useState<SavedImage | null>(null)
+  const [fullscreenImage, setFullscreenImage] = useState<SavedImage | null>(
+    null,
+  )
   const [searchQuery, setSearchQuery] = useState('')
 
   const {
@@ -76,13 +78,14 @@ function GalleryPage() {
         (image) =>
           image.crew?.name.toLowerCase().includes(query) ||
           image.template?.name?.toLowerCase().includes(query) ||
-          image.crew?.id.toLowerCase().includes(query)
+          image.crew?.id.toLowerCase().includes(query),
       )
     }
 
     // Sort by most recent first
     filtered = filtered.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
 
     setFilteredImages(filtered)
@@ -129,7 +132,9 @@ function GalleryPage() {
   }
 
   const handleBatchDownload = async () => {
-    const selectedImagesList = savedImages.filter((img) => selectedImages.has(img.id))
+    const selectedImagesList = savedImages.filter((img) =>
+      selectedImages.has(img.id),
+    )
     for (const image of selectedImagesList) {
       await handleDownload(image)
       await new Promise((resolve) => setTimeout(resolve, 500)) // Small delay between downloads
@@ -139,7 +144,7 @@ function GalleryPage() {
 
   const handleDeleteImage = async (image: SavedImage) => {
     const isConfirmed = window.confirm(
-      `Are you sure you want to delete "${image.crew?.name || 'this image'}"?\n\nThis action cannot be undone.`
+      `Are you sure you want to delete "${image.crew?.name || 'this image'}"?\n\nThis action cannot be undone.`,
     )
 
     if (!isConfirmed) {
@@ -155,7 +160,9 @@ function GalleryPage() {
 
   const handleBatchDelete = async () => {
     if (selectedImages.size === 0) return
-    const selectedImagesList = savedImages.filter((img) => selectedImages.has(img.id))
+    const selectedImagesList = savedImages.filter((img) =>
+      selectedImages.has(img.id),
+    )
     if (selectedImagesList.length > 0) {
       const confirmMessage = `Are you sure you want to delete ${selectedImagesList.length} images? This action cannot be undone.`
       if (window.confirm(confirmMessage)) {
@@ -233,7 +240,10 @@ function GalleryPage() {
           <div className="gallery-actions">
             {selectedImages.size > 0 && (
               <>
-                <button className="btn btn-secondary" onClick={handleBatchDownload}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleBatchDownload}
+                >
                   Download Selected ({selectedImages.size})
                 </button>
                 <button className="btn btn-danger" onClick={handleBatchDelete}>
@@ -243,7 +253,9 @@ function GalleryPage() {
             )}
 
             <button className="btn btn-secondary" onClick={handleSelectAll}>
-              {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
+              {selectedImages.size === filteredImages.length
+                ? 'Deselect All'
+                : 'Select All'}
             </button>
 
             <a href="/generate" className="btn btn-primary">
@@ -256,7 +268,10 @@ function GalleryPage() {
         {filteredImages.length === 0 ? (
           <div className="empty-state">
             <h2>No Images Yet</h2>
-            <p>Start creating beautiful crew images by generating your first image</p>
+            <p>
+              Start creating beautiful crew images by generating your first
+              image
+            </p>
             <a href="/generate" className="btn btn-primary">
               🎨 Generate Your First Image
             </a>
@@ -291,9 +306,12 @@ function GalleryPage() {
                 </div>
 
                 <div className="image-info">
-                  <div className="image-title">{image.crew?.name || 'Unknown Crew'}</div>
+                  <div className="image-title">
+                    {image.crew?.name || 'Unknown Crew'}
+                  </div>
                   <div className="image-subtitle">
-                    {image.template?.name || 'Unknown Template'} • {image.crew?.boatType?.code || 'Unknown Boat'}
+                    {image.template?.name || 'Unknown Template'} •{' '}
+                    {image.crew?.boatType?.code || 'Unknown Boat'}
                   </div>
                   {image.crew?.club && (
                     <div className="club-colors">
@@ -301,11 +319,15 @@ function GalleryPage() {
                       <div className="color-swatches">
                         <div
                           className="color-swatch"
-                          style={{ backgroundColor: image.crew.club.primaryColor }}
+                          style={{
+                            backgroundColor: image.crew.club.primaryColor,
+                          }}
                         />
                         <div
                           className="color-swatch"
-                          style={{ backgroundColor: image.crew.club.secondaryColor }}
+                          style={{
+                            backgroundColor: image.crew.club.secondaryColor,
+                          }}
                         />
                       </div>
                     </div>
@@ -350,11 +372,19 @@ function GalleryPage() {
 
         {/* Fullscreen Modal */}
         {fullscreenImage && (
-          <div className="modal-overlay" onClick={() => setFullscreenImage(null)}>
+          <div
+            className="modal-overlay"
+            onClick={() => setFullscreenImage(null)}
+          >
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <div className="modal-title">{fullscreenImage.crew?.name || 'Image Preview'}</div>
-                <button className="modal-close" onClick={() => setFullscreenImage(null)}>
+                <div className="modal-title">
+                  {fullscreenImage.crew?.name || 'Image Preview'}
+                </div>
+                <button
+                  className="modal-close"
+                  onClick={() => setFullscreenImage(null)}
+                >
                   ×
                 </button>
               </div>
@@ -371,17 +401,22 @@ function GalleryPage() {
                     <div className="detail-grid">
                       <div className="detail-item">
                         <span className="detail-label">Name:</span>
-                        <span className="detail-value">{fullscreenImage.crew?.name || 'Unknown'}</span>
+                        <span className="detail-value">
+                          {fullscreenImage.crew?.name || 'Unknown'}
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Boat:</span>
                         <span className="detail-value">
-                          {fullscreenImage.crew?.boatType?.name} ({fullscreenImage.crew?.boatType?.code})
+                          {fullscreenImage.crew?.boatType?.name} (
+                          {fullscreenImage.crew?.boatType?.code})
                         </span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Race:</span>
-                        <span className="detail-value">{fullscreenImage.crew?.raceName || 'Not specified'}</span>
+                        <span className="detail-value">
+                          {fullscreenImage.crew?.raceName || 'Not specified'}
+                        </span>
                       </div>
                       {fullscreenImage.crew?.club && (
                         <div className="detail-item">
@@ -391,11 +426,17 @@ function GalleryPage() {
                             <div className="color-swatches inline">
                               <div
                                 className="color-swatch"
-                                style={{ backgroundColor: fullscreenImage.crew.club.primaryColor }}
+                                style={{
+                                  backgroundColor:
+                                    fullscreenImage.crew.club.primaryColor,
+                                }}
                               />
                               <div
                                 className="color-swatch"
-                                style={{ backgroundColor: fullscreenImage.crew.club.secondaryColor }}
+                                style={{
+                                  backgroundColor:
+                                    fullscreenImage.crew.club.secondaryColor,
+                                }}
                               />
                             </div>
                           </span>
@@ -409,11 +450,15 @@ function GalleryPage() {
                     <div className="detail-grid">
                       <div className="detail-item">
                         <span className="detail-label">Name:</span>
-                        <span className="detail-value">{fullscreenImage.template?.name}</span>
+                        <span className="detail-value">
+                          {fullscreenImage.template?.name}
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Type:</span>
-                        <span className="detail-value">{fullscreenImage.template?.templateType}</span>
+                        <span className="detail-value">
+                          {fullscreenImage.template?.templateType}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -423,25 +468,33 @@ function GalleryPage() {
                     <div className="detail-grid">
                       <div className="detail-item">
                         <span className="detail-label">Filename:</span>
-                        <span className="detail-value">{fullscreenImage.filename}</span>
+                        <span className="detail-value">
+                          {fullscreenImage.filename}
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Created:</span>
-                        <span className="detail-value">{new Date(fullscreenImage.createdAt).toLocaleString()}</span>
+                        <span className="detail-value">
+                          {new Date(fullscreenImage.createdAt).toLocaleString()}
+                        </span>
                       </div>
-                      {fullscreenImage.metadata?.width && fullscreenImage.metadata?.height && (
-                        <div className="detail-item">
-                          <span className="detail-label">Dimensions:</span>
-                          <span className="detail-value">
-                            {fullscreenImage.metadata.width} × {fullscreenImage.metadata.height}
-                          </span>
-                        </div>
-                      )}
+                      {fullscreenImage.metadata?.width &&
+                        fullscreenImage.metadata?.height && (
+                          <div className="detail-item">
+                            <span className="detail-label">Dimensions:</span>
+                            <span className="detail-value">
+                              {fullscreenImage.metadata.width} ×{' '}
+                              {fullscreenImage.metadata.height}
+                            </span>
+                          </div>
+                        )}
                       {fullscreenImage.metadata?.generatedAt && (
                         <div className="detail-item">
                           <span className="detail-label">Generated:</span>
                           <span className="detail-value">
-                            {new Date(fullscreenImage.metadata.generatedAt).toLocaleString()}
+                            {new Date(
+                              fullscreenImage.metadata.generatedAt,
+                            ).toLocaleString()}
                           </span>
                         </div>
                       )}
@@ -458,7 +511,10 @@ function GalleryPage() {
                             {fullscreenImage.metadata.colors.primaryColor}
                             <div
                               className="color-swatch"
-                              style={{ backgroundColor: fullscreenImage.metadata.colors.primaryColor }}
+                              style={{
+                                backgroundColor:
+                                  fullscreenImage.metadata.colors.primaryColor,
+                              }}
                             />
                           </span>
                         </div>
@@ -468,7 +524,11 @@ function GalleryPage() {
                             {fullscreenImage.metadata.colors.secondaryColor}
                             <div
                               className="color-swatch"
-                              style={{ backgroundColor: fullscreenImage.metadata.colors.secondaryColor }}
+                              style={{
+                                backgroundColor:
+                                  fullscreenImage.metadata.colors
+                                    .secondaryColor,
+                              }}
                             />
                           </span>
                         </div>

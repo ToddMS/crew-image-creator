@@ -1,6 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { useAuth } from '../routes/__root'
 import { useState } from 'react'
+import { useAuth } from '../lib/auth-context'
 
 const navItems = [
   { href: '/', label: 'Dashboard', key: 'dashboard' },
@@ -13,7 +13,7 @@ const navItems = [
 export function Navigation() {
   const router = useRouterState()
   const currentPath = router.location.pathname
-  const { user, setUser, showAuthModal, setShowAuthModal } = useAuth()
+  const { user, setUser, showAuthModal, setShowAuthModal, isLoading } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
 
   const isActiveRoute = (href: string) => {
@@ -51,7 +51,11 @@ export function Navigation() {
 
         {/* User Actions */}
         <div className="nav-actions">
-          {user ? (
+          {isLoading ? (
+            <div style={{ width: '120px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '20px', height: '20px', border: '2px solid #e5e7eb', borderTop: '2px solid #2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            </div>
+          ) : user ? (
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
@@ -66,11 +70,18 @@ export function Navigation() {
                   borderRadius: '50px',
                   transition: 'background-color 0.2s',
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                onMouseEnter={(e) =>
+                  (e.target.style.backgroundColor = '#f3f4f6')
+                }
+                onMouseLeave={(e) =>
+                  (e.target.style.backgroundColor = 'transparent')
+                }
               >
                 <img
-                  src={user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2563eb&color=fff`}
+                  src={
+                    user.picture ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2563eb&color=fff`
+                  }
                   alt={user.name}
                   style={{
                     width: '32px',
@@ -79,7 +90,13 @@ export function Navigation() {
                     objectFit: 'cover',
                   }}
                 />
-                <span style={{ fontSize: '0.875rem', color: '#374151', fontWeight: '500' }}>
+                <span
+                  style={{
+                    fontSize: '0.875rem',
+                    color: '#374151',
+                    fontWeight: '500',
+                  }}
+                >
                   {user.name}
                 </span>
                 <svg
@@ -130,8 +147,19 @@ export function Navigation() {
                       overflow: 'hidden',
                     }}
                   >
-                    <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb' }}>
-                      <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+                    <div
+                      style={{
+                        padding: '0.75rem 1rem',
+                        borderBottom: '1px solid #e5e7eb',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          color: '#111827',
+                        }}
+                      >
                         {user.name}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
@@ -152,8 +180,12 @@ export function Navigation() {
                         cursor: 'pointer',
                         transition: 'background-color 0.2s',
                       }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#fef2f2'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                      onMouseEnter={(e) =>
+                        (e.target.style.backgroundColor = '#fef2f2')
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.style.backgroundColor = 'transparent')
+                      }
                     >
                       Sign Out
                     </button>
@@ -171,7 +203,6 @@ export function Navigation() {
           )}
         </div>
       </div>
-
     </nav>
   )
 }

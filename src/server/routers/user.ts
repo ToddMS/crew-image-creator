@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { publicProcedure, router } from '../../lib/trpc'
 import { prisma } from '../../lib/prisma'
+import bcrypt from 'bcryptjs'
 
 export const userRouter = router({
   getAll: publicProcedure.query(async () => {
@@ -81,7 +82,6 @@ export const userRouter = router({
       }
 
       // Hash password
-      const bcrypt = require('bcryptjs')
       const hashedPassword = await bcrypt.hash(input.password, 12)
 
       // Create user
@@ -92,6 +92,35 @@ export const userRouter = router({
           password: hashedPassword,
         },
       })
+
+      // Return user without password
+      const { password, ...userWithoutPassword } = user
+      return userWithoutPassword
+    }),
+
+  signin: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email('Invalid email'),
+        password: z.string().min(1, 'Password is required'),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      // Find user by email
+      const user = await prisma.user.findUnique({
+        where: { email: input.email },
+      })
+
+      if (!user || !user.password) {
+        throw new Error('Invalid email or password')
+      }
+
+      // Verify password
+      const isValid = await bcrypt.compare(input.password, user.password)
+
+      if (!isValid) {
+        throw new Error('Invalid email or password')
+      }
 
       // Return user without password
       const { password, ...userWithoutPassword } = user

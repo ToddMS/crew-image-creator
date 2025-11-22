@@ -135,12 +135,20 @@ export const savedImageRouter = router({
       z.object({
         crewId: z.string(),
         templateId: z.string(),
-        userId: z.string(),
-        colors: z.object({
-          primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-          secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-        }).optional(),
-      })
+        userId: z.string().optional(),
+        colors: z
+          .object({
+            primaryColor: z
+              .string()
+              .regex(/^#[0-9A-F]{6}$/i)
+              .optional(),
+            secondaryColor: z
+              .string()
+              .regex(/^#[0-9A-F]{6}$/i)
+              .optional(),
+          })
+          .optional(),
+      }),
     )
     .mutation(async ({ input }) => {
       try {
@@ -166,16 +174,47 @@ export const savedImageRouter = router({
         }
 
         // Validate input
-        const validation = ImageGenerationService.validateGenerationInput(crew, template)
+        const validation = ImageGenerationService.validateGenerationInput(
+          crew,
+          template,
+        )
         if (!validation.valid) {
           throw new Error(validation.error)
+        }
+
+        // Get or create demo user if userId not provided or invalid
+        let userId = input.userId
+        let validUser = null
+
+        if (userId) {
+          // Try to find the provided user
+          validUser = await prisma.user.findUnique({
+            where: { id: userId },
+          })
+        }
+
+        if (!validUser) {
+          // Either no userId provided or invalid userId, use/create demo user
+          let demoUser = await prisma.user.findFirst({
+            where: { email: 'demo@example.com' },
+          })
+
+          if (!demoUser) {
+            demoUser = await prisma.user.create({
+              data: {
+                email: 'demo@example.com',
+                name: 'Demo User',
+              },
+            })
+          }
+          userId = demoUser.id
         }
 
         // Generate the image with custom colors if provided
         const generatedImage = await ImageGenerationService.generateCrewImage(
           crew,
           template,
-          input.colors
+          input.colors,
         )
 
         // Save to database
@@ -183,7 +222,7 @@ export const savedImageRouter = router({
           data: {
             crewId: input.crewId,
             templateId: input.templateId,
-            userId: input.userId,
+            userId: userId,
             imageUrl: generatedImage.imageUrl,
             filename: generatedImage.filename,
             metadata: {
@@ -192,7 +231,7 @@ export const savedImageRouter = router({
               generatedAt: new Date().toISOString(),
               colors: input.colors || {
                 primaryColor: crew.club?.primaryColor || '#15803d',
-                secondaryColor: crew.club?.secondaryColor || '#f9a8d4'
+                secondaryColor: crew.club?.secondaryColor || '#f9a8d4',
               },
             },
           },
@@ -217,7 +256,9 @@ export const savedImageRouter = router({
         return savedImage
       } catch (error) {
         console.error('Image generation error:', error)
-        throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        throw new Error(
+          `Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
       }
     }),
 
@@ -226,11 +267,19 @@ export const savedImageRouter = router({
       z.object({
         crewId: z.string(),
         templateId: z.string(),
-        colors: z.object({
-          primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-          secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-        }).optional(),
-      })
+        colors: z
+          .object({
+            primaryColor: z
+              .string()
+              .regex(/^#[0-9A-F]{6}$/i)
+              .optional(),
+            secondaryColor: z
+              .string()
+              .regex(/^#[0-9A-F]{6}$/i)
+              .optional(),
+          })
+          .optional(),
+      }),
     )
     .mutation(async ({ input }) => {
       try {
@@ -256,7 +305,10 @@ export const savedImageRouter = router({
         }
 
         // Validate input
-        const validation = ImageGenerationService.validateGenerationInput(crew, template)
+        const validation = ImageGenerationService.validateGenerationInput(
+          crew,
+          template,
+        )
         if (!validation.valid) {
           throw new Error(validation.error)
         }
@@ -265,7 +317,7 @@ export const savedImageRouter = router({
         const generatedImage = await ImageGenerationService.generateCrewImage(
           crew,
           template,
-          input.colors
+          input.colors,
         )
 
         return {
@@ -276,7 +328,9 @@ export const savedImageRouter = router({
         }
       } catch (error) {
         console.error('Preview generation error:', error)
-        throw new Error(`Failed to generate preview: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        throw new Error(
+          `Failed to generate preview: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
       }
     }),
 })

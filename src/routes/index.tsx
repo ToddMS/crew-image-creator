@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
+import { Link, createFileRoute, useSearch } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { useAuth } from './__root'
+import { useAuth } from '../lib/auth-context'
 import '../dashboard.css'
 
 export const Route = createFileRoute('/')({
@@ -32,7 +32,14 @@ function DashboardPage() {
         // Clean up URL
         window.history.replaceState({}, '', '/')
       } catch (e) {
-        console.error('Failed to parse user data:', e, 'userParam:', userParam, 'type:', typeof userParam)
+        console.error(
+          'Failed to parse user data:',
+          e,
+          'userParam:',
+          userParam,
+          'type:',
+          typeof userParam,
+        )
       }
     }
 
@@ -82,7 +89,9 @@ function DashboardPage() {
 
           <Link to="/gallery" className="action-card">
             <h3 className="action-title">View Gallery</h3>
-            <p className="action-description">Browse and download all your generated crew images</p>
+            <p className="action-description">
+              Browse and download all your generated crew images
+            </p>
             <div className="action-arrow">
               Browse <span>→</span>
             </div>

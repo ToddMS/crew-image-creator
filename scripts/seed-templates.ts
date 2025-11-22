@@ -19,33 +19,33 @@ async function main() {
   // Create the 2 new templates based on visual analysis
   const templates = [
     {
-      name: "Classic Program",
-      templateType: "program",
-      previewUrl: "/template-previews/template-1.svg",
+      name: 'Classic Program',
+      templateType: 'program',
+      previewUrl: '/template-previews/template-1.svg',
       metadata: {
-        primaryColor: "#094E2A",   // Dark green from the text
-        secondaryColor: "#FFFFFF", // White background
-        style: "traditional",
-        description: "Classic rowing program layout with formal typography"
-      }
+        primaryColor: '#094E2A', // Dark green from the text
+        secondaryColor: '#FFFFFF', // White background
+        style: 'traditional',
+        description: 'Classic rowing program layout with formal typography',
+      },
     },
     {
-      name: "Modern Geometric",
-      templateType: "poster",
-      previewUrl: "/template-previews/template-2.svg",
+      name: 'Modern Geometric',
+      templateType: 'poster',
+      previewUrl: '/template-previews/template-2.svg',
       metadata: {
-        primaryColor: "#094E2A",   // Dark green
-        secondaryColor: "#F3BFD4", // Pink accent color
-        style: "geometric",
-        description: "Modern design with geometric shapes and oar motif"
-      }
-    }
+        primaryColor: '#094E2A', // Dark green
+        secondaryColor: '#F3BFD4', // Pink accent color
+        style: 'geometric',
+        description: 'Modern design with geometric shapes and oar motif',
+      },
+    },
   ]
 
   // Create the new templates
   for (const template of templates) {
     await prisma.template.create({
-      data: template
+      data: template,
     })
     console.log(`✅ Created template: ${template.name}`)
   }

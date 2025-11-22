@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import './create-crew.css'
 
@@ -17,10 +17,14 @@ const boatClassToSeats: Record<string, number> = {
   '1x': 1,
 }
 
-const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+'
+const boatClassHasCox = (boatClass: string) =>
+  boatClass === '8+' || boatClass === '4+'
 
 const boatClassToBoatType = (boatClass: string) => {
-  const mapping: Record<string, { id: number; value: string; seats: number; name: string }> = {
+  const mapping: Record<
+    string,
+    { id: number; value: string; seats: number; name: string }
+  > = {
     '8+': { id: 1, value: '8+', seats: 8, name: 'Eight' },
     '4+': { id: 2, value: '4+', seats: 4, name: 'Coxed Four' },
     '4-': { id: 3, value: '4-', seats: 4, name: 'Coxless Four' },
@@ -45,7 +49,7 @@ function CreateCrewPage() {
   const [raceName, setRaceName] = useState('')
   const [boatName, setBoatName] = useState('')
   const [coachName, setCoachName] = useState('')
-  const [crewNames, setCrewNames] = useState<string[]>([])
+  const [crewNames, setCrewNames] = useState<Array<string>>([])
   const [coxName, setCoxName] = useState('')
   const [saving, setSaving] = useState(false)
   const [showValidation, setShowValidation] = useState(false)
@@ -122,12 +126,15 @@ function CreateCrewPage() {
 
     setSaving(true)
     try {
-      const selectedBoatType = boatTypes.find(bt => bt.code === boatClass)
+      const selectedBoatType = boatTypes.find((bt) => bt.code === boatClass)
       if (!selectedBoatType) {
         throw new Error('Invalid boat type selected')
       }
 
-      const allCrewNames = [...(boatClassHasCox(boatClass) ? [coxName] : []), ...crewNames]
+      const allCrewNames = [
+        ...(boatClassHasCox(boatClass) ? [coxName] : []),
+        ...crewNames,
+      ]
 
       await createCrewMutation.mutateAsync({
         name: boatName,
@@ -159,7 +166,9 @@ function CreateCrewPage() {
                   onChange={(e) => {
                     const newBoatClass = e.target.value
                     setBoatClass(newBoatClass)
-                    setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''))
+                    setCrewNames(
+                      Array(boatClassToSeats[newBoatClass] || 0).fill(''),
+                    )
                     setCoxName('')
                   }}
                   className={showValidation && !boatClass ? 'error' : ''}
@@ -175,7 +184,9 @@ function CreateCrewPage() {
                   <option value="1x">1x (Single Sculls)</option>
                 </select>
                 {showValidation && !boatClass && (
-                  <div className="error-message">Please select a boat class</div>
+                  <div className="error-message">
+                    Please select a boat class
+                  </div>
                 )}
               </div>
 
@@ -250,12 +261,22 @@ function CreateCrewPage() {
       case 1:
         if (!canProceedFromStep(0)) {
           return (
-            <div className="form-container" style={{ textAlign: 'center', padding: '3rem' }}>
-              <p style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '1rem' }}>
+            <div
+              className="form-container"
+              style={{ textAlign: 'center', padding: '3rem' }}
+            >
+              <p
+                style={{
+                  fontSize: '1.1rem',
+                  color: '#6b7280',
+                  marginBottom: '1rem',
+                }}
+              >
                 ⬅️ Please complete crew information first
               </p>
               <p style={{ color: '#9ca3af' }}>
-                Go back to fill in boat class, club name, race name, and boat name
+                Go back to fill in boat class, club name, race name, and boat
+                name
               </p>
             </div>
           )
@@ -274,12 +295,16 @@ function CreateCrewPage() {
                       type="text"
                       value={coxName}
                       onChange={(e) => setCoxName(e.target.value)}
-                      className={showValidation && !coxName.trim() ? 'error' : ''}
+                      className={
+                        showValidation && !coxName.trim() ? 'error' : ''
+                      }
                       placeholder="Enter coxswain name"
                       required
                     />
                     {showValidation && !coxName.trim() && (
-                      <div className="error-message">Please enter coxswain name</div>
+                      <div className="error-message">
+                        Please enter coxswain name
+                      </div>
                     )}
                   </div>
                 </div>
@@ -303,13 +328,19 @@ function CreateCrewPage() {
                       <input
                         type="text"
                         value={name}
-                        onChange={(e) => handleNameChange(index, e.target.value)}
-                        className={showValidation && !name.trim() ? 'error' : ''}
+                        onChange={(e) =>
+                          handleNameChange(index, e.target.value)
+                        }
+                        className={
+                          showValidation && !name.trim() ? 'error' : ''
+                        }
                         placeholder="Enter rower name"
                         required
                       />
                       {showValidation && !name.trim() && (
-                        <div className="error-message">Please enter rower name</div>
+                        <div className="error-message">
+                          Please enter rower name
+                        </div>
                       )}
                     </div>
                   )
@@ -420,7 +451,9 @@ function CreateCrewPage() {
                     : 'inactive'
               }`}
             >
-              <div className="step-icon">{activeStep > index ? '✓' : index + 1}</div>
+              <div className="step-icon">
+                {activeStep > index ? '✓' : index + 1}
+              </div>
               <div className="step-content">
                 <div className="step-label">{step.label}</div>
                 <div className="step-description">{step.description}</div>

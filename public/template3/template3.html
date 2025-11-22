@@ -1,51 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Template 3 - Dynamic Crew Program</title>
-    <link rel="stylesheet" href="template3.css">
-</head>
-<body>
+    <link rel="stylesheet" href="template3.css" />
+  </head>
+  <body>
     <div class="template-container">
-        <!-- Header with club name and dynamic gradients -->
-        <header class="header">
-            <h1 class="club-name">{{CLUB_NAME}}</h1>
-            <div class="divider"></div>
-        </header>
+      <!-- Header with club name and dynamic gradients -->
+      <header class="header">
+        <h1 class="club-name">{{CLUB_NAME}}</h1>
+        <div class="divider"></div>
+      </header>
 
-        <!-- Main content area -->
-        <main class="main-content">
-            <!-- Crew info section -->
-            <section class="crew-info">
-                <h2 class="crew-name">{{CREW_NAME}}</h2>
-                <div class="crew-details">
-                    <span class="boat-type">{{BOAT_TYPE}}</span>
-                    <span class="seats">{{SEATS}} Seats</span>
-                    <span class="race-name">{{RACE_NAME}}</span>
-                </div>
-                <div class="boat-name">{{BOAT_NAME}}</div>
-                <div class="coach-name">Coach: {{COACH_NAME}}</div>
-            </section>
+      <!-- Main content area -->
+      <main class="main-content">
+        <!-- Crew info section -->
+        <section class="crew-info">
+          <h2 class="crew-name">{{CREW_NAME}}</h2>
+          <div class="crew-details">
+            <span class="boat-type">{{BOAT_TYPE}}</span>
+            <span class="seats">{{SEATS}} Seats</span>
+            <span class="race-name">{{RACE_NAME}}</span>
+          </div>
+          <div class="boat-name">{{BOAT_NAME}}</div>
+          <div class="coach-name">Coach: {{COACH_NAME}}</div>
 
-            <!-- Crew members grid with dynamic positioning -->
-            <section class="crew-roster">
-                <h3>Crew Lineup</h3>
-                <div class="crew-grid">
-                    {{#CREW_MEMBERS}}
-                    <div class="crew-member">
-                        <div class="position-badge">{{POSITION}}</div>
-                        <div class="member-name">{{NAME}}</div>
-                    </div>
-                    {{/CREW_MEMBERS}}
-                </div>
-            </section>
-        </main>
+          <!-- Boat image in center position -->
+          {{#BOAT_IMAGE_AVAILABLE}}
+          <div class="boat-image-container">{{BOAT_IMAGE}}</div>
+          {{/BOAT_IMAGE_AVAILABLE}}
+        </section>
 
-        <!-- Footer with decorative elements -->
-        <footer class="footer">
-            <div class="boat-silhouette"></div>
-        </footer>
+        <!-- Crew members grid with dynamic positioning -->
+        <section class="crew-roster">
+          <h3>Crew Lineup</h3>
+          <div class="crew-grid">
+            {{#CREW_MEMBERS}}
+            <div class="crew-member">
+              <div class="position-badge">{{POSITION}}</div>
+              <div class="member-name">{{NAME}}</div>
+            </div>
+            {{/CREW_MEMBERS}}
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer with decorative elements -->
+      <footer class="footer">
+        <div class="boat-silhouette"></div>
+      </footer>
     </div>
-</body>
+  </body>
 </html>

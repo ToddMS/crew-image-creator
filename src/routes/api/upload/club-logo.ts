@@ -1,7 +1,7 @@
+import path from 'node:path'
 import { createFileRoute } from '@tanstack/react-router'
 import multer from 'multer'
 import sharp from 'sharp'
-import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
 // Configure multer for memory storage (we'll process with sharp)
@@ -35,18 +35,24 @@ async function handleLogoUpload({ request }: { request: Request }) {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      return new Response(JSON.stringify({ error: 'Only image files are allowed' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'Only image files are allowed' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      return new Response(JSON.stringify({ error: 'File too large. Maximum size is 5MB' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'File too large. Maximum size is 5MB' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     // Convert File to Buffer
@@ -54,13 +60,19 @@ async function handleLogoUpload({ request }: { request: Request }) {
 
     // Generate unique filename
     const filename = `${uuidv4()}.webp`
-    const outputPath = path.join(process.cwd(), 'public', 'uploads', 'club-logos', filename)
+    const outputPath = path.join(
+      process.cwd(),
+      'public',
+      'uploads',
+      'club-logos',
+      filename,
+    )
 
     // Process image with sharp (resize and optimize)
     await sharp(buffer)
       .resize(200, 200, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 0 }
+        background: { r: 255, g: 255, b: 255, alpha: 0 },
       })
       .webp({ quality: 90 })
       .toFile(outputPath)
@@ -72,25 +84,24 @@ async function handleLogoUpload({ request }: { request: Request }) {
       JSON.stringify({
         success: true,
         logoUrl,
-        message: 'Logo uploaded successfully'
+        message: 'Logo uploaded successfully',
       }),
       {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-      }
+      },
     )
-
   } catch (error) {
     console.error('Logo upload error:', error)
     return new Response(
       JSON.stringify({
         error: 'Failed to upload logo',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      }
+      },
     )
   }
 }

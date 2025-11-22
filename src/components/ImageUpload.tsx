@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 
 interface ImageUploadProps {
   onUpload: (imageUrl: string) => void
@@ -11,16 +11,18 @@ interface ImageUploadProps {
 export function ImageUpload({
   onUpload,
   currentImage,
-  label = "Upload Image",
-  accept = "image/*",
-  maxSize = 5
+  label = 'Upload Image',
+  accept = 'image/*',
+  maxSize = 5,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<string | null>(currentImage || null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -83,24 +85,28 @@ export function ImageUpload({
 
   return (
     <div style={{ marginBottom: '1rem' }}>
-      <label style={{
-        display: 'block',
-        marginBottom: '0.5rem',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        color: '#374151'
-      }}>
+      <label
+        style={{
+          display: 'block',
+          marginBottom: '0.5rem',
+          fontSize: '0.875rem',
+          fontWeight: '500',
+          color: '#374151',
+        }}
+      >
         {label}
       </label>
 
-      <div style={{
-        border: '2px dashed #d1d5db',
-        borderRadius: '8px',
-        padding: '1.5rem',
-        textAlign: 'center',
-        backgroundColor: '#f9fafb',
-        position: 'relative'
-      }}>
+      <div
+        style={{
+          border: '2px dashed #d1d5db',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          textAlign: 'center',
+          backgroundColor: '#f9fafb',
+          position: 'relative',
+        }}
+      >
         {preview ? (
           <div style={{ position: 'relative' }}>
             <img
@@ -111,10 +117,17 @@ export function ImageUpload({
                 maxHeight: '200px',
                 objectFit: 'contain',
                 borderRadius: '4px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
               }}
             />
-            <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+            <div
+              style={{
+                marginTop: '1rem',
+                display: 'flex',
+                gap: '0.5rem',
+                justifyContent: 'center',
+              }}
+            >
               <button
                 onClick={handleClick}
                 disabled={uploading}
@@ -126,7 +139,7 @@ export function ImageUpload({
                   borderRadius: '4px',
                   fontSize: '0.875rem',
                   cursor: uploading ? 'not-allowed' : 'pointer',
-                  opacity: uploading ? 0.5 : 1
+                  opacity: uploading ? 0.5 : 1,
                 }}
               >
                 {uploading ? 'Uploading...' : 'Change Image'}
@@ -142,7 +155,7 @@ export function ImageUpload({
                   borderRadius: '4px',
                   fontSize: '0.875rem',
                   cursor: uploading ? 'not-allowed' : 'pointer',
-                  opacity: uploading ? 0.5 : 1
+                  opacity: uploading ? 0.5 : 1,
                 }}
               >
                 Remove
@@ -156,7 +169,7 @@ export function ImageUpload({
                 width: '48px',
                 height: '48px',
                 margin: '0 auto 1rem',
-                color: '#9ca3af'
+                color: '#9ca3af',
               }}
               fill="none"
               stroke="currentColor"
@@ -169,7 +182,13 @@ export function ImageUpload({
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <p style={{ margin: '0 0 0.5rem', color: '#374151', fontSize: '0.875rem' }}>
+            <p
+              style={{
+                margin: '0 0 0.5rem',
+                color: '#374151',
+                fontSize: '0.875rem',
+              }}
+            >
               Click to upload or drag and drop
             </p>
             <p style={{ margin: 0, color: '#6b7280', fontSize: '0.75rem' }}>
@@ -187,7 +206,7 @@ export function ImageUpload({
                 borderRadius: '4px',
                 fontSize: '0.875rem',
                 cursor: uploading ? 'not-allowed' : 'pointer',
-                opacity: uploading ? 0.5 : 1
+                opacity: uploading ? 0.5 : 1,
               }}
             >
               {uploading ? 'Uploading...' : 'Select Image'}
@@ -205,15 +224,17 @@ export function ImageUpload({
       </div>
 
       {error && (
-        <div style={{
-          marginTop: '0.5rem',
-          padding: '0.5rem',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '4px',
-          color: '#dc2626',
-          fontSize: '0.875rem'
-        }}>
+        <div
+          style={{
+            marginTop: '0.5rem',
+            padding: '0.5rem',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '4px',
+            color: '#dc2626',
+            fontSize: '0.875rem',
+          }}
+        >
           {error}
         </div>
       )}

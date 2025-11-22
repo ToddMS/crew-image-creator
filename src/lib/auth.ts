@@ -1,19 +1,19 @@
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { AuthConfig } from "@auth/core"
-import { prisma } from "./prisma"
-import bcrypt from "bcryptjs"
-import type { Adapter } from "@auth/core/adapters"
+import { PrismaAdapter } from '@auth/prisma-adapter'
+import bcrypt from 'bcryptjs'
+import { prisma } from './prisma'
+import type { AuthConfig } from '@auth/core'
+import type { Adapter } from '@auth/core/adapters'
 
 export const authConfig: AuthConfig = {
-  adapter: PrismaAdapter(prisma) as Adapter,
+  adapter: PrismaAdapter(prisma),
   providers: [
     {
-      id: "credentials",
-      name: "credentials",
-      type: "credentials",
+      id: 'credentials',
+      name: 'credentials',
+      type: 'credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -22,8 +22,8 @@ export const authConfig: AuthConfig = {
 
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email as string
-          }
+            email: credentials.email as string,
+          },
         })
 
         if (!user || !user.password) {
@@ -32,7 +32,7 @@ export const authConfig: AuthConfig = {
 
         const passwordsMatch = await bcrypt.compare(
           credentials.password as string,
-          user.password
+          user.password,
         )
 
         if (!passwordsMatch) {
@@ -45,11 +45,11 @@ export const authConfig: AuthConfig = {
           name: user.name,
           image: user.avatarUrl,
         }
-      }
-    }
+      },
+    },
   ],
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
   },
   callbacks: {
     async jwt({ token, user }) {

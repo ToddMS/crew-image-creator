@@ -1,0 +1,149 @@
+@import 'tailwindcss';
+
+:root {
+  --primary: 59 130 246;
+  --secondary: 100 116 139;
+  --success: 16 185 129;
+  --warning: 245 158 11;
+  --error: 239 68 68;
+  --muted: 241 245 249;
+  --accent: 99 102 241;
+
+  --radius: 0.5rem;
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  background-color: rgb(248 250 252);
+  color: rgb(15 23 42);
+}
+
+/* Focus styles */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid rgb(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Loading animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(241 245 249);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139);
+}
+
+/* Error boundary styles */
+.error-boundary {
+  padding: 2rem;
+  text-align: center;
+  background-color: rgb(254 242 242);
+  border: 1px solid rgb(252 165 165);
+  border-radius: var(--radius);
+  margin: 1rem;
+}
+
+.error-boundary h1,
+.error-boundary h2 {
+  color: rgb(185 28 28);
+  margin-bottom: 1rem;
+}
+
+.error-boundary details {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.error-boundary pre {
+  background-color: rgb(31 41 55);
+  color: rgb(243 244 246);
+  padding: 1rem;
+  border-radius: var(--radius);
+  overflow: auto;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+}
+
+/* Loading states */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .bg-white { background-color: white !important; }
+  .text-white { color: black !important; }
+}

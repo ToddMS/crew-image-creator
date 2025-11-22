@@ -1,13 +1,13 @@
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import puppeteer from 'puppeteer'
-import fs from 'fs/promises'
-import path from 'path'
 import { TemplateCompiler } from './templateCompiler'
 
 interface Crew {
   id: string
   name: string
   raceName?: string | null
-  crewNames: string[]
+  crewNames: Array<string>
   boatType: { name: string; code: string }
   club?: { name: string; primaryColor: string; secondaryColor: string } | null
 }
@@ -42,7 +42,7 @@ export class ImageGenerationService {
   static async generateCrewImage(
     crew: Crew,
     template: Template,
-    colors?: { primaryColor: string; secondaryColor: string }
+    colors?: { primaryColor: string; secondaryColor: string },
   ): Promise<GeneratedImage> {
     const filename = `${crew.name.toLowerCase().replace(/\s+/g, '-')}-${template.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`
     const outputPath = path.join(process.cwd(), 'public', 'uploads', filename)
@@ -53,7 +53,7 @@ export class ImageGenerationService {
     // Use club colors if no custom colors provided
     const finalColors = colors || {
       primaryColor: crew.club?.primaryColor || '#15803d',
-      secondaryColor: crew.club?.secondaryColor || '#f9a8d4'
+      secondaryColor: crew.club?.secondaryColor || '#f9a8d4',
     }
 
     // Generate image
@@ -61,7 +61,7 @@ export class ImageGenerationService {
       crew,
       template,
       colors: finalColors,
-      outputPath
+      outputPath,
     })
 
     return {
@@ -96,19 +96,29 @@ export class ImageGenerationService {
   private static async loadTemplate(
     template: Template,
     crew: Crew,
-    colors: { primaryColor: string; secondaryColor: string }
+    colors: { primaryColor: string; secondaryColor: string },
   ): Promise<string> {
     const templateMap: Record<string, string> = {
       'Classic Program': 'template1',
       'Modern Geometric': 'template2',
-      'Dynamic Crew Program': 'template3'
+      'Dynamic Crew Program': 'template3',
     }
 
     const templateName = templateMap[template.name] || 'template1'
 
     // Load HTML and CSS files
-    const htmlPath = path.join(process.cwd(), 'public', templateName, `${templateName}.html`)
-    const cssPath = path.join(process.cwd(), 'public', templateName, `${templateName}.css`)
+    const htmlPath = path.join(
+      process.cwd(),
+      'public',
+      templateName,
+      `${templateName}.html`,
+    )
+    const cssPath = path.join(
+      process.cwd(),
+      'public',
+      templateName,
+      `${templateName}.css`,
+    )
 
     let htmlContent = await fs.readFile(htmlPath, 'utf-8')
     const cssContent = await fs.readFile(cssPath, 'utf-8')
@@ -123,10 +133,22 @@ export class ImageGenerationService {
     // Use TemplateCompiler for advanced placeholders if the template supports them
     if (htmlContent.includes('{{') || htmlContent.includes('{{#')) {
       const templateData = TemplateCompiler.formatCrewData(crew, template)
-      htmlContent = TemplateCompiler.compileTemplate(htmlContent, templateData, colors)
+      const templateMetadata = template.metadata ? template.metadata : undefined
+
+      htmlContent = TemplateCompiler.compileTemplate(
+        htmlContent,
+        templateData,
+        colors,
+        templateMetadata,
+      )
     } else {
       // Fallback to legacy method for simple templates
-      htmlContent = this.applyColorsToTemplate(htmlContent, cssContent, templateName, colors)
+      htmlContent = this.applyColorsToTemplate(
+        htmlContent,
+        cssContent,
+        templateName,
+        colors,
+      )
       htmlContent = this.applyCrewDataToTemplate(htmlContent, crew)
     }
 
@@ -140,7 +162,7 @@ export class ImageGenerationService {
     html: string,
     css: string,
     templateName: string,
-    colors: { primaryColor: string; secondaryColor: string }
+    colors: { primaryColor: string; secondaryColor: string },
   ): string {
     let modifiedCss = css
 
@@ -148,10 +170,14 @@ export class ImageGenerationService {
       // Template 1: Corner brackets
       // Primary color: top-left and bottom-right (pink class)
       // Secondary color: top-right and bottom-left (green class)
-      modifiedCss = modifiedCss.replace(/\.pink\s*{[^}]*}/g,
-        `.pink { background-color: ${colors.primaryColor}; }`)
-      modifiedCss = modifiedCss.replace(/\.green\s*{[^}]*}/g,
-        `.green { background-color: ${colors.secondaryColor}; }`)
+      modifiedCss = modifiedCss.replace(
+        /\.pink\s*{[^}]*}/g,
+        `.pink { background-color: ${colors.primaryColor}; }`,
+      )
+      modifiedCss = modifiedCss.replace(
+        /\.green\s*{[^}]*}/g,
+        `.green { background-color: ${colors.secondaryColor}; }`,
+      )
     } else if (templateName === 'template2') {
       // Template 2: Diagonal split
       // Primary color: green triangles
@@ -180,7 +206,7 @@ export class ImageGenerationService {
     // Insert crew content into the content area
     html = html.replace(
       '<!-- Content will be dynamically inserted here -->',
-      crewContentHtml
+      crewContentHtml,
     )
 
     return html
@@ -224,9 +250,13 @@ export class ImageGenerationService {
           max-width: 600px;
           margin: 0 auto;
         ">
-          ${crewNames.map((name: string, index: number) => {
-            const position = this.getPositionLabel(index + 1, crewNames.length)
-            return `
+          ${crewNames
+            .map((name: string, index: number) => {
+              const position = this.getPositionLabel(
+                index + 1,
+                crewNames.length,
+              )
+              return `
               <div style="
                 background: rgba(255, 255, 255, 0.9);
                 padding: 8px;
@@ -242,7 +272,8 @@ export class ImageGenerationService {
                 </div>
               </div>
             `
-          }).join('')}
+            })
+            .join('')}
         </div>
       </div>
     `
@@ -251,19 +282,25 @@ export class ImageGenerationService {
   /**
    * Get position label for rowing positions
    */
-  private static getPositionLabel(seatNumber: number, totalSeats: number): string {
+  private static getPositionLabel(
+    seatNumber: number,
+    totalSeats: number,
+  ): string {
     if (seatNumber === 1) return 'Bow'
     if (seatNumber === totalSeats) return 'Stroke'
     return `Seat ${seatNumber}`
   }
 
   /**
-   * Convert HTML to image using Puppeteer
+   * Convert HTML to image using Puppeteer with base64 images embedded
    */
-  private static async convertHtmlToImage(html: string, outputPath: string): Promise<void> {
+  private static async convertHtmlToImage(
+    html: string,
+    outputPath: string,
+  ): Promise<void> {
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     })
 
     try {
@@ -272,15 +309,18 @@ export class ImageGenerationService {
       // Set viewport for consistent image size
       await page.setViewport({ width: 1200, height: 800 })
 
-      // Load HTML content
+      // Load HTML content with embedded base64 images
       await page.setContent(html, { waitUntil: 'networkidle0' })
+
+      // Additional wait to ensure all images (including base64) are rendered
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       // Take screenshot
       await page.screenshot({
         path: outputPath,
         type: 'png',
         fullPage: false,
-        clip: { x: 0, y: 0, width: 1200, height: 800 }
+        clip: { x: 0, y: 0, width: 1200, height: 800 },
       })
     } finally {
       await browser.close()
@@ -298,12 +338,15 @@ export class ImageGenerationService {
   /**
    * Validate that a crew and template are compatible for image generation
    */
-  static validateGenerationInput(crew: Crew, template: Template): { valid: boolean; error?: string } {
+  static validateGenerationInput(
+    crew: Crew,
+    template: Template,
+  ): { valid: boolean; error?: string } {
     if (!crew.crewNames || crew.crewNames.length === 0) {
       return { valid: false, error: 'Crew must have at least one rower' }
     }
 
-    if (crew.crewNames.some(name => !name?.trim())) {
+    if (crew.crewNames.some((name) => !name?.trim())) {
       return { valid: false, error: 'All rowers must have names' }
     }
 
@@ -322,7 +365,7 @@ export async function saveGeneratedImage(
   crewId: string,
   templateId: string,
   userId: string,
-  generatedImage: GeneratedImage
+  generatedImage: GeneratedImage,
 ) {
   // This would typically be called from a tRPC mutation
   return {

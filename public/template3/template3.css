@@ -1,237 +1,256 @@
 /* Template 3 - Dynamic Crew Program Styles */
 
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .template-container {
-    width: 1200px;
-    height: 800px;
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    position: relative;
+  width: 1200px;
+  height: 800px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 /* Header Styles */
 .header {
-    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #d946ef 100%);
-    padding: 40px;
-    text-align: center;
-    position: relative;
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #d946ef 100%);
+  padding: 40px;
+  text-align: center;
+  position: relative;
 }
 
 .club-name {
-    font-size: 3.5rem;
-    font-weight: 800;
-    color: white;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    margin-bottom: 20px;
-    letter-spacing: 2px;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+  letter-spacing: 2px;
 }
 
 .divider {
-    width: 120px;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 3px;
-    margin: 0 auto;
+  width: 120px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  margin: 0 auto;
 }
 
 /* Main Content */
 .main-content {
-    flex: 1;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 
 /* Crew Info Section */
 .crew-info {
-    text-align: center;
-    border-bottom: 2px solid #f1f5f9;
-    padding-bottom: 30px;
+  text-align: center;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 30px;
 }
 
 .crew-name {
-    font-size: 2.8rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 20px;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 20px;
 }
 
 .crew-details {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
 .crew-details span {
-    background: #f1f5f9;
-    padding: 8px 20px;
-    border-radius: 25px;
-    font-weight: 600;
-    color: #475569;
-    border: 2px solid #e2e8f0;
+  background: #f1f5f9;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  color: #475569;
+  border: 2px solid #e2e8f0;
 }
 
 .boat-name {
-    font-size: 1.3rem;
-    color: #64748b;
-    font-style: italic;
-    margin-bottom: 10px;
+  font-size: 1.3rem;
+  color: #64748b;
+  font-style: italic;
+  margin-bottom: 10px;
 }
 
 .coach-name {
-    font-size: 1.1rem;
-    color: #64748b;
-    font-weight: 500;
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Boat Image Container */
+.boat-image-container {
+  margin: 25px 0;
+  text-align: center;
+}
+
+.boat-image-container .boat-image {
+  max-width: 300px;
+  max-height: 150px;
+  opacity: 0.8;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+}
+
+.boat-image-container .boat-image:hover {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 /* Crew Roster Section */
 .crew-roster h3 {
-    font-size: 2rem;
-    font-weight: 700;
-    text-align: center;
-    color: #1e293b;
-    margin-bottom: 25px;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1e293b;
+  margin-bottom: 25px;
 }
 
 .crew-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
-    max-width: 900px;
-    margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .crew-member {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .crew-member::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #059669, #d946ef);
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #059669, #d946ef);
 }
 
 .crew-member:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .position-badge {
-    background: linear-gradient(90deg, #059669, #10b981);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-    display: inline-block;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  background: linear-gradient(90deg, #059669, #10b981);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .member-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1e293b;
-    line-height: 1.3;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.3;
 }
 
 /* Footer */
 .footer {
-    background: linear-gradient(90deg, #059669 0%, #10b981 50%, #d946ef 100%);
-    height: 80px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: linear-gradient(90deg, #059669 0%, #10b981 50%, #d946ef 100%);
+  height: 80px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .boat-silhouette {
-    width: 200px;
-    height: 20px;
-    background: linear-gradient(90deg, #059669, #10b981);
-    border-radius: 10px;
-    position: relative;
+  width: 200px;
+  height: 20px;
+  background: linear-gradient(90deg, #059669, #10b981);
+  border-radius: 10px;
+  position: relative;
 }
 
 .boat-silhouette::after {
-    content: '';
-    position: absolute;
-    right: -8px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 8px solid #059669;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid #059669;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
 }
 
 /* Responsive Design */
 @media (max-width: 1250px) {
-    .template-container {
-        width: 95vw;
-        height: auto;
-        min-height: 800px;
-    }
+  .template-container {
+    width: 95vw;
+    height: auto;
+    min-height: 800px;
+  }
 }
 
 @media (max-width: 768px) {
-    .header {
-        padding: 30px 20px;
-    }
+  .header {
+    padding: 30px 20px;
+  }
 
-    .club-name {
-        font-size: 2.5rem;
-    }
+  .club-name {
+    font-size: 2.5rem;
+  }
 
-    .crew-name {
-        font-size: 2.2rem;
-    }
+  .crew-name {
+    font-size: 2.2rem;
+  }
 
-    .main-content {
-        padding: 30px 20px;
-    }
+  .main-content {
+    padding: 30px 20px;
+  }
 
-    .crew-details {
-        gap: 15px;
-    }
+  .crew-details {
+    gap: 15px;
+  }
 
-    .crew-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-    }
+  .crew-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
 }
