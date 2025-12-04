@@ -370,191 +370,85 @@ function GalleryPage() {
           </div>
         )}
 
-        {/* Fullscreen Modal */}
+        {/* Fullscreen Modal - Simplified */}
         {fullscreenImage && (
           <div
             className="modal-overlay"
             onClick={() => setFullscreenImage(null)}
+            style={{
+              position: 'fixed',
+              inset: '0',
+              backgroundColor: 'rgba(0, 0, 0, 0.9)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: '9999',
+              padding: '1rem'
+            }}
           >
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <div className="modal-title">
-                  {fullscreenImage.crew?.name || 'Image Preview'}
-                </div>
-                <button
-                  className="modal-close"
-                  onClick={() => setFullscreenImage(null)}
-                >
-                  ×
-                </button>
-              </div>
-              <div className="modal-body">
-                <img
-                  src={fullscreenImage.imageUrl}
-                  alt={`${fullscreenImage.crew?.name} - ${fullscreenImage.template?.name}`}
-                  className="fullscreen-image"
-                />
+            {/* Header with image name and close button */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                maxWidth: '6rem',
+                marginBottom: '1rem',
+                maxWidth: '1536px'
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: 'white',
+                  margin: '0'
+                }}
+              >
+                {fullscreenImage.crew?.name || 'Unknown Crew'}
+              </h2>
+              <button
+                onClick={() => setFullscreenImage(null)}
+                style={{
+                  padding: '0.5rem',
+                  color: 'white',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '2rem',
+                  transition: 'color 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.color = '#d1d5db'}
+                onMouseOut={(e) => e.target.style.color = 'white'}
+              >
+                ×
+              </button>
+            </div>
 
-                <div className="modal-details">
-                  <div className="detail-section">
-                    <h4>Crew Information</h4>
-                    <div className="detail-grid">
-                      <div className="detail-item">
-                        <span className="detail-label">Name:</span>
-                        <span className="detail-value">
-                          {fullscreenImage.crew?.name || 'Unknown'}
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Boat:</span>
-                        <span className="detail-value">
-                          {fullscreenImage.crew?.boatType?.name} (
-                          {fullscreenImage.crew?.boatType?.code})
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Race:</span>
-                        <span className="detail-value">
-                          {fullscreenImage.crew?.raceName || 'Not specified'}
-                        </span>
-                      </div>
-                      {fullscreenImage.crew?.club && (
-                        <div className="detail-item">
-                          <span className="detail-label">Club:</span>
-                          <span className="detail-value">
-                            {fullscreenImage.crew.club.name}
-                            <div className="color-swatches inline">
-                              <div
-                                className="color-swatch"
-                                style={{
-                                  backgroundColor:
-                                    fullscreenImage.crew.club.primaryColor,
-                                }}
-                              />
-                              <div
-                                className="color-swatch"
-                                style={{
-                                  backgroundColor:
-                                    fullscreenImage.crew.club.secondaryColor,
-                                }}
-                              />
-                            </div>
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="detail-section">
-                    <h4>Template Information</h4>
-                    <div className="detail-grid">
-                      <div className="detail-item">
-                        <span className="detail-label">Name:</span>
-                        <span className="detail-value">
-                          {fullscreenImage.template?.name}
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Type:</span>
-                        <span className="detail-value">
-                          {fullscreenImage.template?.templateType}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-section">
-                    <h4>File Information</h4>
-                    <div className="detail-grid">
-                      <div className="detail-item">
-                        <span className="detail-label">Filename:</span>
-                        <span className="detail-value">
-                          {fullscreenImage.filename}
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Created:</span>
-                        <span className="detail-value">
-                          {new Date(fullscreenImage.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                      {fullscreenImage.metadata?.width &&
-                        fullscreenImage.metadata?.height && (
-                          <div className="detail-item">
-                            <span className="detail-label">Dimensions:</span>
-                            <span className="detail-value">
-                              {fullscreenImage.metadata.width} ×{' '}
-                              {fullscreenImage.metadata.height}
-                            </span>
-                          </div>
-                        )}
-                      {fullscreenImage.metadata?.generatedAt && (
-                        <div className="detail-item">
-                          <span className="detail-label">Generated:</span>
-                          <span className="detail-value">
-                            {new Date(
-                              fullscreenImage.metadata.generatedAt,
-                            ).toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {fullscreenImage.metadata?.colors && (
-                    <div className="detail-section">
-                      <h4>Color Scheme</h4>
-                      <div className="detail-grid">
-                        <div className="detail-item">
-                          <span className="detail-label">Primary Color:</span>
-                          <span className="detail-value">
-                            {fullscreenImage.metadata.colors.primaryColor}
-                            <div
-                              className="color-swatch"
-                              style={{
-                                backgroundColor:
-                                  fullscreenImage.metadata.colors.primaryColor,
-                              }}
-                            />
-                          </span>
-                        </div>
-                        <div className="detail-item">
-                          <span className="detail-label">Secondary Color:</span>
-                          <span className="detail-value">
-                            {fullscreenImage.metadata.colors.secondaryColor}
-                            <div
-                              className="color-swatch"
-                              style={{
-                                backgroundColor:
-                                  fullscreenImage.metadata.colors
-                                    .secondaryColor,
-                              }}
-                            />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="modal-actions">
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => handleDownload(fullscreenImage)}
-                    >
-                      Download
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => {
-                        handleDeleteImage(fullscreenImage)
-                        setFullscreenImage(null)
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {/* Full-size image */}
+            <div
+              style={{
+                flex: '1',
+                width: '100%',
+                maxWidth: '1536px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <img
+                src={fullscreenImage.imageUrl}
+                alt={`${fullscreenImage.crew?.name} - ${fullscreenImage.template?.name}`}
+                onClick={() => setFullscreenImage(null)}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  cursor: 'pointer'
+                }}
+              />
             </div>
           </div>
         )}

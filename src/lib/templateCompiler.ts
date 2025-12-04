@@ -1,3 +1,6 @@
+import { readFileSync, existsSync } from 'node:fs'
+import path from 'node:path'
+
 export interface TemplateData {
   CLUB_NAME: string
   CREW_NAME: string
@@ -47,7 +50,7 @@ export class TemplateCompiler {
   private static readonly BOAT_IMAGE_MAP: Record<string, string> = {
     '2-': '2-.png',
     '4+': '4+.png',
-    '8+': '8Coxed.png',
+    '8+': '8+.png',
   }
 
   /**
@@ -57,14 +60,12 @@ export class TemplateCompiler {
     available: boolean
     url?: string
   } {
-    const filename = this.BOAT_IMAGE_MAP[boatCode]
-    const available = !!filename
+    try {
+      const filename = this.BOAT_IMAGE_MAP[boatCode]
+      const available = !!filename
 
-    if (available) {
-      try {
+      if (available) {
         // Convert to absolute file path for puppeteer
-        const fs = require('node:fs')
-        const path = require('node:path')
         const imagePath = path.join(
           process.cwd(),
           'public',
@@ -72,21 +73,68 @@ export class TemplateCompiler {
           filename,
         )
 
-        if (fs.existsSync(imagePath)) {
+        if (existsSync(imagePath)) {
           // Convert to base64 data URL for reliable loading in puppeteer
-          const imageBuffer = fs.readFileSync(imagePath)
+          const imageBuffer = readFileSync(imagePath)
           const base64 = imageBuffer.toString('base64')
           const dataUrl = `data:image/png;base64,${base64}`
           return { available: true, url: dataUrl }
         }
-      } catch (error) {
-        console.error('Error loading boat image:', error)
       }
+    } catch (error) {
+      console.error('Error loading boat image:', error)
     }
 
     return {
-      available,
-      url: available ? `/boat-images/${filename}` : undefined,
+      available: false,
+      url: undefined,
+    }
+  }
+
+  /**
+   * Process club logo URL for reliable loading in Puppeteer
+   */
+  static getClubLogoInfo(logoUrl: string | null | undefined): {
+    available: boolean
+    url?: string
+  } {
+    try {
+      if (!logoUrl) {
+        return { available: false, url: undefined }
+      }
+
+      // If it's a local URL (starts with /uploads/), convert to base64
+      if (logoUrl.startsWith('/uploads/')) {
+        const imagePath = path.join(process.cwd(), 'public', logoUrl)
+
+        if (existsSync(imagePath)) {
+          // Convert to base64 data URL for reliable loading in puppeteer
+          const imageBuffer = readFileSync(imagePath)
+          const base64 = imageBuffer.toString('base64')
+          // Try to detect the image type from file extension
+          const extension = logoUrl.split('.').pop()?.toLowerCase()
+          const mimeType = extension === 'png' ? 'image/png' :
+                          extension === 'jpg' || extension === 'jpeg' ? 'image/jpeg' :
+                          extension === 'webp' ? 'image/webp' :
+                          'image/png' // default fallback
+          const dataUrl = `data:${mimeType};base64,${base64}`
+          console.log('Club logo converted to base64:', { logoUrl, available: true })
+          return { available: true, url: dataUrl }
+        } else {
+          console.log('Club logo file not found:', imagePath)
+        }
+      } else {
+        // External URL - use as-is (might work in Puppeteer)
+        console.log('Club logo external URL:', logoUrl)
+        return { available: true, url: logoUrl }
+      }
+    } catch (error) {
+      console.error('Error loading club logo:', error)
+    }
+
+    return {
+      available: false,
+      url: undefined,
     }
   }
 
@@ -101,25 +149,49 @@ export class TemplateCompiler {
   ): string {
     let compiledHtml = templateHtml
 
-    // Replace single variables
+    // Replace single variables (both uppercase and lowercase versions)
     Object.entries(data).forEach(([key, value]) => {
-      if (key !== 'CREW_MEMBERS') {
+      if (key !== 'CREW_MEMBERS' && key !== 'crewMembers') {
+        // Handle uppercase keys (e.g., RACE_NAME)
         const placeholder = `{{${key}}}`
         compiledHtml = compiledHtml.replace(
           new RegExp(placeholder, 'g'),
           String(value),
         )
+
+        // Handle lowercase keys (e.g., raceName)
+        const lowerKey = key.charAt(0).toLowerCase() + key.slice(1)
+        const lowerPlaceholder = `{{${lowerKey}}}`
+        compiledHtml = compiledHtml.replace(
+          new RegExp(lowerPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+          String(value),
+        )
       }
     })
 
-    // Handle crew members array
-    compiledHtml = this.compileCrewMembers(compiledHtml, data.CREW_MEMBERS)
+    // Handle crew members array (both formats)
+    if (data.CREW_MEMBERS) {
+      compiledHtml = this.compileCrewMembers(compiledHtml, data.CREW_MEMBERS)
+    }
+    if (data.crewMembers) {
+      compiledHtml = this.compileCrewMembersNew(compiledHtml, data.crewMembers)
+    }
 
     // Handle boat image with template-specific positioning
     compiledHtml = this.applyBoatImage(
       compiledHtml,
       data,
       templateMetadata?.boatImage,
+    )
+
+    // Handle club logo conditional
+    const hasClubLogo = !!(data as any).clubLogo
+    console.log('Club logo data:', (data as any).clubLogo, 'hasClubLogo:', hasClubLogo)
+
+    compiledHtml = this.processConditionalBlock(
+      compiledHtml,
+      'clubLogo',
+      hasClubLogo,
     )
 
     // Apply color scheme
@@ -169,6 +241,47 @@ export class TemplateCompiler {
           )
         }
 
+        return memberHtml
+      })
+      .join('')
+
+    // Replace the template block with compiled HTML
+    return (
+      html.substring(0, templateStart) +
+      crewMemberHtml +
+      html.substring(templateEnd)
+    )
+  }
+
+  /**
+   * Compile the crew members section (new lowercase format)
+   */
+  private static compileCrewMembersNew(
+    html: string,
+    crewMembers: Array<{ name: string; badge: string; style: string }>,
+  ): string {
+    // Find the crew member template block
+    const templateStart = html.indexOf('{{#crewMembers}}')
+    const templateEnd =
+      html.indexOf('{{/crewMembers}}') + '{{/crewMembers}}'.length
+
+    if (templateStart === -1 || templateEnd === -1) {
+      return html
+    }
+
+    // Extract the template
+    const template = html.substring(
+      templateStart + '{{#crewMembers}}'.length,
+      templateEnd - '{{/crewMembers}}'.length,
+    )
+
+    // Generate HTML for each crew member
+    const crewMemberHtml = crewMembers
+      .map((member) => {
+        let memberHtml = template
+        memberHtml = memberHtml.replace(/\{\{name\}\}/g, member.name)
+        memberHtml = memberHtml.replace(/\{\{badge\}\}/g, member.badge)
+        memberHtml = memberHtml.replace(/\{\{style\}\}/g, member.style)
         return memberHtml
       })
       .join('')
@@ -249,9 +362,11 @@ export class TemplateCompiler {
       // Primary color mappings
       { from: '#059669', to: colors.primaryColor },
       { from: '#15803d', to: colors.primaryColor },
+      { from: '#094e2a', to: colors.primaryColor }, // Text colors
       { from: '#10b981', to: colors.secondaryColor },
       // Secondary color mappings
       { from: '#f9a8d4', to: colors.secondaryColor },
+      { from: '#f3bfd4', to: colors.secondaryColor }, // Header text color
       { from: '#d946ef', to: colors.secondaryColor },
     ]
 
@@ -295,9 +410,10 @@ export class TemplateCompiler {
   private static applySpecialColors(html: string, colors: ColorScheme): string {
     let styledHtml = html
 
-    // Apply SVG fill colors for Template 2 (diagonal split)
+    // Apply SVG fill colors for Template 1 (diagonal split layout)
+    // Background should be secondary color, diagonal sections should be primary color
     styledHtml = styledHtml.replace(
-      /fill="#f9a8d4"/g,
+      /fill="#f3bfd4"/g,
       `fill="${colors.secondaryColor}"`,
     )
     styledHtml = styledHtml.replace(
@@ -529,6 +645,13 @@ export class TemplateCompiler {
     const boatCode = crew.boatType?.code || '8+'
     const boatImageInfo = this.getBoatImageInfo(boatCode)
 
+    // Get club logo information
+    const clubLogoInfo = this.getClubLogoInfo(crew.club?.logoUrl)
+
+    // Enhanced data for Template 4 (Professional Layout)
+    const crewMembersWithPositions = this.generateCrewPositions(crewMembers, boatCode)
+    const crewCategory = this.generateCrewCategory(crew)
+
     return {
       CLUB_NAME: crew.club?.name || crew.clubName || 'Rowing Club',
       CREW_NAME: crew.name || 'Crew',
@@ -544,6 +667,14 @@ export class TemplateCompiler {
       CREW_MEMBERS: crewMembers,
       BOAT_IMAGE_URL: boatImageInfo.url,
       BOAT_IMAGE_AVAILABLE: boatImageInfo.available,
+      // Enhanced Template 4 data
+      raceName: crew.raceName || 'Championship Regatta 2025',
+      crewCategory: crewCategory,
+      crewMembers: crewMembersWithPositions,
+      clubLogo: clubLogoInfo.url || null,
+      clubName: crew.club?.name || crew.clubName || 'Rowing Club',
+      boatImage: boatImageInfo.url,
+      positions: this.generateOarPositions(boatCode),
     }
   }
 
@@ -628,5 +759,92 @@ export class TemplateCompiler {
           secondaryColor: preset.secondaryColor,
         }
       : null
+  }
+
+  /**
+   * Generate crew positions with styling for Template 4
+   */
+  private static generateCrewPositions(crewMembers: any[], boatCode: string) {
+    return crewMembers.map((member, index) => {
+      const position = this.getPositionBadge(member.POSITION, index + 1, crewMembers.length)
+      const style = this.getPositionStyle(position.badge, boatCode)
+
+      return {
+        name: member.NAME,
+        position: position.badge,
+        badge: position.badge,
+        style: style
+      }
+    })
+  }
+
+  /**
+   * Generate crew category string (e.g., "M1 Senior Men | Open Club 8+")
+   */
+  private static generateCrewCategory(crew: any): string {
+    const category = crew.category || 'M1 Senior Men'
+    const competition = crew.competition || 'Open Club'
+    const boatCode = crew.boatType?.code || '8+'
+
+    return `${category} | ${competition} ${boatCode}`
+  }
+
+  /**
+   * Get position badge text for crew member
+   */
+  private static getPositionBadge(position: string, seatNumber: number, totalSeats: number) {
+    if (position === 'Coxswain') {
+      return { badge: 'C', fullName: 'Coxswain' }
+    }
+
+    if (seatNumber === 1) {
+      return { badge: 'B', fullName: 'Bow' }
+    }
+
+    if (seatNumber === totalSeats - 1) { // Exclude cox from total
+      return { badge: 'S', fullName: 'Stroke' }
+    }
+
+    return { badge: seatNumber.toString(), fullName: `Seat ${seatNumber}` }
+  }
+
+  /**
+   * Get CSS positioning style for crew member based on boat layout
+   */
+  private static getPositionStyle(badge: string, boatCode: string): string {
+    const positions: Record<string, string> = {
+      'B': 'top: 50%; right: 50px; transform: translateY(-50%);',
+      '2': 'top: 35%; left: 40px;',
+      '3': 'top: 65%; right: 40px;',
+      '4': 'top: 30%; left: 30px;',
+      '5': 'top: 70%; right: 30px;',
+      '6': 'top: 25%; left: 20px;',
+      '7': 'top: 75%; right: 20px;',
+      'S': 'top: 20%; left: 50px;',
+      'C': 'bottom: 40px; left: 50%; transform: translateX(-50%);'
+    }
+
+    return positions[badge] || 'top: 50%; left: 50%; transform: translate(-50%, -50%);'
+  }
+
+  /**
+   * Generate oar positions for boat diagram
+   */
+  private static generateOarPositions(boatCode: string) {
+    const positions = []
+    const seatCount = parseInt(boatCode.charAt(0)) || 8
+
+    for (let i = 1; i <= seatCount; i++) {
+      const isPort = i % 2 === 0 // Even seats are port side
+      const oarX = 50 + (i * 35) // Spread oars along boat
+
+      positions.push({
+        seat: i,
+        isPort: isPort,
+        oarX: oarX
+      })
+    }
+
+    return positions
   }
 }

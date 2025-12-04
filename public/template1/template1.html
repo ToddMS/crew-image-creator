@@ -3,45 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Template 1 - Corner Brackets</title>
+    <title>Professional Rowing Layout</title>
     <link rel="stylesheet" href="template1.css" />
   </head>
   <body>
     <div class="template-container">
-      <!-- White background with black border -->
-      <div class="background"></div>
+      <!-- Background with diagonal split -->
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 1080 1080"
+        preserveAspectRatio="none"
+        class="background-svg"
+      >
+        <!-- Primary color background -->
+        <rect width="1080" height="1080" fill="#15803d" />
 
-      <!-- Corner brackets -->
-      <div class="corner-brackets">
-        <!-- Top-left corner - Pink -->
-        <div class="bracket bracket-top-left pink">
-          <div class="bracket-horizontal"></div>
-          <div class="bracket-vertical"></div>
-        </div>
+        <!-- Secondary color diagonal section with parallel lines -->
+        <polygon points="0,216 1080,108 1080,864 0,972" fill="#f3bfd4" />
 
-        <!-- Top-right corner - Green -->
-        <div class="bracket bracket-top-right green">
-          <div class="bracket-horizontal"></div>
-          <div class="bracket-vertical"></div>
-        </div>
+        <!-- Black border -->
+        <rect width="1080" height="1080" fill="none" stroke="black" stroke-width="5" />
 
-        <!-- Bottom-left corner - Green -->
-        <div class="bracket bracket-bottom-left green">
-          <div class="bracket-horizontal"></div>
-          <div class="bracket-vertical"></div>
-        </div>
+        <!-- Parallel diagonal separation lines -->
+        <line
+          x1="0"
+          y1="216"
+          x2="1080"
+          y2="108"
+          stroke="black"
+          stroke-width="5"
+        />
+        <line
+          x1="0"
+          y1="972"
+          x2="1080"
+          y2="864"
+          stroke="black"
+          stroke-width="5"
+        />
+      </svg>
 
-        <!-- Bottom-right corner - Pink -->
-        <div class="bracket bracket-bottom-right pink">
-          <div class="bracket-horizontal"></div>
-          <div class="bracket-vertical"></div>
-        </div>
+      <!-- Header text in top-left -->
+      <!-- <div class="header-text">
+        <h1 class="race-name">{{raceName}}</h1>
+        <p class="crew-category">{{crewCategory}}</p>
+      </div> -->
+
+      <!-- Boat image - much larger and centered -->
+      {{#BOAT_IMAGE_AVAILABLE}}
+      <div class="boat-container">
+        {{BOAT_IMAGE}}
       </div>
+      {{/BOAT_IMAGE_AVAILABLE}}
 
-      <!-- Content area -->
-      <div class="content">
-        <!-- Content will be dynamically inserted here -->
+      <!-- Crew members positioned around boat -->
+      <!-- <div class="crew-positions">
+        {{#crewMembers}}
+        <div class="crew-position" data-seat="{{position}}" style="{{style}}">
+          <div class="position-badge">{{badge}}</div>
+          <div class="member-name">{{name}}</div>
+        </div>
+        {{/crewMembers}}
+      </div> -->
+
+      <!-- Club logo in bottom-right -->
+      {{#clubLogo}}
+      <div class="club-logo">
+        <img src="{{clubLogo}}" alt="Club Logo" />
       </div>
+      {{/clubLogo}}
     </div>
   </body>
 </html>

@@ -67,8 +67,8 @@ export class ImageGenerationService {
     return {
       imageUrl: `/uploads/${filename}`,
       filename,
-      width: 1200,
-      height: 800,
+      width: 1080,
+      height: 1080,
     }
   }
 
@@ -99,9 +99,7 @@ export class ImageGenerationService {
     colors: { primaryColor: string; secondaryColor: string },
   ): Promise<string> {
     const templateMap: Record<string, string> = {
-      'Classic Program': 'template1',
-      'Modern Geometric': 'template2',
-      'Dynamic Crew Program': 'template3',
+      'Template 1': 'template1',
     }
 
     const templateName = templateMap[template.name] || 'template1'
@@ -307,7 +305,7 @@ export class ImageGenerationService {
       const page = await browser.newPage()
 
       // Set viewport for consistent image size
-      await page.setViewport({ width: 1200, height: 800 })
+      await page.setViewport({ width: 1080, height: 1080 })
 
       // Load HTML content with embedded base64 images
       await page.setContent(html, { waitUntil: 'networkidle0' })
@@ -320,7 +318,7 @@ export class ImageGenerationService {
         path: outputPath,
         type: 'png',
         fullPage: false,
-        clip: { x: 0, y: 0, width: 1200, height: 800 },
+        clip: { x: 0, y: 0, width: 1080, height: 1080 },
       })
     } finally {
       await browser.close()

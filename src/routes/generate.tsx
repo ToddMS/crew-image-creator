@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { TemplateSelector } from '../components/TemplateSelector'
@@ -38,6 +38,7 @@ export const Route = createFileRoute('/generate')({
 })
 
 function GenerateImagePage() {
+  const navigate = useNavigate()
   const [selectedCrewId, setSelectedCrewId] = useState<string>('')
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -64,8 +65,8 @@ function GenerateImagePage() {
   const generateImageMutation = trpc.savedImage.generate.useMutation({
     onSuccess: (data) => {
       setIsGenerating(false)
-      alert(`Image generated successfully! Saved as: ${data.filename}`)
-      // TODO: Navigate to gallery or show success message with preview
+      // Navigate to gallery instead of showing toast
+      navigate({ to: '/gallery' })
     },
     onError: (error) => {
       setIsGenerating(false)

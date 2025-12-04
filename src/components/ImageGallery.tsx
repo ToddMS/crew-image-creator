@@ -268,153 +268,40 @@ function ImageDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold">Image Details</h2>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600"
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50 p-4">
+      {/* Header with image name and close button */}
+      <div className="flex items-center justify-between w-full max-w-6xl mb-4">
+        <h2 className="text-xl font-semibold text-white">
+          {savedImage.crew?.name || 'Unknown Crew'}
+        </h2>
+        <button
+          onClick={onClose}
+          className="p-2 text-white hover:text-gray-300 transition-colors"
+        >
+          <svg
+            className="w-8 h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
 
-        <div className="p-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Image */}
-            <div>
-              <img
-                src={savedImage.imageUrl}
-                alt={`${savedImage.crew?.name} - ${savedImage.template?.name}`}
-                className="w-full rounded-lg shadow-sm"
-              />
-            </div>
-
-            {/* Details */}
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">
-                  Crew Information
-                </h3>
-                <div className="bg-gray-50 p-3 rounded-lg space-y-2 text-sm">
-                  <p>
-                    <span className="font-medium">Name:</span>{' '}
-                    {savedImage.crew?.name || 'Unknown'}
-                  </p>
-                  <p>
-                    <span className="font-medium">Boat:</span>{' '}
-                    {savedImage.crew?.boatType?.name} (
-                    {savedImage.crew?.boatType?.code})
-                  </p>
-                  <p>
-                    <span className="font-medium">Race:</span>{' '}
-                    {savedImage.crew?.raceName || 'Not specified'}
-                  </p>
-                  {savedImage.crew?.club && (
-                    <div>
-                      <span className="font-medium">Club:</span>{' '}
-                      {savedImage.crew.club.name}
-                      <div className="flex items-center gap-2 mt-1">
-                        <div
-                          className="w-4 h-4 rounded border border-gray-300"
-                          style={{
-                            backgroundColor: savedImage.crew.club.primaryColor,
-                          }}
-                        />
-                        <div
-                          className="w-4 h-4 rounded border border-gray-300"
-                          style={{
-                            backgroundColor:
-                              savedImage.crew.club.secondaryColor,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">
-                  Template Information
-                </h3>
-                <div className="bg-gray-50 p-3 rounded-lg space-y-2 text-sm">
-                  <p>
-                    <span className="font-medium">Name:</span>{' '}
-                    {savedImage.template?.name}
-                  </p>
-                  <p>
-                    <span className="font-medium">Type:</span>{' '}
-                    {savedImage.template?.templateType}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">
-                  File Information
-                </h3>
-                <div className="bg-gray-50 p-3 rounded-lg space-y-2 text-sm">
-                  <p>
-                    <span className="font-medium">Filename:</span>{' '}
-                    {savedImage.filename}
-                  </p>
-                  <p>
-                    <span className="font-medium">Created:</span>{' '}
-                    {new Date(savedImage.createdAt).toLocaleString()}
-                  </p>
-                  {savedImage.metadata && (
-                    <>
-                      {savedImage.metadata.width &&
-                        savedImage.metadata.height && (
-                          <p>
-                            <span className="font-medium">Dimensions:</span>{' '}
-                            {savedImage.metadata.width} ×{' '}
-                            {savedImage.metadata.height}
-                          </p>
-                        )}
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-4">
-                <button
-                  onClick={() =>
-                    onDownload(savedImage.imageUrl, savedImage.filename)
-                  }
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Download
-                </button>
-                <button
-                  onClick={() => {
-                    onDelete(savedImage.id)
-                    onClose()
-                  }}
-                  className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Full-size image */}
+      <div className="flex-1 w-full max-w-6xl flex items-center justify-center">
+        <img
+          src={savedImage.imageUrl}
+          alt={`${savedImage.crew?.name} - ${savedImage.template?.name}`}
+          className="max-w-full max-h-full object-contain"
+          onClick={onClose}
+        />
       </div>
     </div>
   )

@@ -5,10 +5,11 @@ import { prisma } from '../../lib/prisma'
 export const crewRouter = router({
   getAll: publicProcedure.query(async () => {
     try {
-      // First try a simple query without includes
+      // Include club data for logo information
       return await prisma.crew.findMany({
         include: {
           boatType: true,
+          club: true,
         },
       })
     } catch (error) {
@@ -43,6 +44,7 @@ export const crewRouter = router({
         where: { userId: input.userId },
         include: {
           boatType: true,
+          club: true,
           savedImages: {
             include: {
               template: true,
