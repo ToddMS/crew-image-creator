@@ -143,6 +143,7 @@ async function main() {
     create: {
       email: 'demo@rowing-club.com',
       name: 'Demo Rower',
+      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
       preferences: {
         defaultClub: 'Sample Rowing Club',
         favoriteTemplateType: 'classic',
@@ -192,49 +193,127 @@ async function main() {
 
   console.log('✅ Created sample clubs')
 
-  // Create a sample crew
-  console.log('Creating sample crew...')
+  // Create multiple sample crews
+  console.log('Creating sample crews...')
 
-  const eightBoatType = await prisma.boatType.findFirst({
-    where: { code: '8+' },
+  const boatTypeMap = await prisma.boatType.findMany()
+  const eightBoatType = boatTypeMap.find(bt => bt.code === '8+')
+  const fourBoatType = boatTypeMap.find(bt => bt.code === '4-')
+  const pairBoatType = boatTypeMap.find(bt => bt.code === '2-')
+  const singleBoatType = boatTypeMap.find(bt => bt.code === '1x')
+
+  const sampleClub = await prisma.club.findFirst({
+    where: { name: 'Sample Rowing Club', userId: sampleUser.id },
   })
 
-  if (eightBoatType) {
-    const existingCrew = await prisma.crew.findFirst({
-      where: { name: 'Sample Eight', userId: sampleUser.id },
-    })
+  const thamesClub = await prisma.club.findFirst({
+    where: { name: 'Thames Rowing Club', userId: sampleUser.id },
+  })
 
-    const sampleClub = await prisma.club.findFirst({
-      where: { name: 'Sample Rowing Club', userId: sampleUser.id },
-    })
+  const cambridgeClub = await prisma.club.findFirst({
+    where: { name: 'Cambridge University Boat Club', userId: sampleUser.id },
+  })
 
-    if (!existingCrew) {
-      await prisma.crew.create({
-        data: {
-          name: 'Sample Eight',
-          clubId: sampleClub?.id, // Use club reference
-          raceName: 'Head of the River',
-          boatName: 'Thunder',
-          coachName: 'Coach Smith',
-          crewNames: [
-            'Alice Johnson', // Bow (1)
-            'Bob Wilson', // 2
-            'Charlie Brown', // 3
-            'Diana Prince', // 4
-            'Edward Norton', // 5
-            'Fiona Green', // 6
-            'George Lucas', // 7
-            'Helen Troy', // Stroke (8)
-            'Ian Cox', // Coxswain
-          ],
-          boatTypeId: eightBoatType.id,
-          userId: sampleUser.id,
-        },
+  const sampleCrews = [
+    {
+      name: 'Varsity Eight',
+      clubId: cambridgeClub?.id,
+      raceName: 'The Boat Race 2024',
+      boatName: 'Goldie',
+      coachName: 'Rob Baker',
+      crewNames: [
+        'James Mitchell', 'William Thompson', 'Oliver Jackson', 'George White',
+        'Harry Davies', 'Jack Wilson', 'Charlie Moore', 'Thomas Taylor',
+        'Emma Cox'
+      ],
+      boatTypeId: eightBoatType?.id,
+      userId: sampleUser.id,
+    },
+    {
+      name: 'Senior Four',
+      clubId: thamesClub?.id,
+      raceName: 'Henley Royal Regatta',
+      boatName: 'Lightning',
+      coachName: 'Sarah Parker',
+      crewNames: ['Alex Johnson', 'Sam Williams', 'Ben Davies', 'Tom Evans'],
+      boatTypeId: fourBoatType?.id,
+      userId: sampleUser.id,
+    },
+    {
+      name: 'Championship Pair',
+      clubId: sampleClub?.id,
+      raceName: 'World Championships',
+      boatName: 'Velocity',
+      coachName: 'Helen Cooper',
+      crewNames: ['Matthew Hall', 'Joshua Allen'],
+      boatTypeId: pairBoatType?.id,
+      userId: sampleUser.id,
+    },
+    {
+      name: 'Elite Single',
+      clubId: thamesClub?.id,
+      raceName: 'Diamond Challenge Sculls',
+      boatName: 'Phoenix',
+      coachName: 'David Turner',
+      crewNames: ['Sophie Martin'],
+      boatTypeId: singleBoatType?.id,
+      userId: sampleUser.id,
+    }
+  ]
+
+  for (const crew of sampleCrews) {
+    if (crew.boatTypeId) {
+      const existingCrew = await prisma.crew.findFirst({
+        where: { name: crew.name, userId: sampleUser.id },
       })
+
+      if (!existingCrew) {
+        await prisma.crew.create({
+          data: crew,
+        })
+      }
     }
   }
 
-  console.log('✅ Created sample crew')
+  console.log('✅ Created sample crews')
+
+  // Create some saved images
+  console.log('Creating sample saved images...')
+
+  const allTemplates = await prisma.template.findMany()
+  const crews = await prisma.crew.findMany({ where: { userId: sampleUser.id } })
+
+  if (allTemplates.length > 0 && crews.length > 0) {
+    for (let i = 0; i < Math.min(3, crews.length); i++) {
+      const existingImage = await prisma.savedImage.findFirst({
+        where: {
+          crewId: crews[i].id,
+          userId: sampleUser.id
+        },
+      })
+
+      if (!existingImage) {
+        await prisma.savedImage.create({
+          data: {
+            filename: `crew_image_${i + 1}.jpg`,
+            imageUrl: `https://images.unsplash.com/photo-156${i}000000?w=1080&h=1080&fit=crop`,
+            fileSize: 256000 + (i * 50000),
+            dimensions: { width: 1080, height: 1080 },
+            metadata: {
+              template: allTemplates[i % allTemplates.length].name,
+              generated: new Date().toISOString(),
+              colors: ['#1e3a8a', '#ffffff']
+            },
+            crewId: crews[i].id,
+            templateId: allTemplates[i % allTemplates.length].id,
+            userId: sampleUser.id
+          }
+        })
+      }
+    }
+  }
+
+  console.log('✅ Created sample saved images')
 
   const counts = {
     boatTypes: await prisma.boatType.count(),

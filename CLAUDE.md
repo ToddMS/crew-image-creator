@@ -75,6 +75,11 @@ src/
 - **Import Order**: External → Internal → Relative imports
 - **Error Handling**: Proper error boundaries and loading states
 
+### Documentation & AI Assistance
+- **Library Documentation**: Always use Context7 MCP for up-to-date library documentation when working with external dependencies
+- **Before adding dependencies**: Check Context7 for current best practices, API changes, and usage examples
+- **When troubleshooting**: Consult Context7 for the latest documentation on framework features, hooks, and patterns
+
 ### Git Workflow
 ```bash
 # Feature development
