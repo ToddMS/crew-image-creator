@@ -14,7 +14,7 @@
 
 /* Main Content Container */
 .my-crews-container .container {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 1.5rem 1.5rem 6rem !important;
 }
@@ -29,7 +29,7 @@
   gap: 1rem;
   animation: staggerIn 0.6s ease-out;
   width: 100%;
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -90,7 +90,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .crew-card-title {
@@ -145,14 +145,14 @@
 
 /* Compact Info Row */
 .crew-compact-info {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .crew-compact-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.1875rem 0;
+  padding: 0.0625rem 0;
 }
 
 .crew-compact-label {
@@ -169,11 +169,11 @@
 
 /* Expandable Crew Members */
 .crew-members {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   background: var(--gray-100);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius);
-  padding: 0.75rem;
+  padding: 0.5rem;
 }
 
 .crew-members-header {
@@ -263,15 +263,34 @@
 }
 
 .coach-position .crew-member-seat {
-  background: var(--secondary) !important;
-  color: var(--white) !important;
+  background: var(--primary-light) !important;
+  color: var(--primary) !important;
   min-width: 40px !important;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.1875rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .crew-member-seat.coach {
-  background: var(--secondary);
-  color: var(--white);
+  background: var(--primary-light);
+  color: var(--primary);
   min-width: 40px;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.1875rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.coach-position .crew-member-name {
+  font-size: 0.6875rem;
+  color: var(--gray-900);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .crew-actions {
