@@ -848,15 +848,15 @@ export class TemplateCompiler {
    */
   private static getPositionStyle(badge: string, boatCode: string): string {
     const positions: Record<string, string> = {
-      'B': 'top: 37% !important; right: 320px !important;',
-      '2': 'top: 41% !important; left: 320px !important;',
-      '3': 'top: 47% !important; right: 320px !important;',
-      '4': 'top: 51% !important; left: 320px !important;',
-      '5': 'top: 57% !important; right: 320px !important;',
-      '6': 'top: 61% !important; left: 320px !important;',
-      '7': 'top: 67% !important; right: 320px !important;',
-      'S': 'top: 72% !important; left: 320px !important;',
-      'C': 'top: 76% !important; right: 475px !important;'
+      'B': 'top: 37% !important; right: 360px !important;',
+      '2': 'top: 41% !important; left: 310px !important;',
+      '3': 'top: 47% !important; right: 360px !important;',
+      '4': 'top: 51% !important; left: 310px !important;',
+      '5': 'top: 57% !important; right: 360px !important;',
+      '6': 'top: 61% !important; left: 310px !important;',
+      '7': 'top: 67% !important; right: 360px !important;',
+      'S': 'top: 72% !important; left: 310px !important;',
+      'C': 'top: 76% !important; right: 520px !important;'
     }
 
     return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'

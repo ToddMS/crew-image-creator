@@ -95,9 +95,7 @@ body {
 
 .crew-position {
   position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  transform: translateY(-50%); /* Center the container on its anchor point */
 }
 
 .position-badge {
@@ -113,6 +111,9 @@ body {
   color: #094e2a; /* Will be replaced with primary color */
   font-family: 'Inter', sans-serif;
   border: 2px solid rgba(0, 0, 0, 0.1);
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 .member-name {
@@ -121,6 +122,27 @@ body {
   color: #094e2a; /* Will be replaced with primary color */
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
+  position: absolute;
+  top: 25px; /* Center vertically with badge (badge height 50px / 2) */
+  transform: translateY(-50%);
+}
+
+/* Left side positions: names extend to the left */
+.crew-position[data-seat="2"] .member-name,
+.crew-position[data-seat="4"] .member-name,
+.crew-position[data-seat="6"] .member-name,
+.crew-position[data-seat="S"] .member-name {
+  right: 15px; /* Badge width (50px) + gap (15px) */
+  text-align: right;
+}
+
+/* Right side positions: names extend to the right */
+.crew-position[data-seat="3"] .member-name,
+.crew-position[data-seat="5"] .member-name,
+.crew-position[data-seat="7"] .member-name,
+.crew-position[data-seat="B"] .member-name,
+.crew-position[data-seat="C"] .member-name {
+  left: 65px; /* Badge width (50px) + gap (15px) */
 }
 
 
