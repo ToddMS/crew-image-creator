@@ -44,7 +44,14 @@ export class ImageGenerationService {
     template: Template,
     colors?: { primaryColor: string; secondaryColor: string },
   ): Promise<GeneratedImage> {
+    console.log('🎯 DEBUG: ImageGeneration.generateCrewImage called with:')
+    console.log('  - Crew ID:', crew.id, 'Crew Name:', crew.name)
+    console.log('  - Template ID:', template.id, 'Template Name:', template.name)
+    console.log('  - Template Type:', template.templateType)
+    console.log('  - Template Metadata:', JSON.stringify(template.metadata, null, 2))
+
     const filename = `${crew.name.toLowerCase().replace(/\s+/g, '-')}-${template.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`
+    console.log('  - Generated filename:', filename)
     const outputPath = path.join(process.cwd(), 'public', 'uploads', filename)
 
     // Ensure output directory exists
@@ -98,25 +105,31 @@ export class ImageGenerationService {
     crew: Crew,
     colors: { primaryColor: string; secondaryColor: string },
   ): Promise<string> {
-    const templateMap: Record<string, string> = {
-      'Template 1': 'template1',
+    // Use template metadata to get file paths, or fallback to name mapping
+    let htmlPath: string
+    let cssPath: string
+    let templateName: string
+
+    if (template.metadata?.htmlFile && template.metadata?.cssFile) {
+      // Use paths from template metadata
+      htmlPath = path.join(process.cwd(), 'public', template.metadata.htmlFile)
+      cssPath = path.join(process.cwd(), 'public', template.metadata.cssFile)
+      templateName = path.basename(path.dirname(template.metadata.htmlFile))
+    } else {
+      // Fallback to legacy mapping for older templates
+      const templateMap: Record<string, string> = {
+        'Diagonal Professional': 'templates/template1',
+        'Corner Brackets Modern': 'templates/template2',
+        'Template 1': 'templates/template1',
+        'Template 2': 'templates/template2',
+      }
+
+      const templateDir = templateMap[template.name] || 'templates/template1'
+      const templateName = path.basename(templateDir)
+
+      htmlPath = path.join(process.cwd(), 'public', templateDir, `${templateName}.html`)
+      cssPath = path.join(process.cwd(), 'public', templateDir, `${templateName}.css`)
     }
-
-    const templateName = templateMap[template.name] || 'template1'
-
-    // Load HTML and CSS files
-    const htmlPath = path.join(
-      process.cwd(),
-      'public',
-      templateName,
-      `${templateName}.html`,
-    )
-    const cssPath = path.join(
-      process.cwd(),
-      'public',
-      templateName,
-      `${templateName}.css`,
-    )
 
     let htmlContent = await fs.readFile(htmlPath, 'utf-8')
     const cssContent = await fs.readFile(cssPath, 'utf-8')

@@ -6,7 +6,7 @@ export const templateRouter = router({
   getAll: publicProcedure.query(async () => {
     return await prisma.template.findMany({
       where: { isActive: true },
-      orderBy: { templateType: 'asc' },
+      orderBy: { createdAt: 'asc' },
     })
   }),
 

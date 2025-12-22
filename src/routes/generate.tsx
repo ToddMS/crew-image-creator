@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { TemplateSelector } from '../components/TemplateSelector'
+import { useAuth } from '../lib/auth-context'
 
 // Custom scrollbar styles
 const scrollbarStyles = `
@@ -39,6 +40,7 @@ export const Route = createFileRoute('/generate')({
 
 function GenerateImagePage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [selectedCrewId, setSelectedCrewId] = useState<string>('')
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -75,6 +77,12 @@ function GenerateImagePage() {
   })
 
   const handleGenerateImage = async () => {
+    console.log('🎪 DEBUG: Frontend handleGenerateImage called with:')
+    console.log('  - selectedCrewId:', selectedCrewId)
+    console.log('  - selectedTemplateId:', selectedTemplateId)
+    console.log('  - selectedCrew:', selectedCrew?.name)
+    console.log('  - selectedTemplate:', selectedTemplate?.name)
+
     if (!selectedCrewId || !selectedTemplateId) {
       alert('Please select both a crew and a template')
       return
@@ -82,9 +90,8 @@ function GenerateImagePage() {
 
     setIsGenerating(true)
 
-    // For demo purposes, using a default user ID
-    // In a real app, this would come from authentication context
-    const userId = 'demo-user-id'
+    // Use authenticated user ID or fall back to undefined (backend handles demo user)
+    const userId = user?.id
 
     // Determine colors to use
     let colors = undefined

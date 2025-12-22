@@ -48,9 +48,10 @@ export class TemplateCompiler {
    * Available boat images - maps boat codes to clean filenames
    */
   private static readonly BOAT_IMAGE_MAP: Record<string, string> = {
-    '2-': '2-.png',
-    '4+': '4+.png',
-    '8+': '8+.png',
+    '2-': '2-.svg',
+    '4-': '4-.svg',
+    '4+': '4+.svg',
+    '8+': '8+.svg',
   }
 
   /**
@@ -77,7 +78,10 @@ export class TemplateCompiler {
           // Convert to base64 data URL for reliable loading in puppeteer
           const imageBuffer = readFileSync(imagePath)
           const base64 = imageBuffer.toString('base64')
-          const dataUrl = `data:image/png;base64,${base64}`
+          // Detect file extension for proper MIME type
+          const extension = filename.split('.').pop()?.toLowerCase()
+          const mimeType = extension === 'svg' ? 'image/svg+xml' : 'image/png'
+          const dataUrl = `data:${mimeType};base64,${base64}`
           return { available: true, url: dataUrl }
         }
       }
@@ -147,6 +151,9 @@ export class TemplateCompiler {
     colors: ColorScheme,
     templateMetadata?: TemplateMetadata,
   ): string {
+    console.log('🎯 DEBUG: TemplateCompiler.compileTemplate called')
+    console.log('  - Has crewMembers:', !!data.crewMembers, 'Count:', data.crewMembers?.length)
+    console.log('  - crewMembers data:', JSON.stringify(data.crewMembers, null, 2))
     let compiledHtml = templateHtml
 
     // Replace single variables (both uppercase and lowercase versions)
@@ -617,26 +624,40 @@ export class TemplateCompiler {
 
     // Add regular crew members
     if (crew.crewNames && Array.isArray(crew.crewNames)) {
-      let regularRowerIndex = 1
+      const boatSeats = crew.boatType?.seats || 8
+      const hasCox = crew.boatType?.code?.includes('+') || false
+      // For coxed boats, rower seats are 1 to 8 (not 9), cox is separate
+      const maxRowerSeat = hasCox ? 8 : boatSeats
 
-      crew.crewNames.forEach((name: string) => {
+      console.log(`🎯 DEBUG: boatSeats=${boatSeats}, hasCox=${hasCox}, maxRowerSeat=${maxRowerSeat}`)
+
+      crew.crewNames.forEach((name: string, index: number) => {
         if (name.toLowerCase().startsWith('cox:')) {
-          // Handle coxswain
+          // Handle coxswain with "cox:" prefix
           crewMembers.push({
             POSITION: 'Coxswain',
             NAME: name.replace(/^cox:\s*/i, '').trim(),
           })
-        } else {
-          // Handle regular rowers
-          const position = this.getPositionLabel(
-            regularRowerIndex,
-            crew.boatType?.seats || 8,
-          )
+        } else if (hasCox && index === 0) {
+          // First crew member in coxed boats is the coxswain
           crewMembers.push({
-            POSITION: position,
+            POSITION: 'Coxswain',
             NAME: name.trim(),
           })
-          regularRowerIndex++
+        } else {
+          // Handle rowers in reverse order (cox -> stroke -> ... -> bow)
+          // For 8+: Tim(idx 1)=Stroke(8), Todd(idx 2)=7, ..., Alex(idx 8)=Bow(1)
+          const seatNumber = hasCox ? maxRowerSeat - (index - 1) : maxRowerSeat - index + 1
+
+          // Only create rower positions for valid seat numbers (1 to maxRowerSeat)
+          if (seatNumber >= 1 && seatNumber <= maxRowerSeat) {
+            const position = this.getPositionLabel(seatNumber, maxRowerSeat)
+
+            crewMembers.push({
+              POSITION: position,
+              NAME: name.trim(),
+            })
+          }
         }
       })
     }
@@ -766,13 +787,27 @@ export class TemplateCompiler {
    */
   private static generateCrewPositions(crewMembers: any[], boatCode: string) {
     return crewMembers.map((member, index) => {
-      const position = this.getPositionBadge(member.POSITION, index + 1, crewMembers.length)
-      const style = this.getPositionStyle(position.badge, boatCode)
+      // member.POSITION already contains the correct position string
+      let badge: string
+
+      if (member.POSITION === 'Coxswain') {
+        badge = 'C'
+      } else if (member.POSITION === 'Bow') {
+        badge = 'B'
+      } else if (member.POSITION === 'Stroke') {
+        badge = 'S'
+      } else {
+        // Extract seat number from "Seat X" format
+        const seatMatch = member.POSITION.match(/Seat (\d+)/)
+        badge = seatMatch ? seatMatch[1] : member.POSITION
+      }
+
+      const style = this.getPositionStyle(badge, boatCode)
 
       return {
         name: member.NAME,
-        position: position.badge,
-        badge: position.badge,
+        position: badge,
+        badge: badge,
         style: style
       }
     })
@@ -813,18 +848,18 @@ export class TemplateCompiler {
    */
   private static getPositionStyle(badge: string, boatCode: string): string {
     const positions: Record<string, string> = {
-      'B': 'top: 50%; right: 50px; transform: translateY(-50%);',
-      '2': 'top: 35%; left: 40px;',
-      '3': 'top: 65%; right: 40px;',
-      '4': 'top: 30%; left: 30px;',
-      '5': 'top: 70%; right: 30px;',
-      '6': 'top: 25%; left: 20px;',
-      '7': 'top: 75%; right: 20px;',
-      'S': 'top: 20%; left: 50px;',
-      'C': 'bottom: 40px; left: 50%; transform: translateX(-50%);'
+      'B': 'top: 37% !important; right: 320px !important;',
+      '2': 'top: 41% !important; left: 320px !important;',
+      '3': 'top: 47% !important; right: 320px !important;',
+      '4': 'top: 51% !important; left: 320px !important;',
+      '5': 'top: 57% !important; right: 320px !important;',
+      '6': 'top: 61% !important; left: 320px !important;',
+      '7': 'top: 67% !important; right: 320px !important;',
+      'S': 'top: 72% !important; left: 320px !important;',
+      'C': 'top: 76% !important; right: 475px !important;'
     }
 
-    return positions[badge] || 'top: 50%; left: 50%; transform: translate(-50%, -50%);'
+    return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }
 
   /**

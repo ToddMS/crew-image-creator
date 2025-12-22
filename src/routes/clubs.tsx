@@ -300,29 +300,6 @@ function ClubsPage() {
               <div className="loading-spinner"></div>
               <p>Loading clubs...</p>
             </div>
-          ) : filteredClubs.length === 0 ? (
-            <div className="empty-state">
-              {searchTerm ? (
-                <>
-                  <h3>No clubs found</h3>
-                  <p>No clubs match "{searchTerm}"</p>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setSearchTerm('')}
-                  >
-                    Clear Search
-                  </button>
-                </>
-              ) : (
-                <>
-                  <h3>No Clubs Yet</h3>
-                  <p>Create your first club preset to get started</p>
-                  <button className="btn btn-primary" onClick={startNewClub}>
-                    Create First Club
-                  </button>
-                </>
-              )}
-            </div>
           ) : (
             <>
               {isCreatingNew && (
@@ -415,6 +392,32 @@ function ClubsPage() {
                   </div>
                 </div>
               )}
+
+              {filteredClubs.length === 0 && !isCreatingNew ? (
+                <div className="empty-state">
+                  {searchTerm ? (
+                    <>
+                      <h3>No clubs found</h3>
+                      <p>No clubs match "{searchTerm}"</p>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setSearchTerm('')}
+                      >
+                        Clear Search
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <h3>No Clubs Yet</h3>
+                      <p>Create your first club preset to get started</p>
+                      <button className="btn btn-primary" onClick={startNewClub}>
+                        Create First Club
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : null}
+
               {filteredClubs.map((club) => {
                 const isEditing = editingClubId === club.id
                 const editData = editForm[club.id] || club

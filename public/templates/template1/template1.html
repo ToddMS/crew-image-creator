@@ -45,10 +45,10 @@
       </svg>
 
       <!-- Header text in top-left -->
-      <!-- <div class="header-text">
-        <h1 class="race-name">{{raceName}}</h1>
+      <div class="header-text">
+        <h1 class="race-name">{{RACE_NAME}}</h1>
         <p class="crew-category">{{crewCategory}}</p>
-      </div> -->
+      </div>
 
       <!-- Boat image - much larger and centered -->
       {{#BOAT_IMAGE_AVAILABLE}}
@@ -57,15 +57,14 @@
       </div>
       {{/BOAT_IMAGE_AVAILABLE}}
 
-      <!-- Crew members positioned around boat -->
-      <!-- <div class="crew-positions">
+      <!-- Crew position badges around boat -->
+      <div class="crew-positions">
         {{#crewMembers}}
-        <div class="crew-position" data-seat="{{position}}" style="{{style}}">
+        <div class="crew-position" data-seat="{{badge}}" style="{{style}}">
           <div class="position-badge">{{badge}}</div>
-          <div class="member-name">{{name}}</div>
         </div>
         {{/crewMembers}}
-      </div> -->
+      </div>
 
       <!-- Club logo in bottom-right -->
       {{#clubLogo}}

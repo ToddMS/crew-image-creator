@@ -70,7 +70,10 @@ export function TemplateSelector({
                 ? 'border-blue-600 ring-2 ring-blue-200'
                 : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
             }`}
-            onClick={() => onTemplateSelect(template.id)}
+            onClick={() => {
+              console.log('🎨 DEBUG: Template clicked:', template.id, template.name)
+              onTemplateSelect(template.id)
+            }}
           >
             {/* Template preview */}
             <div className="aspect-square bg-gray-100 flex items-center justify-center relative overflow-hidden">

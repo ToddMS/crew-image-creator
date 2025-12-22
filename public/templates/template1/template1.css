@@ -123,53 +123,6 @@ body {
   white-space: nowrap;
 }
 
-/* Improved positioning for each seat with better alignment */
-.crew-position[data-seat="B"] {
-  top: 50%;
-  right: 50px;
-  transform: translateY(-50%);
-}
-
-.crew-position[data-seat="2"] {
-  top: 35%;
-  left: 40px;
-}
-
-.crew-position[data-seat="3"] {
-  top: 65%;
-  right: 40px;
-}
-
-.crew-position[data-seat="4"] {
-  top: 30%;
-  left: 30px;
-}
-
-.crew-position[data-seat="5"] {
-  top: 70%;
-  right: 30px;
-}
-
-.crew-position[data-seat="6"] {
-  top: 25%;
-  left: 20px;
-}
-
-.crew-position[data-seat="7"] {
-  top: 75%;
-  right: 20px;
-}
-
-.crew-position[data-seat="S"] {
-  top: 20%;
-  left: 50px;
-}
-
-.crew-position[data-seat="C"] {
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-}
 
 /* Club logo in bottom-right */
 .club-logo {

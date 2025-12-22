@@ -152,6 +152,12 @@ export const savedImageRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
+        console.log('🚀 DEBUG: SavedImage.generate mutation called with input:')
+        console.log('  - crewId:', input.crewId)
+        console.log('  - templateId:', input.templateId)
+        console.log('  - userId:', input.userId)
+        console.log('  - colors:', input.colors)
+
         // Get crew and template data
         const crew = await prisma.crew.findUnique({
           where: { id: input.crewId },
@@ -164,6 +170,7 @@ export const savedImageRouter = router({
         if (!crew) {
           throw new Error('Crew not found')
         }
+        console.log('  - Found crew:', crew.id, crew.name)
 
         const template = await prisma.template.findUnique({
           where: { id: input.templateId },
@@ -172,6 +179,7 @@ export const savedImageRouter = router({
         if (!template) {
           throw new Error('Template not found')
         }
+        console.log('  - Found template:', template.id, template.name, template.templateType)
 
         // Validate input
         const validation = ImageGenerationService.validateGenerationInput(
