@@ -83,6 +83,8 @@ const config = defineConfig(({ mode }) => ({
   ssr: {
     external: ['@prisma/client'],
     noExternal: [],
+    // Skip CSS processing for SSR to avoid circular dependency
+    target: 'node',
   },
 }))
 

@@ -77,6 +77,16 @@ function DashboardPage() {
             </div>
           </Link>
 
+          <Link to="/clubs" className="action-card">
+            <h3 className="action-title">Manage Clubs</h3>
+            <p className="action-description">
+              Create and customise club presets with colors and branding
+            </p>
+            <div className="action-arrow">
+              Manage <span>→</span>
+            </div>
+          </Link>
+
           <Link to="/generate" className="action-card">
             <h3 className="action-title">Generate Images</h3>
             <p className="action-description">
