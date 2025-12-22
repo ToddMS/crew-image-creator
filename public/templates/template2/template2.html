@@ -36,6 +36,11 @@
         <div class="bracket-vertical"></div>
       </div>
 
+      <!-- Race name at top center -->
+      <div class="race-title">
+        <h1 class="race-name">{{RACE_NAME}}</h1>
+      </div>
+
       <!-- Boat image on the left -->
       {{#BOAT_IMAGE_AVAILABLE}}
       <div class="boat-container">
@@ -43,10 +48,23 @@
       </div>
       {{/BOAT_IMAGE_AVAILABLE}}
 
-      <!-- Content area for crew data -->
-      <div class="content-area">
-        <!-- This will be populated with crew information -->
+      <!-- Right side content -->
+      <div class="right-content">
+
+        <!-- Crew names list -->
+        <div class="crew-names">
+          {{#CREW_MEMBERS}}
+          <p class="crew-member">{{POSITION}}: {{NAME}}</p>
+          {{/CREW_MEMBERS}}
+        </div>
       </div>
+
+      <!-- Club logo -->
+      {{#clubLogo}}
+      <div class="club-logo">
+        <img src="{{clubLogo}}" alt="Club Logo" />
+      </div>
+      {{/clubLogo}}
     </div>
   </body>
 </html>

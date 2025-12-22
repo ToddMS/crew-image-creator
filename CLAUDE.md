@@ -291,6 +291,128 @@ Crew -> SavedImages (one-to-many)
 - Body: font-normal
 - Captions: font-medium
 
+## 🖼️ Template Development Guide
+
+### Template Structure
+Templates are located in `/public/templates/templateX/` with:
+- `templateX.html` - HTML structure with Handlebars-like placeholders
+- `templateX.css` - Styling with color placeholders for club customization
+
+### Template Variables
+All templates use these standard placeholders:
+- `{{RACE_NAME}}` - Race/event name
+- `{{CREW_NAME}}` - Crew name
+- `{{BOAT_TYPE}}` - Boat type (e.g., "Eight")
+- `{{BOAT_CODE}}` - Boat code (e.g., "8+")
+- `{{crewCategory}}` - Generated category string (e.g., "M1 Senior Men | Open Club 8+")
+- `{{#BOAT_IMAGE_AVAILABLE}}{{BOAT_IMAGE}}{{/BOAT_IMAGE_AVAILABLE}}` - Conditional boat image
+- `{{#clubLogo}}<img src="{{clubLogo}}" />{{/clubLogo}}` - Conditional club logo
+- `{{#crewMembers}}` - Crew members array with positioning data
+
+### Color System
+Templates use placeholder colors that get replaced by club colors:
+- `#094e2a` → Primary color (green)
+- `#f3bfd4` → Secondary color (pink)
+- `#15803d` → Primary color variant
+- `#f9a8d4` → Secondary color variant
+
+### Boat Image System
+Boats are dynamically loaded as base64 SVGs:
+- Template uses `{{#BOAT_IMAGE_AVAILABLE}}` conditional
+- `{{BOAT_IMAGE}}` gets replaced with `<img class="boat-image" src="data:image/svg+xml;base64,..." />`
+- Boat types: `8+`, `4+`, `4-`, `2-` map to corresponding SVG files in `/public/boat-images/`
+
+### Template Examples
+
+#### Template 1: Diagonal Professional
+- **Layout**: Diagonal split background, boat centered, position badges around boat
+- **Key Features**: SVG diagonal background, crew positioning system, club logo bottom-right
+- **Files**: `/public/templates/template1/`
+
+#### Template 2: Corner Brackets
+- **Layout**: Corner L-brackets, boat on left, content on right, race title top-center
+- **Key Features**: Four corner brackets (alternating colors), boat left-positioned, centered race title
+- **Files**: `/public/templates/template2/`
+
+### Adding New Templates
+
+1. **Create template directory**: `/public/templates/templateX/`
+2. **HTML Structure** (`templateX.html`):
+   ```html
+   <!doctype html>
+   <html lang="en">
+     <head>
+       <meta charset="UTF-8" />
+       <title>Template Name</title>
+       <link rel="stylesheet" href="templateX.css" />
+     </head>
+     <body>
+       <div class="template-container">
+         <!-- Background elements -->
+
+         <!-- Race title -->
+         <h1 class="race-name">{{RACE_NAME}}</h1>
+
+         <!-- Boat image -->
+         {{#BOAT_IMAGE_AVAILABLE}}
+         <div class="boat-container">
+           {{BOAT_IMAGE}}
+         </div>
+         {{/BOAT_IMAGE_AVAILABLE}}
+
+         <!-- Crew data -->
+         <div class="crew-info">{{crewCategory}}</div>
+
+         <!-- Club logo -->
+         {{#clubLogo}}
+         <div class="club-logo">
+           <img src="{{clubLogo}}" alt="Club Logo" />
+         </div>
+         {{/clubLogo}}
+       </div>
+     </body>
+   </html>
+   ```
+
+3. **CSS Styling** (`templateX.css`):
+   ```css
+   * {
+     box-sizing: border-box;
+     margin: 0;
+     padding: 0;
+   }
+
+   body {
+     font-family: 'Inter', Arial, sans-serif;
+     width: 1080px;
+     height: 1080px;
+     overflow: hidden;
+   }
+
+   .template-container {
+     position: absolute;
+     width: 1080px;
+     height: 1080px;
+   }
+
+   /* Use placeholder colors that get replaced */
+   .race-name {
+     color: #094e2a; /* Primary color placeholder */
+   }
+   ```
+
+4. **Database Entry**: Add template record to database with proper metadata
+5. **Test Generation**: Verify template works with different crew configurations
+
+### Template Best Practices
+- **Dimensions**: Always use 1080px × 1080px for consistency
+- **Font**: Use Inter font family with proper fallbacks
+- **Colors**: Use placeholder colors that get replaced by club colors
+- **Positioning**: Use absolute positioning for precise layout control
+- **Z-index**: Layer elements properly (background: 1, boat: 15, content: 10-20)
+- **Responsive text**: Handle long names with ellipsis and max-width
+- **Image handling**: Use conditional blocks for optional elements (boat, logo)
+
 ## 🤝 Contributing
 
 1. Fork the repository

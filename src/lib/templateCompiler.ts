@@ -677,6 +677,14 @@ export class TemplateCompiler {
     const crewMembersWithPositions = this.generateCrewPositions(crewMembers, boatCode)
     const crewCategory = this.generateCrewCategory(crew)
 
+    // For Template 2: Put crew in Bow to Stroke order with Cox at end
+    const rowers = crewMembers.filter(m => m.POSITION !== 'Coxswain')
+    const coxswain = crewMembers.find(m => m.POSITION === 'Coxswain')
+    const reversedCrewOrder = [...rowers].reverse() // Bow to Stroke order
+    if (coxswain) {
+      reversedCrewOrder.push(coxswain) // Add cox at the end
+    }
+
     return {
       CLUB_NAME: crew.club?.name || crew.clubName || 'Rowing Club',
       CREW_NAME: crew.name || 'Crew',
@@ -689,7 +697,7 @@ export class TemplateCompiler {
       RACE_NAME: crew.raceName || 'Championship Race',
       BOAT_NAME: crew.boatName || `${crew.boatType?.name || 'Eight'} Shell`,
       COACH_NAME: crew.coachName || crew.coach?.name || 'Head Coach',
-      CREW_MEMBERS: crewMembers,
+      CREW_MEMBERS: reversedCrewOrder,
       BOAT_IMAGE_URL: boatImageInfo.url,
       BOAT_IMAGE_AVAILABLE: boatImageInfo.available,
       // Enhanced Template 4 data
