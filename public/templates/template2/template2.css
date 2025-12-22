@@ -129,11 +129,33 @@ body {
   right: 0;
 }
 
+/* Boat container - positioned on the left like template 1 */
+.boat-container {
+  position: absolute;
+  top: 50%;
+  left: 150px;
+  transform: translateY(-50%);
+  z-index: 15;
+  width: 400px;
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.boat-container .boat-image {
+  width: 380px !important;
+  height: 580px !important;
+  opacity: 1;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+  object-fit: fill;
+}
+
 /* Content area - ready for crew information */
 .content-area {
   position: absolute;
   top: 250px;
-  left: 250px;
+  left: 580px;
   right: 250px;
   bottom: 250px;
   z-index: 10;
