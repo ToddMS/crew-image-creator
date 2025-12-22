@@ -359,7 +359,7 @@ function CreateCrewPage() {
                 <div className="review-item">
                   <span className="review-label">Boat Class:</span>
                   <span className="review-value">
-                    {boatClass} - {boatClassToBoatType(boatClass)?.name}
+                    {boatClass} - {boatClassToBoatType(boatClass).name}
                   </span>
                 </div>
                 <div className="review-item">

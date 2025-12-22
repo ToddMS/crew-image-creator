@@ -187,8 +187,8 @@ function GenerateImagePage() {
                         </div>
                         <div className="mt-3">
                           <p className="text-xs text-gray-500">
-                            {crew.crewNames?.length || 0} rower
-                            {(crew.crewNames?.length || 0) !== 1 ? 's' : ''}
+                            {crew.crewNames.length || 0} rower
+                            {(crew.crewNames.length || 0) !== 1 ? 's' : ''}
                           </p>
                         </div>
                       </div>
@@ -439,11 +439,11 @@ function GenerateImagePage() {
                             Rowers:
                           </p>
                           <div className="text-sm text-gray-600">
-                            {selectedCrew.crewNames?.map((rowerName, index) => (
+                            {selectedCrew.crewNames.map((rowerName, index) => (
                               <span key={index}>
                                 {rowerName}
                                 {index <
-                                (selectedCrew.crewNames?.length || 0) - 1
+                                (selectedCrew.crewNames.length || 0) - 1
                                   ? ', '
                                   : ''}
                               </span>

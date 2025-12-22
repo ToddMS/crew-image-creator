@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 export interface TemplateData {
@@ -797,7 +797,7 @@ export class TemplateCompiler {
   /**
    * Generate crew positions with styling for Template 4
    */
-  private static generateCrewPositions(crewMembers: any[], boatCode: string) {
+  private static generateCrewPositions(crewMembers: Array<any>, boatCode: string) {
     return crewMembers.map((member, index) => {
       // member.POSITION already contains the correct position string
       let badge: string

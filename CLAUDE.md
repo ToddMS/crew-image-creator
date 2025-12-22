@@ -75,6 +75,158 @@ src/
 - **Import Order**: External → Internal → Relative imports
 - **Error Handling**: Proper error boundaries and loading states
 
+### Code Quality Standards
+
+#### TypeScript Best Practices
+```typescript
+// ✅ GOOD - Explicit types, no any
+interface CrewMember {
+  name: string
+  position: string
+}
+
+// ❌ BAD - Implicit any, no types
+const handleData = (data) => {
+  // any type usage
+}
+
+// ✅ GOOD - Proper array types
+const crews: Array<Crew> = []
+
+// ❌ BAD - Shorthand array syntax (ESLint rule)
+const crews: Crew[] = []
+
+// ✅ GOOD - Type-only imports
+import type { User } from '@prisma/client'
+import { prisma } from '../lib/prisma'
+
+// ❌ BAD - Mixed imports
+import { User, prisma } from '@prisma/client'
+```
+
+#### ESLint Rule Compliance
+```typescript
+// ✅ GOOD - No unnecessary optional chaining
+if (user.name) {
+  console.log(user.name)
+}
+
+// ❌ BAD - Unnecessary optional chain on non-nullish value
+if (user?.name) { // user is already defined
+  console.log(user?.name)
+}
+
+// ✅ GOOD - Proper async/await usage
+const handleSubmit = async () => {
+  await api.submit(data)
+}
+
+// ❌ BAD - Async function without await
+const handleSubmit = async () => {
+  api.submit(data) // Not awaiting
+}
+
+// ✅ GOOD - No variable shadowing
+const error = 'top level error'
+try {
+  // code
+} catch (apiError) { // Different name
+  console.log(apiError)
+}
+
+// ❌ BAD - Variable shadowing
+const error = 'top level error'
+try {
+  // code
+} catch (error) { // Shadows outer 'error'
+  console.log(error)
+}
+```
+
+#### Import Organization
+```typescript
+// ✅ GOOD - Sorted imports, type-only imports
+import type { Club, User } from '@prisma/client'
+import type { ButtonHTMLAttributes } from 'react'
+
+import { useState } from 'react'
+import { router, publicProcedure } from '../lib/trpc'
+
+// ❌ BAD - Unsorted imports, inline type specifiers
+import { useState, type ButtonHTMLAttributes } from 'react'
+import { publicProcedure, router } from '../lib/trpc'
+```
+
+#### Database & API Patterns
+```typescript
+// ✅ GOOD - Proper type safety, error handling
+const crew = await prisma.crew.findUnique({
+  where: { id: crewId },
+  include: { boatType: true, club: true }
+})
+
+if (!crew) {
+  throw new Error('Crew not found')
+}
+
+// Handle crew with proper typing
+
+// ❌ BAD - No null checks, loose typing
+const crew = await prisma.crew.findUnique({ where: { id: crewId } })
+// Directly using crew without null check
+```
+
+### Quality Assurance Commands
+```bash
+# Before committing - run all checks
+npm run lint          # ESLint (must pass)
+npm run typecheck     # TypeScript (must pass)
+npm run format        # Prettier formatting
+npm run test          # Unit tests (must pass)
+npm run build         # Production build (must pass)
+
+# Fix auto-fixable linting issues
+npm run lint -- --fix
+```
+
+### Common ESLint Issues & Fixes
+
+1. **Unnecessary Optional Chaining** (`@typescript-eslint/no-unnecessary-condition`)
+   ```typescript
+   // Fix: Remove optional chaining when value is guaranteed non-null
+   user.name instead of user?.name
+   ```
+
+2. **Array Type Syntax** (`@typescript-eslint/array-type`)
+   ```typescript
+   // Fix: Use Array<T> instead of T[]
+   Array<string> instead of string[]
+   ```
+
+3. **Import Sorting** (`sort-imports`, `import/order`)
+   ```typescript
+   // Fix: Sort imports alphabetically, separate by type
+   ```
+
+4. **Variable Shadowing** (`no-shadow`)
+   ```typescript
+   // Fix: Use different variable names in nested scopes
+   ```
+
+5. **Async Without Await** (`@typescript-eslint/require-await`)
+   ```typescript
+   // Fix: Remove async if no await, or add proper await
+   ```
+
+### Pre-commit Checklist
+- [ ] `npm run lint` passes with 0 errors
+- [ ] `npm run typecheck` passes with 0 errors
+- [ ] `npm run build` succeeds
+- [ ] All tests pass (`npm run test`)
+- [ ] No unused imports or variables
+- [ ] Proper error handling implemented
+- [ ] Database queries include proper null checks
+
 ### Documentation & AI Assistance
 - **Library Documentation**: Always use Context7 MCP for up-to-date library documentation when working with external dependencies
 - **Before adding dependencies**: Check Context7 for current best practices, API changes, and usage examples

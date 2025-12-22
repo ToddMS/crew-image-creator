@@ -122,7 +122,7 @@ export function ImageGallery({ userId, className = '' }: ImageGalleryProps) {
             <div className="aspect-[4/3] rounded-t-lg overflow-hidden bg-gray-100">
               <img
                 src={savedImage.imageUrl}
-                alt={`${savedImage.crew?.name || 'Crew'} - ${savedImage.template?.name || 'Template'}`}
+                alt={`${savedImage.crew.name || 'Crew'} - ${savedImage.template.name || 'Template'}`}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
@@ -192,12 +192,12 @@ export function ImageGallery({ userId, className = '' }: ImageGalleryProps) {
             {/* Image info */}
             <div className="p-3">
               <h3 className="font-medium text-gray-900 mb-1 truncate">
-                {savedImage.crew?.name || 'Unknown Crew'}
+                {savedImage.crew.name || 'Unknown Crew'}
               </h3>
               <div className="space-y-1 text-xs text-gray-500">
-                <p>Template: {savedImage.template?.name || 'Unknown'}</p>
-                <p>Boat: {savedImage.crew?.boatType?.name || 'Unknown'}</p>
-                {savedImage.crew?.club && (
+                <p>Template: {savedImage.template.name || 'Unknown'}</p>
+                <p>Boat: {savedImage.crew.boatType.name || 'Unknown'}</p>
+                {savedImage.crew.club && (
                   <div className="flex items-center gap-1">
                     <span>{savedImage.crew.club.name}</span>
                     <div className="flex gap-1">
@@ -272,7 +272,7 @@ function ImageDetailsModal({
       {/* Header with image name and close button */}
       <div className="flex items-center justify-between w-full max-w-6xl mb-4">
         <h2 className="text-xl font-semibold text-white">
-          {savedImage.crew?.name || 'Unknown Crew'}
+          {savedImage.crew.name || 'Unknown Crew'}
         </h2>
         <button
           onClick={onClose}
@@ -298,7 +298,7 @@ function ImageDetailsModal({
       <div className="flex-1 w-full max-w-6xl flex items-center justify-center">
         <img
           src={savedImage.imageUrl}
-          alt={`${savedImage.crew?.name} - ${savedImage.template?.name}`}
+          alt={`${savedImage.crew.name} - ${savedImage.template.name}`}
           className="max-w-full max-h-full object-contain"
           onClick={onClose}
         />

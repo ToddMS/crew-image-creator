@@ -42,7 +42,7 @@ function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: '/api/trpc',
           async headers() {
-            if (typeof window !== 'undefined' && window.localStorage) {
+            if (typeof window !== 'undefined') {
               try {
                 const user = localStorage.getItem('rowgram_user')
                 if (user) {

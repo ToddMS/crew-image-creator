@@ -1,5 +1,6 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component   } from 'react'
 import { Button } from './button'
+import type {ErrorInfo, ReactNode} from 'react';
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -129,11 +130,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 }
 
 // Hook version for functional components
-export function withErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
+export function withErrorBoundary<TProps extends object>(
+  Component: React.ComponentType<TProps>,
   errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
 ) {
-  return function WrappedComponent(props: P) {
+  return function WrappedComponent(props: TProps) {
     return (
       <ErrorBoundary {...errorBoundaryProps}>
         <Component {...props} />

@@ -76,9 +76,9 @@ function GalleryPage() {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
         (image) =>
-          image.crew?.name.toLowerCase().includes(query) ||
-          image.template?.name?.toLowerCase().includes(query) ||
-          image.crew?.id.toLowerCase().includes(query),
+          image.crew.name.toLowerCase().includes(query) ||
+          image.template.name.toLowerCase().includes(query) ||
+          image.crew.id.toLowerCase().includes(query),
       )
     }
 
@@ -311,7 +311,7 @@ function GalleryPage() {
                   </div>
                   <div className="image-subtitle">
                     {image.template?.name || 'Unknown Template'} •{' '}
-                    {image.crew?.boatType?.code || 'Unknown Boat'}
+                    {image.crew.boatType.code || 'Unknown Boat'}
                   </div>
                   {image.crew?.club && (
                     <div className="club-colors">
@@ -394,7 +394,6 @@ function GalleryPage() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 width: '100%',
-                maxWidth: '6rem',
                 marginBottom: '1rem',
                 maxWidth: '1536px'
               }}

@@ -139,7 +139,7 @@ export class ImageGenerationService {
     htmlContent = htmlContent.replace('</head>', `${cssTag}</head>`)
 
     // Remove external CSS link
-    htmlContent = htmlContent.replace(/<link[^>]*rel=\"stylesheet\"[^>]*>/g, '')
+    htmlContent = htmlContent.replace(/<link[^>]*rel="stylesheet"[^>]*>/g, '')
 
     // Use TemplateCompiler for advanced placeholders if the template supports them
     if (htmlContent.includes('{{') || htmlContent.includes('{{#')) {
@@ -230,7 +230,7 @@ export class ImageGenerationService {
     const crewNames = crew.crewNames || []
     const clubName = crew.club?.name || 'Rowing Club'
     const crewName = crew.name || 'Crew'
-    const boatType = crew.boatType?.name || 'Eight'
+    const boatType = crew.boatType.name || 'Eight'
     const raceName = crew.raceName || 'Championship Race'
 
     return `
@@ -357,11 +357,11 @@ export class ImageGenerationService {
       return { valid: false, error: 'Crew must have at least one rower' }
     }
 
-    if (crew.crewNames.some((name) => !name?.trim())) {
+    if (crew.crewNames.some((name) => !name.trim())) {
       return { valid: false, error: 'All rowers must have names' }
     }
 
-    if (!crew.name?.trim()) {
+    if (!crew.name.trim()) {
       return { valid: false, error: 'Crew must have a name' }
     }
 

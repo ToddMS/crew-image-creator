@@ -1,4 +1,4 @@
-import { type Crew, type Club, type BoatType, type Template, type SavedImage, type User } from '@prisma/client'
+import type {BoatType, Club, Crew, SavedImage, Template, User} from '@prisma/client';
 
 export type {
   Crew,
@@ -12,7 +12,7 @@ export type {
 export interface CrewWithRelations extends Crew {
   boatType: BoatType
   club: Club | null
-  savedImages: SavedImage[]
+  savedImages: Array<SavedImage>
 }
 
 export interface SavedImageWithRelations extends SavedImage {
@@ -22,7 +22,7 @@ export interface SavedImageWithRelations extends SavedImage {
 }
 
 export interface ClubWithCrew extends Club {
-  crews: Crew[]
+  crews: Array<Crew>
 }
 
 export interface CrewFormData {
@@ -32,7 +32,7 @@ export interface CrewFormData {
   raceName?: string
   boatName?: string
   coachName?: string
-  crewNames: string[]
+  crewNames: Array<string>
   boatTypeId: string
 }
 
@@ -70,7 +70,7 @@ export interface PaginationInfo {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[]
+  data: Array<T>
   pagination: PaginationInfo
 }
 

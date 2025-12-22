@@ -1,7 +1,7 @@
 import { z } from 'zod'
+import bcrypt from 'bcryptjs'
 import { publicProcedure, router } from '../../lib/trpc'
 import { prisma } from '../../lib/prisma'
-import bcrypt from 'bcryptjs'
 
 export const userRouter = router({
   getAll: publicProcedure.query(async () => {
