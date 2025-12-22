@@ -667,6 +667,10 @@ export class TemplateCompiler {
     const boatImageInfo = this.getBoatImageInfo(boatCode)
 
     // Get club logo information
+    console.log('🎯 DEBUG: crew.clubId:', crew.clubId)
+    console.log('🎯 DEBUG: crew.clubName:', crew.clubName)
+    console.log('🎯 DEBUG: crew.club:', JSON.stringify(crew.club, null, 2))
+    console.log('🎯 DEBUG: crew.club?.logoUrl:', crew.club?.logoUrl)
     const clubLogoInfo = this.getClubLogoInfo(crew.club?.logoUrl)
 
     // Enhanced data for Template 4 (Professional Layout)

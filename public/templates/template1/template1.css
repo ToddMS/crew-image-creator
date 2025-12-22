@@ -149,10 +149,10 @@ body {
 /* Club logo in bottom-right */
 .club-logo {
   position: absolute;
-  bottom: 30px;
+  bottom: 20px;
   right: 30px;
-  width: 120px;
-  height: 120px;
+  width: 170px;
+  height: 170px;
   z-index: 10;
 }
 
@@ -160,5 +160,4 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 50%;
 }

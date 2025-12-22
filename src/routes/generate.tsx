@@ -111,6 +111,7 @@ function GenerateImagePage() {
       crewId: selectedCrewId,
       templateId: selectedTemplateId,
       userId,
+      clubId: selectedClubId || undefined,
       colors,
     })
   }

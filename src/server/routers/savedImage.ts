@@ -136,6 +136,7 @@ export const savedImageRouter = router({
         crewId: z.string(),
         templateId: z.string(),
         userId: z.string().optional(),
+        clubId: z.string().optional(),
         colors: z
           .object({
             primaryColor: z
@@ -156,6 +157,7 @@ export const savedImageRouter = router({
         console.log('  - crewId:', input.crewId)
         console.log('  - templateId:', input.templateId)
         console.log('  - userId:', input.userId)
+        console.log('  - clubId:', input.clubId)
         console.log('  - colors:', input.colors)
 
         // Get crew and template data
@@ -166,6 +168,15 @@ export const savedImageRouter = router({
             club: true,
           },
         })
+
+        // Get selected club if provided
+        let selectedClub = null
+        if (input.clubId) {
+          selectedClub = await prisma.club.findUnique({
+            where: { id: input.clubId },
+          })
+          console.log('  - Found selected club:', selectedClub?.name, 'with logo:', selectedClub?.logoUrl)
+        }
 
         if (!crew) {
           throw new Error('Crew not found')
@@ -218,9 +229,14 @@ export const savedImageRouter = router({
           userId = demoUser.id
         }
 
+        // Create crew with selected club for image generation
+        const crewWithSelectedClub = selectedClub
+          ? { ...crew, club: selectedClub }
+          : crew
+
         // Generate the image with custom colors if provided
         const generatedImage = await ImageGenerationService.generateCrewImage(
-          crew,
+          crewWithSelectedClub,
           template,
           input.colors,
         )
@@ -275,6 +291,7 @@ export const savedImageRouter = router({
       z.object({
         crewId: z.string(),
         templateId: z.string(),
+        clubId: z.string().optional(),
         colors: z
           .object({
             primaryColor: z
@@ -300,6 +317,14 @@ export const savedImageRouter = router({
           },
         })
 
+        // Get selected club if provided
+        let selectedClub = null
+        if (input.clubId) {
+          selectedClub = await prisma.club.findUnique({
+            where: { id: input.clubId },
+          })
+        }
+
         if (!crew) {
           throw new Error('Crew not found')
         }
@@ -312,9 +337,14 @@ export const savedImageRouter = router({
           throw new Error('Template not found')
         }
 
+        // Create crew with selected club for image generation
+        const crewWithSelectedClub = selectedClub
+          ? { ...crew, club: selectedClub }
+          : crew
+
         // Validate input
         const validation = ImageGenerationService.validateGenerationInput(
-          crew,
+          crewWithSelectedClub,
           template,
         )
         if (!validation.valid) {
@@ -323,7 +353,7 @@ export const savedImageRouter = router({
 
         // Generate preview image (same as regular but not saved to DB)
         const generatedImage = await ImageGenerationService.generateCrewImage(
-          crew,
+          crewWithSelectedClub,
           template,
           input.colors,
         )
