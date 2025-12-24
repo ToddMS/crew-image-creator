@@ -97,7 +97,7 @@ function CrewsPage() {
 
   const distributeCrewsIntoColumns = (
     crews: Array<any>,
-    columnCount: number = 3,
+    columnCount: number = 4,
   ) => {
     const columns: Array<Array<any>> = Array.from({ length: columnCount }, () => [])
 
@@ -264,12 +264,6 @@ function CrewsPage() {
                   >
                     Clear ({selectedCrews.size})
                   </button>
-                  <button
-                    className="btn-outline-danger-small"
-                    onClick={handleBulkDelete}
-                  >
-                    Delete
-                  </button>
                   <Link
                     to="/generate"
                     className="btn-primary-small"
@@ -279,6 +273,12 @@ function CrewsPage() {
                   >
                     Generate
                   </Link>
+                  <button
+                    className="btn-outline-danger-small"
+                    onClick={handleBulkDelete}
+                  >
+                    Delete
+                  </button>
                 </div>
               )}
 

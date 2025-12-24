@@ -53,9 +53,15 @@ function CreateCrewPage() {
   const [coxName, setCoxName] = useState('')
   const [saving, setSaving] = useState(false)
   const [showValidation, setShowValidation] = useState(false)
+  const [showClubDropdown, setShowClubDropdown] = useState(false)
+  const [filteredClubs, setFilteredClubs] = useState<string[]>([])
+  const [highlightedClubIndex, setHighlightedClubIndex] = useState(-1)
 
   // Get boat types for the mutation
   const { data: boatTypes = [] } = trpc.boatType.getAll.useQuery()
+
+  // Get existing clubs for the dropdown
+  const { data: existingClubs = [] } = trpc.club.getAll.useQuery()
 
   const createCrewMutation = trpc.crew.create.useMutation({
     onSuccess: () => {
@@ -71,15 +77,12 @@ function CreateCrewPage() {
   const steps = [
     {
       label: 'Crew Information',
-      description: 'Basic details about your crew',
     },
     {
       label: 'Add Members',
-      description: 'Enter crew member names',
     },
     {
       label: 'Review & Save',
-      description: 'Review and save your crew',
     },
   ]
 
@@ -97,6 +100,28 @@ function CreateCrewPage() {
     }
   }
 
+  const getValidationMessage = (step: number): string => {
+    const missingFields: string[] = []
+
+    switch (step) {
+      case 0:
+        if (!boatClass) missingFields.push('Boat Class')
+        if (!clubName) missingFields.push('Club Name')
+        if (!raceName) missingFields.push('Race Name')
+        if (!boatName) missingFields.push('Boat Name')
+        break
+      case 1:
+        if (crewNames.some(name => !name.trim())) missingFields.push('All crew member names')
+        if (boatClassHasCox(boatClass) && !coxName.trim()) missingFields.push('Coxswain name')
+        break
+    }
+
+    if (missingFields.length === 0) return ''
+    if (missingFields.length === 1) return `Please fill in: ${missingFields[0]}`
+    if (missingFields.length === 2) return `Please fill in: ${missingFields.join(' and ')}`
+    return `Please fill in: ${missingFields.slice(0, -1).join(', ')} and ${missingFields.slice(-1)}`
+  }
+
   const handleNext = () => {
     if (canProceedFromStep(activeStep)) {
       setActiveStep((prev) => prev + 1)
@@ -107,15 +132,115 @@ function CreateCrewPage() {
   }
 
   const handleBack = () => {
-    if (activeStep === 0) {
-      navigate({ to: '/crews' })
-    } else {
-      setActiveStep((prev) => prev - 1)
-    }
+    setActiveStep((prev) => prev - 1)
   }
 
   const handleNameChange = (idx: number, value: string) => {
     setCrewNames((names) => names.map((n, i) => (i === idx ? value : n)))
+  }
+
+  // Club combobox handlers
+  const handleClubNameChange = (value: string) => {
+    setClubName(value)
+
+    // Filter clubs based on input
+    const clubNames = existingClubs.map(club => club.name)
+    const filtered = value.length === 0
+      ? clubNames.slice(0, 5) // Show first 5 clubs when no input
+      : clubNames.filter(name =>
+          name.toLowerCase().includes(value.toLowerCase())
+        ).slice(0, 5) // Limit to 5 results
+
+    setFilteredClubs(filtered)
+    setShowClubDropdown(true) // Always show dropdown when focused
+    setHighlightedClubIndex(-1)
+  }
+
+  const selectClub = (clubName: string) => {
+    setClubName(clubName)
+    setShowClubDropdown(false)
+    setHighlightedClubIndex(-1)
+  }
+
+  const handleClubKeyDown = (e: React.KeyboardEvent) => {
+    // Handle dropdown navigation if dropdown is shown
+    if (showClubDropdown && filteredClubs.length > 0) {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setHighlightedClubIndex(prev =>
+            prev < filteredClubs.length - 1 ? prev + 1 : prev
+          )
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setHighlightedClubIndex(prev => prev > 0 ? prev - 1 : prev)
+          break
+        case 'Enter':
+          e.preventDefault()
+          if (highlightedClubIndex >= 0) {
+            selectClub(filteredClubs[highlightedClubIndex])
+          }
+          return
+        case 'Escape':
+          setShowClubDropdown(false)
+          setHighlightedClubIndex(-1)
+          break
+      }
+    }
+
+    // Handle regular Enter key navigation when no dropdown or no selection
+    handleInputKeyDown(e, 1, 5, false) // Club name is field index 1 out of 5 total fields in step 1
+  }
+
+  // Handle Enter key navigation between fields
+  const handleInputKeyDown = (e: React.KeyboardEvent, fieldIndex: number, totalFields: number, isLastStep: boolean = false) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+
+      if (fieldIndex < totalFields - 1) {
+        // Move to next field
+        const nextFieldIndex = fieldIndex + 1
+        const inputs = document.querySelectorAll('input[type="text"], select')
+        const nextInput = inputs[nextFieldIndex] as HTMLInputElement | HTMLSelectElement
+        if (nextInput) {
+          nextInput.focus()
+        }
+      } else {
+        // Last field - advance to next step or save
+        if (isLastStep) {
+          // On last step, trigger save
+          handleSaveCrew()
+        } else {
+          // On other steps, go to next step
+          handleNext()
+        }
+      }
+    }
+  }
+
+  // Handle crew member input navigation
+  const handleCrewMemberKeyDown = (e: React.KeyboardEvent, memberIndex: number, totalMembers: number) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+
+      if (memberIndex < totalMembers - 1) {
+        // Move to next crew member field
+        setTimeout(() => {
+          const inputs = document.querySelectorAll('input[required]')
+          const currentStepInputs = Array.from(inputs).filter(input =>
+            input.closest('.form-container') !== null
+          )
+          const nextInput = currentStepInputs[memberIndex + 1] as HTMLInputElement
+          if (nextInput) {
+            nextInput.focus()
+          }
+        }, 0)
+      } else {
+        // Last crew member field - go to next step
+        handleNext()
+      }
+    }
   }
 
   const handleSaveCrew = async () => {
@@ -171,6 +296,7 @@ function CreateCrewPage() {
                     )
                     setCoxName('')
                   }}
+                  onKeyDown={(e) => handleInputKeyDown(e, 0, 5, false)} // Boat class is field 0 out of 5 in step 1
                   className={showValidation && !boatClass ? 'error' : ''}
                   required
                 >
@@ -194,15 +320,48 @@ function CreateCrewPage() {
                 <label htmlFor="clubName">
                   Club Name <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="clubName"
-                  value={clubName}
-                  onChange={(e) => setClubName(e.target.value)}
-                  className={showValidation && !clubName ? 'error' : ''}
-                  placeholder="Enter club name"
-                  required
-                />
+                <div className="combobox-container">
+                  <input
+                    type="text"
+                    id="clubName"
+                    value={clubName}
+                    onChange={(e) => handleClubNameChange(e.target.value)}
+                    onKeyDown={handleClubKeyDown}
+                    onFocus={() => {
+                      const clubNames = existingClubs.map(club => club.name)
+                      const filtered = clubName.length === 0
+                        ? clubNames.slice(0, 5) // Show first 5 clubs when empty
+                        : clubNames.filter(name =>
+                            name.toLowerCase().includes(clubName.toLowerCase())
+                          ).slice(0, 5)
+
+                      setFilteredClubs(filtered)
+                      setShowClubDropdown(filtered.length > 0)
+                    }}
+                    onBlur={(e) => {
+                      // Delay hiding dropdown to allow click selection
+                      setTimeout(() => setShowClubDropdown(false), 150)
+                    }}
+                    className={showValidation && !clubName ? 'error' : ''}
+                    placeholder="Enter or search club name"
+                    required
+                    autoComplete="off"
+                  />
+                  {showClubDropdown && filteredClubs.length > 0 && (
+                    <div className="combobox-dropdown">
+                      {filteredClubs.map((club, index) => (
+                        <div
+                          key={club}
+                          className={`combobox-option ${index === highlightedClubIndex ? 'highlighted' : ''}`}
+                          onClick={() => selectClub(club)}
+                          onMouseEnter={() => setHighlightedClubIndex(index)}
+                        >
+                          {club}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {showValidation && !clubName && (
                   <div className="error-message">Please enter club name</div>
                 )}
@@ -217,6 +376,7 @@ function CreateCrewPage() {
                   id="raceName"
                   value={raceName}
                   onChange={(e) => setRaceName(e.target.value)}
+                  onKeyDown={(e) => handleInputKeyDown(e, 2, 5, false)} // Race name is field 2 out of 5 in step 1
                   className={showValidation && !raceName ? 'error' : ''}
                   placeholder="Enter race or event name"
                   required
@@ -235,6 +395,7 @@ function CreateCrewPage() {
                   id="boatName"
                   value={boatName}
                   onChange={(e) => setBoatName(e.target.value)}
+                  onKeyDown={(e) => handleInputKeyDown(e, 3, 5, false)} // Boat name is field 3 out of 5 in step 1
                   className={showValidation && !boatName ? 'error' : ''}
                   placeholder="Enter boat name"
                   required
@@ -251,6 +412,7 @@ function CreateCrewPage() {
                   id="coachName"
                   value={coachName}
                   onChange={(e) => setCoachName(e.target.value)}
+                  onKeyDown={(e) => handleInputKeyDown(e, 4, 5, false)} // Coach name is field 4 out of 5 in step 1 (last field in step 1)
                   placeholder="Enter coach name (optional)"
                 />
               </div>
@@ -295,10 +457,11 @@ function CreateCrewPage() {
                       type="text"
                       value={coxName}
                       onChange={(e) => setCoxName(e.target.value)}
+                      onKeyDown={(e) => handleCrewMemberKeyDown(e, 0, crewNames.length + 1)} // Cox is first field
                       className={
                         showValidation && !coxName.trim() ? 'error' : ''
                       }
-                      placeholder="Enter coxswain name"
+                      placeholder="Enter coxswain's name"
                       required
                     />
                     {showValidation && !coxName.trim() && (
@@ -331,10 +494,11 @@ function CreateCrewPage() {
                         onChange={(e) =>
                           handleNameChange(index, e.target.value)
                         }
+                        onKeyDown={(e) => handleCrewMemberKeyDown(e, boatClassHasCox(boatClass) ? index + 1 : index, crewNames.length + (boatClassHasCox(boatClass) ? 1 : 0))}
                         className={
                           showValidation && !name.trim() ? 'error' : ''
                         }
-                        placeholder="Enter rower name"
+                        placeholder={`Enter ${seatName.toLowerCase().replace(' seat', '')}'s name`}
                         required
                       />
                       {showValidation && !name.trim() && (
@@ -353,7 +517,7 @@ function CreateCrewPage() {
       case 2:
         return (
           <div className="form-container">
-            <div className="review-section">
+            <div className="review-section-compact">
               <div className="review-card">
                 <h3>Crew Details</h3>
                 <div className="review-item">
@@ -384,28 +548,41 @@ function CreateCrewPage() {
 
               <div className="review-card">
                 <h3>Crew Members</h3>
-                {boatClassHasCox(boatClass) && (
-                  <div className="review-item">
-                    <span className="review-label">Coxswain:</span>
-                    <span className="review-value">{coxName}</span>
-                  </div>
-                )}
-                {crewNames.map((name, index) => {
-                  const seatNumber = boatClassToSeats[boatClass] - index
-                  const seatName =
-                    seatNumber === 1
-                      ? 'Bow Seat'
-                      : seatNumber === boatClassToSeats[boatClass]
-                        ? 'Stroke Seat'
-                        : `${seatNumber} Seat`
-
-                  return (
-                    <div key={index} className="review-item">
-                      <span className="review-label">{seatName}:</span>
-                      <span className="review-value">{name}</span>
+                <div className="crew-members-compact">
+                  {boatClassHasCox(boatClass) && (
+                    <div className="review-item-compact">
+                      <span className="review-label">Coxswain:</span>
+                      <span className="review-value">{coxName}</span>
                     </div>
-                  )
-                })}
+                  )}
+
+                  {/* Stroke and Bow on same line */}
+                  <div className="stroke-bow-row">
+                    <div className="review-item-compact">
+                      <span className="review-label">Stroke Seat:</span>
+                      <span className="review-value">{crewNames[0]}</span>
+                    </div>
+                    <div className="review-item-compact">
+                      <span className="review-label">Bow Seat:</span>
+                      <span className="review-value">{crewNames[crewNames.length - 1]}</span>
+                    </div>
+                  </div>
+
+                  {/* Middle seats in 2-column grid */}
+                  <div className="crew-members-grid">
+                    {crewNames.slice(1, -1).map((name, index) => {
+                      const seatNumber = boatClassToSeats[boatClass] - (index + 1)
+                      const seatName = `${seatNumber} Seat`
+
+                      return (
+                        <div key={index} className="review-item-compact">
+                          <span className="review-label">{seatName}:</span>
+                          <span className="review-value">{name}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -433,9 +610,38 @@ function CreateCrewPage() {
   return (
     <div className="create-crew-container">
       <div className="container">
-        <div className="page-header">
-          <h1>Create New Crew</h1>
-          <p>Set up your crew lineup and member details</p>
+        <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {activeStep === 0 ? (
+            <button
+              className="btn-text-small"
+              onClick={() => navigate({ to: '/crews' })}
+            >
+              ← Back to Crews
+            </button>
+          ) : (
+            <button className="btn-text-small" onClick={handleBack}>
+              ← Back
+            </button>
+          )}
+
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            {activeStep === steps.length - 1 ? (
+              <button
+                className="btn-success-small"
+                onClick={handleSaveCrew}
+                disabled={saving || !canProceedFromStep(activeStep)}
+              >
+                {saving ? 'Saving...' : 'Save Crew'}
+              </button>
+            ) : (
+              <button
+                className="btn-primary-small"
+                onClick={handleNext}
+              >
+                Next Step →
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Stepper */}
@@ -456,7 +662,6 @@ function CreateCrewPage() {
               </div>
               <div className="step-content">
                 <div className="step-label">{step.label}</div>
-                <div className="step-description">{step.description}</div>
               </div>
             </div>
           ))}
@@ -464,33 +669,6 @@ function CreateCrewPage() {
 
         {/* Step Content */}
         {renderStepContent(activeStep)}
-
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <button className="btn btn-secondary" onClick={handleBack}>
-            ← {activeStep === 0 ? 'Back to Crews' : 'Back'}
-          </button>
-
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            {activeStep === steps.length - 1 ? (
-              <button
-                className="btn btn-primary"
-                onClick={handleSaveCrew}
-                disabled={saving || !canProceedFromStep(activeStep)}
-              >
-                {saving ? 'Saving...' : 'Save Crew'}
-              </button>
-            ) : (
-              <button
-                className="btn btn-primary"
-                onClick={handleNext}
-                disabled={!canProceedFromStep(activeStep)}
-              >
-                Next Step →
-              </button>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   )
