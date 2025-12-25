@@ -110,6 +110,18 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.crew-card-subtitle > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crew-card-subtitle > span:first-child {
+  max-width: 120px;
 }
 
 .crew-card-checkbox {

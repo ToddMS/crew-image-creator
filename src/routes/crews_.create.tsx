@@ -79,7 +79,7 @@ function CreateCrewPage() {
       label: 'Crew Information',
     },
     {
-      label: 'Add Members',
+      label: 'Add Crew',
     },
     {
       label: 'Review & Save',
@@ -483,6 +483,13 @@ function CreateCrewPage() {
                         ? 'Stroke Seat'
                         : `${seatNumber} Seat`
 
+                  const placeholderText =
+                    seatNumber === 1
+                      ? "Enter bow's name"
+                      : seatNumber === boatClassToSeats[boatClass]
+                        ? "Enter stroke's name"
+                        : `Enter ${seatNumber}'s name`
+
                   return (
                     <div key={index} className="crew-name-input">
                       <div className="seat-label">
@@ -498,7 +505,7 @@ function CreateCrewPage() {
                         className={
                           showValidation && !name.trim() ? 'error' : ''
                         }
-                        placeholder={`Enter ${seatName.toLowerCase().replace(' seat', '')}'s name`}
+                        placeholder={placeholderText}
                         required
                       />
                       {showValidation && !name.trim() && (
@@ -559,11 +566,11 @@ function CreateCrewPage() {
                   {/* Stroke and Bow on same line */}
                   <div className="stroke-bow-row">
                     <div className="review-item-compact">
-                      <span className="review-label">Stroke Seat:</span>
+                      <span className="review-label">Stroke seat:</span>
                       <span className="review-value">{crewNames[0]}</span>
                     </div>
                     <div className="review-item-compact">
-                      <span className="review-label">Bow Seat:</span>
+                      <span className="review-label">Bow seat:</span>
                       <span className="review-value">{crewNames[crewNames.length - 1]}</span>
                     </div>
                   </div>
@@ -572,7 +579,7 @@ function CreateCrewPage() {
                   <div className="crew-members-grid">
                     {crewNames.slice(1, -1).map((name, index) => {
                       const seatNumber = boatClassToSeats[boatClass] - (index + 1)
-                      const seatName = `${seatNumber} Seat`
+                      const seatName = `${seatNumber} seat`
 
                       return (
                         <div key={index} className="review-item-compact">
@@ -631,7 +638,28 @@ function CreateCrewPage() {
                 onClick={handleSaveCrew}
                 disabled={saving || !canProceedFromStep(activeStep)}
               >
-                {saving ? 'Saving...' : 'Save Crew'}
+                {saving ? (
+                  'Saving...'
+                ) : (
+                  <>
+                    Save Crew
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ marginLeft: '0.5rem' }}
+                    >
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                      <polyline points="17,21 17,13 7,13 7,21"/>
+                      <polyline points="7,3 7,8 15,8"/>
+                    </svg>
+                  </>
+                )}
               </button>
             ) : (
               <button

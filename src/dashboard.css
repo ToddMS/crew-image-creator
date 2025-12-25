@@ -548,8 +548,8 @@
 }
 
 .btn-primary-small {
-  background: var(--primary-light);
-  color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
   padding: 0.625rem 0.75rem;
   font-size: 0.8125rem;
   border-radius: var(--radius);
@@ -557,11 +557,14 @@
   text-decoration: none;
   cursor: pointer;
   transition: var(--transition);
+  font-weight: 600;
 }
 
 .btn-primary-small:hover {
-  background: var(--primary);
+  background: var(--primary-dark);
   color: var(--white);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn-success-small {
