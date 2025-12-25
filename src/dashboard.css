@@ -33,8 +33,37 @@
   line-height: 1.5;
   color: var(--gray-900);
   background: var(--gray-50);
-  min-height: 100vh;
+  min-height: calc(100vh - 81px);
   animation: fadeIn 0.3s ease-out;
+  overflow-x: hidden;
+}
+
+/* Hide scroll bars globally for dashboard pages */
+body:has(.dashboard-container) {
+  overflow-x: hidden;
+}
+
+html:has(.dashboard-container) {
+  overflow-x: hidden;
+}
+
+/* Alternative scroll bar hiding for better browser support */
+body {
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+/* Hide scrollbars but keep functionality */
+.dashboard-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.dashboard-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 @keyframes fadeIn {
@@ -250,7 +279,7 @@
 .action-card {
   background: var(--white);
   border-radius: var(--radius-lg);
-  padding: 2rem;
+  padding: 1rem 1rem;  
   box-shadow: var(--shadow);
   transition: var(--transition);
   cursor: pointer;
@@ -577,7 +606,7 @@
   text-decoration: none;
   cursor: pointer;
   transition: var(--transition);
-}
+  }
 
 .btn-success-small:hover {
   background: rgb(16 185 129 / 0.9);

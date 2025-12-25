@@ -178,6 +178,11 @@ html:has(.create-crew-container .step.active:first-child) {
   margin-right: auto;
 }
 
+/* Narrower container for review step */
+.form-container:has(.review-section-clean) {
+  max-width: 650px;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -290,6 +295,20 @@ html:has(.create-crew-container .step.active:first-child) {
   gap: 1.5rem;
 }
 
+/* Crew Details Grid - 2x2 layout */
+.crew-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.crew-detail-coach {
+  grid-column: 1 / -1;
+}
+
 .cox-input {
   display: flex;
   flex-direction: column;
@@ -350,6 +369,10 @@ html:has(.create-crew-container .step.active:first-child) {
   gap: 2rem;
 }
 
+.review-section-clean {
+  padding: 0;
+}
+
 /* Compact Review Section */
 .review-section-compact {
   display: grid;
@@ -383,11 +406,11 @@ html:has(.create-crew-container .step.active:first-child) {
 }
 
 .review-item-compact {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: block;
   padding: 0.5rem 0;
   font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .review-item-compact:last-child {
@@ -395,17 +418,22 @@ html:has(.create-crew-container .step.active:first-child) {
 }
 
 .review-item-compact .review-label {
+  display: inline;
   font-weight: 600;
   color: var(--gray-700);
   font-size: 0.875rem;
+  margin-right: 0.5rem;
 }
 
 .review-item-compact .review-value {
+  display: inline-block;
   color: var(--gray-900);
-  text-align: right;
-  max-width: 60%;
-  word-break: break-word;
   font-size: 0.875rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
 }
 
 .review-card {
@@ -430,6 +458,7 @@ html:has(.create-crew-container .step.active:first-child) {
   align-items: center;
   padding: 0.75rem 0;
   border-bottom: 1px solid var(--gray-200);
+  gap: 1rem;
 }
 
 .review-item:last-child {
@@ -444,8 +473,11 @@ html:has(.create-crew-container .step.active:first-child) {
 .review-value {
   color: var(--gray-900);
   text-align: right;
-  max-width: 60%;
-  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Action Buttons */

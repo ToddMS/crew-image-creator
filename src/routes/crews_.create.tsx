@@ -524,71 +524,59 @@ function CreateCrewPage() {
       case 2:
         return (
           <div className="form-container">
-            <div className="review-section-compact">
-              <div className="review-card">
-                <h3>Crew Details</h3>
-                <div className="review-item">
+            <div className="review-section-clean">
+              {/* Crew Details in 2-column grid */}
+              <div className="crew-details-grid">
+                <div className="review-item-compact">
                   <span className="review-label">Boat Class:</span>
                   <span className="review-value">
-                    {boatClass} - {boatClassToBoatType(boatClass).name}
+                    {boatClassToBoatType(boatClass).name} - {boatClass}
                   </span>
                 </div>
-                <div className="review-item">
+                <div className="review-item-compact">
                   <span className="review-label">Club:</span>
                   <span className="review-value">{clubName}</span>
                 </div>
-                <div className="review-item">
+                <div className="review-item-compact">
                   <span className="review-label">Race:</span>
                   <span className="review-value">{raceName}</span>
                 </div>
-                <div className="review-item">
+                <div className="review-item-compact">
                   <span className="review-label">Boat Name:</span>
                   <span className="review-value">{boatName}</span>
                 </div>
                 {coachName && (
-                  <div className="review-item">
+                  <div className="review-item-compact crew-detail-coach">
                     <span className="review-label">Coach:</span>
                     <span className="review-value">{coachName}</span>
                   </div>
                 )}
               </div>
 
-              <div className="review-card">
-                <h3>Crew Members</h3>
-                <div className="crew-members-compact">
-                  {boatClassHasCox(boatClass) && (
-                    <div className="review-item-compact">
-                      <span className="review-label">Coxswain:</span>
-                      <span className="review-value">{coxName}</span>
-                    </div>
-                  )}
-
-                  {/* Stroke and Bow on same line */}
-                  <div className="stroke-bow-row">
-                    <div className="review-item-compact">
-                      <span className="review-label">Stroke seat:</span>
-                      <span className="review-value">{crewNames[0]}</span>
-                    </div>
-                    <div className="review-item-compact">
-                      <span className="review-label">Bow seat:</span>
-                      <span className="review-value">{crewNames[crewNames.length - 1]}</span>
-                    </div>
+              {/* Crew Members */}
+              <div className="crew-members-compact">
+                {boatClassHasCox(boatClass) && (
+                  <div className="review-item-compact">
+                    <span className="review-label">Coxswain:</span>
+                    <span className="review-value">{coxName}</span>
                   </div>
+                )}
 
-                  {/* Middle seats in 2-column grid */}
-                  <div className="crew-members-grid">
-                    {crewNames.slice(1, -1).map((name, index) => {
-                      const seatNumber = boatClassToSeats[boatClass] - (index + 1)
-                      const seatName = `${seatNumber} seat`
+                {/* All crew members in correct rowing order - Cox, Stroke, 7, 6, 5, 4, 3, 2, Bow */}
+                <div className="crew-members-grid">
+                  {crewNames.map((name, index) => {
+                    const seatNumber = boatClassToSeats[boatClass] - index
+                    const seatName = seatNumber === 1 ? 'Bow seat' :
+                                    seatNumber === boatClassToSeats[boatClass] ? 'Stroke seat' :
+                                    `${seatNumber} seat`
 
-                      return (
-                        <div key={index} className="review-item-compact">
-                          <span className="review-label">{seatName}:</span>
-                          <span className="review-value">{name}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
+                    return (
+                      <div key={seatNumber} className="review-item-compact">
+                        <span className="review-label">{seatName}:</span>
+                        <span className="review-value">{name}</span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -652,7 +640,6 @@ function CreateCrewPage() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      style={{ marginLeft: '0.5rem' }}
                     >
                       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                       <polyline points="17,21 17,13 7,13 7,21"/>
