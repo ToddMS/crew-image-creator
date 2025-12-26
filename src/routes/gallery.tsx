@@ -47,9 +47,6 @@ function GalleryPage() {
 
   const [filteredImages, setFilteredImages] = useState<Array<SavedImage>>([])
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set())
-  const [fullscreenImage, setFullscreenImage] = useState<SavedImage | null>(
-    null,
-  )
   const [searchQuery, setSearchQuery] = useState('')
 
   // Advanced filtering state
@@ -259,22 +256,6 @@ function GalleryPage() {
     }
   }
 
-  // Handle ESC key to close fullscreen modal
-  useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && fullscreenImage) {
-        setFullscreenImage(null)
-      }
-    }
-
-    if (fullscreenImage) {
-      document.addEventListener('keydown', handleEscapeKey)
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey)
-    }
-  }, [fullscreenImage])
 
   if (!user) {
     return (
@@ -519,11 +500,6 @@ function GalleryPage() {
               </button>
 
               <a href="/generate" className="generate-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="16"></line>
-                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
                 Generate New
               </a>
             </div>
@@ -551,7 +527,7 @@ function GalleryPage() {
                 onClick={() => handleImageSelect(image.id)}
               >
                 {/* Image Selection Checkbox */}
-                <div className="image-checkbox">
+                <div className="image-checkbox image-checkbox-right">
                   <input
                     type="checkbox"
                     checked={selectedImages.has(image.id)}
@@ -560,13 +536,7 @@ function GalleryPage() {
                   />
                 </div>
 
-                <div
-                  className="image-preview"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setFullscreenImage(image)
-                  }}
-                >
+                <div className="image-preview">
                   <img
                     src={image.imageUrl}
                     alt={`${image.crew?.name || 'Crew Image'}`}
@@ -653,87 +623,6 @@ function GalleryPage() {
           </div>
         )}
 
-        {/* Fullscreen Modal - Simplified */}
-        {fullscreenImage && (
-          <div
-            className="modal-overlay"
-            onClick={() => setFullscreenImage(null)}
-            style={{
-              position: 'fixed',
-              inset: '0',
-              backgroundColor: 'rgba(0, 0, 0, 0.9)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: '9999',
-              padding: '1rem'
-            }}
-          >
-            {/* Header with image name and close button */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                marginBottom: '1rem',
-                maxWidth: '1536px'
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: 'white',
-                  margin: '0'
-                }}
-              >
-                {fullscreenImage.crew?.name || 'Unknown Crew'}
-              </h2>
-              <button
-                onClick={() => setFullscreenImage(null)}
-                style={{
-                  padding: '0.5rem',
-                  color: 'white',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '2rem',
-                  transition: 'color 0.2s'
-                }}
-                onMouseOver={(e) => e.target.style.color = '#d1d5db'}
-                onMouseOut={(e) => e.target.style.color = 'white'}
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Full-size image */}
-            <div
-              style={{
-                flex: '1',
-                width: '100%',
-                maxWidth: '1536px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <img
-                src={fullscreenImage.imageUrl}
-                alt={fullscreenImage.crew?.name || 'Crew Image'}
-                onClick={() => setFullscreenImage(null)}
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  objectFit: 'contain',
-                  cursor: 'pointer'
-                }}
-              />
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
