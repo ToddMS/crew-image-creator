@@ -246,6 +246,42 @@ function ClubsPage() {
     }
   }
 
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = async (e: React.DragEvent, clubId?: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const files = Array.from(e.dataTransfer.files)
+    const imageFile = files.find(file => file.type.startsWith('image/'))
+
+    if (!imageFile) {
+      alert('Please drop an image file')
+      return
+    }
+
+    if (imageFile.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB')
+      return
+    }
+
+    await handleLogoUpload(imageFile, clubId)
+  }
+
   const filteredClubs = clubs.filter((club) =>
     club.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
@@ -312,6 +348,10 @@ function ClubsPage() {
                           ? handleLogoRemove()
                           : handleLogoClick()
                       }
+                      onDragOver={handleDragOver}
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e)}
                     >
                       {newClubForm.logoUrl ? (
                         <img src={newClubForm.logoUrl} alt="Club logo" />
@@ -322,13 +362,12 @@ function ClubsPage() {
                     <div className="name-section">
                       <input
                         type="text"
-                        className="preset-name-input"
+                        className="preset-name-input editing-input"
                         placeholder="Enter club name"
                         value={newClubForm.name}
                         onChange={(e) =>
                           handleNewClubChange('name', e.target.value)
                         }
-                        style={{ width: '100%', paddingLeft: '0.5rem' }}
                       />
                     </div>
                     <input
@@ -341,7 +380,7 @@ function ClubsPage() {
                   </div>
                   <div className="preset-colors">
                     <div className="preset-color-group">
-                      <div className="preset-color-label">Primary</div>
+                      <div className="preset-color-label">PRIMARY</div>
                       <input
                         type="color"
                         className="preset-color-picker"
@@ -360,7 +399,7 @@ function ClubsPage() {
                       />
                     </div>
                     <div className="preset-color-group">
-                      <div className="preset-color-label">Secondary</div>
+                      <div className="preset-color-label">SECONDARY</div>
                       <input
                         type="color"
                         className="preset-color-picker"

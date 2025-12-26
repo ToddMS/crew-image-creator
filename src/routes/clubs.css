@@ -49,6 +49,13 @@
   color: #3b82f6;
 }
 
+/* Ensure logo section is visible in editing mode */
+.preset-card.editing .logo-section.empty {
+  border: 1px dashed #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
 /* Edit mode - small X button overlay */
 .logo-section.editable.has-logo::after {
   content: '×';
@@ -82,6 +89,8 @@
   min-width: 0;
 }
 
+
+
 /* Logo Section for Upload (in edit mode) */
 .preset-logo-section {
   margin: 0.5rem 0;
@@ -90,6 +99,133 @@
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   font-size: 0.75rem;
+}
+
+/* Enhanced Card Design */
+.preset-card.new-preset {
+  border: 2px dashed #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.preset-card.editing {
+  border-color: #3b82f6;
+}
+
+/* Enhanced Name Input */
+.preset-name-input {
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  width: 100%;
+  padding: 0;
+  min-width: 0; /* Allow shrinking */
+}
+
+.preset-name-input:focus {
+  outline: none;
+}
+
+.preset-name-input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* Ensure proper layout in editing mode */
+.preset-card.editing .preset-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+.preset-card.editing .logo-section {
+  width: 32px !important;
+  height: 32px !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  z-index: 10 !important;
+  margin-right: 0.5rem !important;
+}
+
+.preset-card.editing .name-section {
+  flex: none !important;
+  width: 130px !important;
+  margin-left: 0.25rem !important;
+}
+
+.editing-input,
+.preset-card.editing .preset-name-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  border: 1px solid #d1d5db !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 4px !important;
+  background: white !important;
+  font-size: 0.875rem !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  left: auto !important;
+  margin: 0 !important;
+}
+
+/* Enhanced Button Styling */
+.preset-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.preset-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.preset-btn:not(.primary):not(.danger) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.preset-btn:not(.primary):not(.danger):hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.preset-btn.primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.preset-btn.primary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.preset-btn.danger {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.preset-btn.danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .preset-logo-section label {
