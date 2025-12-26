@@ -1,6 +1,9 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
+import { SearchBar } from '../components/SearchBar'
+import '../components/SearchBar.css'
+import '../components/Button.css'
 import '../dashboard.css'
 import './crews.css'
 
@@ -12,11 +15,17 @@ const boatClassHasCox = (boatClass: string) =>
   boatClass === '8+' || boatClass === '4+'
 
 function CrewsPage() {
+  const navigate = useNavigate()
   const [sortBy, setSortBy] = useState<string>('recent')
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set())
   const [expandedCrewMembers, setExpandedCrewMembers] = useState<Set<string>>(
     new Set(),
   )
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredCrews, setFilteredCrews] = useState<any[]>([])
+  const [selectedClub, setSelectedClub] = useState<string>('')
+  const [selectedBoatClass, setSelectedBoatClass] = useState<string>('')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
   // Mock user state for now - in the original this comes from auth context
   const user = { name: 'Demo User' }
@@ -72,28 +81,32 @@ function CrewsPage() {
     }
   })
 
-  const getSortedCrews = () => {
-    const crewsCopy = [...savedCrews]
+  // Filter function for SearchBar
+  const filterFunction = (crew: any, query: string) => {
+    const crewName = crew.boatName?.toLowerCase() || ''
+    const clubName = crew.boatClub?.toLowerCase() || ''
+    const raceName = crew.raceName?.toLowerCase() || ''
+    const rowerNames = crew.crewMembers?.map((member: any) => member.name).join(' ').toLowerCase() || ''
+    const coachName = crew.coachName?.toLowerCase() || ''
 
-    switch (sortBy) {
-      case 'recent':
-        return crewsCopy.sort(
-          (a, b) =>
-            new Date(b.createdAt || 0).getTime() -
-            new Date(a.createdAt || 0).getTime(),
-        )
-      case 'club':
-        return crewsCopy.sort((a, b) => a.boatClub.localeCompare(b.boatClub))
-      case 'race':
-        return crewsCopy.sort((a, b) =>
-          (a.raceName || '').localeCompare(b.raceName || ''),
-        )
-      case 'boat_class':
-        return crewsCopy.sort((a, b) => a.boatClass.localeCompare(b.boatClass))
-      default:
-        return crewsCopy
-    }
+    return crewName.includes(query) ||
+           clubName.includes(query) ||
+           raceName.includes(query) ||
+           rowerNames.includes(query) ||
+           coachName.includes(query)
   }
+
+  // Get unique clubs and boat classes for filters
+  const uniqueClubs = Array.from(new Set(savedCrews.map(crew => crew.boatClub).filter(Boolean))).map(club => ({
+    value: club,
+    label: club
+  }))
+
+  const uniqueBoatClasses = Array.from(new Set(savedCrews.map(crew => crew.boatClass).filter(Boolean))).map(boatClass => ({
+    value: boatClass,
+    label: boatClass
+  }))
+
 
   const distributeCrewsIntoColumns = (
     crews: Array<any>,
@@ -133,6 +146,14 @@ function CrewsPage() {
       newSelected.delete(crewId)
     }
     setSelectedCrews(newSelected)
+  }
+
+  const handleSelectAll = () => {
+    if (selectedCrews.size === filteredCrews.length) {
+      setSelectedCrews(new Set())
+    } else {
+      setSelectedCrews(new Set(filteredCrews.map((crew) => crew.id)))
+    }
   }
 
   const handleBulkDelete = async () => {
@@ -241,72 +262,71 @@ function CrewsPage() {
     <div className="my-crews-container">
       <div className="container">
         <div className="crews-section">
-          <div className="section-header">
-            <div className="section-header-left">
-              <span className="section-title">Crews</span>
-              <span className="section-badge">{getSortedCrews().length}</span>
-              <div className="crew-count">
-                {selectedCrews.size > 0 ? (
-                  <span className="section-badge selection">
-                    {selectedCrews.size} of {savedCrews.length} crews selected
-                  </span>
-                ) : (
-                  ``
-                )}
-              </div>
-            </div>
-            <div className="section-header-right">
-              {selectedCrews.size > 0 && (
-                <div className="selection-actions-inline">
-                  <button
-                    className="btn-text-small"
-                    onClick={() => setSelectedCrews(new Set())}
-                  >
-                    Clear ({selectedCrews.size})
-                  </button>
-                  <Link
-                    to="/generate"
-                    className="btn-primary-small"
-                    state={{
-                      selectedCrewIds: Array.from(selectedCrews),
-                    }}
-                  >
-                    Generate
-                  </Link>
-                  <button
-                    className="btn-outline-danger-small"
-                    onClick={handleBulkDelete}
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-
-              <div className="crew-dropdown">
-                {savedCrews.length > 0 && (
-                  <div className="sort-dropdown">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      aria-label="Sort crews by"
-                    >
-                      <option value="recent">Recently Created</option>
-                      <option value="club">Club Name</option>
-                      <option value="race">Race Name</option>
-                      <option value="boat_class">Boat Class</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              <Link to="/crews/create" className="btn-primary-small">
-                Create New Crew
-              </Link>
-            </div>
-          </div>
+          <SearchBar
+            items={savedCrews}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onItemsFiltered={setFilteredCrews}
+            placeholder="Search crews..."
+            filterFunction={filterFunction}
+            sortOptions={[
+              { value: 'recent', label: 'Recently Created', sortFn: (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime() },
+              { value: 'club', label: 'Club Name', sortFn: (a, b) => a.boatClub.localeCompare(b.boatClub) },
+              { value: 'race', label: 'Race Name', sortFn: (a, b) => (a.raceName || '').localeCompare(b.raceName || '') },
+              { value: 'boat_class', label: 'Boat Class', sortFn: (a, b) => a.boatClass.localeCompare(b.boatClass) }
+            ]}
+            selectedSort={sortBy}
+            onSortChange={setSortBy}
+            advancedFilters={[
+              {
+                name: 'club',
+                label: 'Club',
+                options: [{ value: '', label: 'All Clubs' }, ...uniqueClubs],
+                selectedValue: selectedClub,
+                onValueChange: setSelectedClub,
+                filterFn: (crew, value) => !value || crew.boatClub === value
+              },
+              {
+                name: 'boatClass',
+                label: 'Boat Class',
+                options: [{ value: '', label: 'All Boat Classes' }, ...uniqueBoatClasses],
+                selectedValue: selectedBoatClass,
+                onValueChange: setSelectedBoatClass,
+                filterFn: (crew, value) => !value || crew.boatClass === value
+              }
+            ]}
+            showAdvancedFilters={showAdvancedFilters}
+            onToggleAdvancedFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            resultsCount={filteredCrews.length}
+            className="crews-search-bar"
+            actionButtons={[
+              ...(selectedCrews.size > 0 ? [
+                {
+                  label: 'Delete',
+                  onClick: handleBulkDelete,
+                  variant: 'crew-danger' as const
+                },
+                {
+                  label: 'Generate',
+                  onClick: () => navigate({ to: '/generate', state: { selectedCrewIds: Array.from(selectedCrews) } }),
+                  variant: 'crew-secondary' as const
+                }
+              ] : []),
+              {
+                label: selectedCrews.size === filteredCrews.length ? 'Deselect All' : 'Select All',
+                onClick: handleSelectAll,
+                variant: 'secondary'
+              },
+              {
+                label: 'Create New',
+                onClick: () => navigate({ to: '/crews/create' }),
+                variant: 'primary'
+              }
+            ]}
+          />
 
           <div className="crews-grid">
-            {distributeCrewsIntoColumns(getSortedCrews()).map(
+            {distributeCrewsIntoColumns(filteredCrews).map(
               (column, columnIndex) => (
                 <div key={columnIndex} className="crew-column">
                   {column.map((crew) => (

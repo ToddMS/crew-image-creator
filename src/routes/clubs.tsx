@@ -3,6 +3,9 @@ import { useRef, useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { ImageUpload } from '../components/ImageUpload'
 import { useAuth } from '../lib/auth-context'
+import { SearchBar } from '../components/SearchBar'
+import '../components/SearchBar.css'
+import '../components/Button.css'
 import '../dashboard.css'
 import './clubs.css'
 
@@ -38,6 +41,7 @@ function ClubsPage() {
     null,
   )
   const [searchTerm, setSearchTerm] = useState('')
+  const [filteredClubs, setFilteredClubs] = useState<any[]>([])
   const newLogoInputRef = useRef<HTMLInputElement>(null)
   const editLogoInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>(
     {},
@@ -282,9 +286,10 @@ function ClubsPage() {
     await handleLogoUpload(imageFile, clubId)
   }
 
-  const filteredClubs = clubs.filter((club) =>
-    club.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // Filter function for SearchBar
+  const filterFunction = (club: any, query: string) => {
+    return club.name.toLowerCase().includes(query)
+  }
 
   // User comes from auth context
 
@@ -305,30 +310,24 @@ function ClubsPage() {
   return (
     <div className="club-presets-container">
       <div className="container">
-        <div className="section-header">
-          <div className="section-header-left">
-            <span className="section-title">Clubs</span>
-            <span className="section-badge">{clubs.length}</span>
-          </div>
-          <div className="section-header-right">
-            <div className="search-bar">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search clubs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button
-                className="btn btn-primary"
-                onClick={startNewClub}
-                disabled={isCreatingNew}
-              >
-                + Add New
-              </button>
-            </div>
-          </div>
-        </div>
+        <SearchBar
+          items={clubs}
+          searchQuery={searchTerm}
+          onSearchChange={setSearchTerm}
+          onItemsFiltered={setFilteredClubs}
+          placeholder="Search clubs..."
+          filterFunction={filterFunction}
+          resultsCount={filteredClubs.length}
+          className="clubs-search-bar"
+          actionButtons={[
+            {
+              label: 'Create New',
+              onClick: startNewClub,
+              variant: 'primary',
+              disabled: isCreatingNew
+            }
+          ]}
+        />
 
         <div className="gallery-grid">
           {isLoading ? (
@@ -623,13 +622,13 @@ function ClubsPage() {
                       ) : (
                         <>
                           <button
-                            className="preset-btn"
+                            className="btn-primary-small"
                             onClick={() => handleEdit(club)}
                           >
                             Edit
                           </button>
                           <button
-                            className="preset-btn danger"
+                            className="btn-outline-danger-small"
                             onClick={() => setShowDeleteConfirm(club.id)}
                           >
                             Delete

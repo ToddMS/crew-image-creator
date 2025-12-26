@@ -48,10 +48,13 @@ export class TemplateCompiler {
    * Available boat images - maps boat codes to clean filenames
    */
   private static readonly BOAT_IMAGE_MAP: Record<string, string> = {
-    '2-': '2-.svg',
-    '4-': '4-.svg',
-    '4+': '4+.svg',
-    '8+': '8+.svg',
+    '1x': '1x.svg', // Single scull
+    '2-': '2-.svg', // Coxless pair (sweep)
+    '2x': '2x.svg', // Double sculls
+    '4-': '4-.svg', // Coxless four (sweep) - same hull as 4+
+    '4+': '4-.svg', // Coxed four (sweep) - same hull as 4-, coxswain position differs
+    '4x': '4x.svg', // Quad sculls
+    '8+': '8+.svg', // Eight
   }
 
   /**
@@ -859,6 +862,30 @@ export class TemplateCompiler {
    * Get CSS positioning style for crew member based on boat layout
    */
   private static getPositionStyle(badge: string, boatCode: string): string {
+    // Different positioning layouts based on boat type
+    switch (boatCode) {
+      case '4+':
+        return this.get4PlusPositions(badge)
+      case '4-':
+        return this.get4MinusPositions(badge)
+      case '4x':
+        return this.get4xPositions(badge)
+      case '2x':
+        return this.get2xPositions(badge)
+      case '2-':
+        return this.get2MinusPositions(badge)
+      case '1x':
+        return this.get1xPositions(badge)
+      case '8+':
+      default:
+        return this.get8PlusPositions(badge)
+    }
+  }
+
+  /**
+   * Position layout for 8+ boats (original layout)
+   */
+  private static get8PlusPositions(badge: string): string {
     const positions: Record<string, string> = {
       'B': 'top: 37% !important; right: 360px !important;',
       '2': 'top: 41% !important; left: 310px !important;',
@@ -870,8 +897,79 @@ export class TemplateCompiler {
       'S': 'top: 72% !important; left: 310px !important;',
       'C': 'top: 76% !important; right: 520px !important;'
     }
-
     return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+  }
+
+  /**
+   * Position layout for 4+ boats (Coxed Four)
+   */
+  private static get4PlusPositions(badge: string): string {
+    const positions: Record<string, string> = {
+      'B': 'top: 42% !important; right: 360px !important;',
+      '2': 'top: 50% !important; left: 310px !important;',
+      '3': 'top: 58% !important; right: 360px !important;',
+      'S': 'top: 66% !important; left: 310px !important;',
+      'C': 'top: 72% !important; right: 520px !important;'
+    }
+    return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+  }
+
+  /**
+   * Position layout for 4- boats (Coxless Four)
+   */
+  private static get4MinusPositions(badge: string): string {
+    const positions: Record<string, string> = {
+      'B': 'top: 45% !important; right: 360px !important;',
+      '2': 'top: 52% !important; left: 310px !important;',
+      '3': 'top: 59% !important; right: 360px !important;',
+      'S': 'top: 66% !important; left: 310px !important;'
+    }
+    return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+  }
+
+  /**
+   * Position layout for 4x boats (Quad Sculls)
+   */
+  private static get4xPositions(badge: string): string {
+    const positions: Record<string, string> = {
+      'B': 'top: 45% !important; right: 360px !important;',
+      '2': 'top: 52% !important; left: 310px !important;',
+      '3': 'top: 59% !important; right: 360px !important;',
+      'S': 'top: 66% !important; left: 310px !important;'
+    }
+    return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+  }
+
+  /**
+   * Position layout for 2x boats (Double Sculls)
+   */
+  private static get2xPositions(badge: string): string {
+    const positions: Record<string, string> = {
+      'B': 'top: 48% !important; right: 360px !important;',
+      'S': 'top: 58% !important; left: 310px !important;'
+    }
+    return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+  }
+
+  /**
+   * Position layout for 2- boats (Coxless Pair)
+   */
+  private static get2MinusPositions(badge: string): string {
+    const positions: Record<string, string> = {
+      'B': 'top: 48% !important; right: 360px !important;',
+      'S': 'top: 58% !important; left: 310px !important;'
+    }
+    return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+  }
+
+  /**
+   * Position layout for 1x boats (Single Sculls)
+   */
+  private static get1xPositions(badge: string): string {
+    const positions: Record<string, string> = {
+      'S': 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+    }
+    return positions[badge] || 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }
 
   /**

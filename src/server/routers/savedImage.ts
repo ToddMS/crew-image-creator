@@ -10,6 +10,7 @@ export const savedImageRouter = router({
         crew: {
           include: {
             boatType: true,
+            club: true,
           },
         },
         template: true,
@@ -28,6 +29,7 @@ export const savedImageRouter = router({
           crew: {
             include: {
               boatType: true,
+              club: true,
             },
           },
           template: true,
@@ -45,6 +47,7 @@ export const savedImageRouter = router({
           crew: {
             include: {
               boatType: true,
+              club: true,
             },
           },
           template: true,

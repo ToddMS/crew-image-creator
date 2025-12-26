@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
+import { SearchBar } from '../components/SearchBar'
+import '../components/SearchBar.css'
+import '../components/Button.css'
 import './gallery.css'
 
 export const Route = createFileRoute('/gallery')({
@@ -75,72 +78,6 @@ function GalleryPage() {
     },
   })
 
-  const applyFilter = useCallback(() => {
-    let filtered = [...savedImages]
-
-    // Apply search filter (enhanced)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter((image) => {
-        const crewName = image.crew?.name?.toLowerCase() || ''
-        const clubName = image.crew?.club?.name?.toLowerCase() || ''
-        const raceName = image.crew?.raceName?.toLowerCase() || ''
-        const boatType = image.crew?.boatType?.name?.toLowerCase() || ''
-        const rowerNames = image.crew?.crewNames?.join(' ')?.toLowerCase() || ''
-
-        return crewName.includes(query) ||
-               clubName.includes(query) ||
-               raceName.includes(query) ||
-               boatType.includes(query) ||
-               rowerNames.includes(query) ||
-               image.crew?.id?.toLowerCase().includes(query)
-      })
-    }
-
-    // Apply club filter
-    if (selectedClub) {
-      filtered = filtered.filter(image => image.crew?.club?.name === selectedClub)
-    }
-
-    // Apply boat type filter
-    if (selectedBoatType) {
-      filtered = filtered.filter(image => image.crew?.boatType?.code === selectedBoatType)
-    }
-
-    // Apply date range filter
-    if (dateRange.start || dateRange.end) {
-      filtered = filtered.filter(image => {
-        const imageDate = new Date(image.createdAt)
-        const start = dateRange.start ? new Date(dateRange.start) : null
-        const end = dateRange.end ? new Date(dateRange.end) : null
-
-        if (start && imageDate < start) return false
-        if (end && imageDate > end) return false
-        return true
-      })
-    }
-
-    // Apply sorting
-    filtered = filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'club':
-          return (a.crew?.club?.name || '').localeCompare(b.crew?.club?.name || '')
-        case 'boat':
-          return (a.crew?.boatType?.code || '').localeCompare(b.crew?.boatType?.code || '')
-        case 'name':
-          return (a.crew?.name || '').localeCompare(b.crew?.name || '')
-        case 'recent':
-        default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      }
-    })
-
-    setFilteredImages(filtered)
-  }, [savedImages, searchQuery, selectedClub, selectedBoatType, dateRange, sortBy])
-
-  useEffect(() => {
-    applyFilter()
-  }, [applyFilter])
 
   const handleDownload = async (image: SavedImage) => {
     try {
@@ -179,7 +116,7 @@ function GalleryPage() {
   }
 
   const handleSelectByClub = (clubName: string) => {
-    const clubImages = filteredImages.filter(img => img.crew?.club?.name === clubName)
+    const clubImages = filteredImages.filter(img => (img.crew?.club?.name || img.crew?.clubName) === clubName)
     const clubImageIds = clubImages.map(img => img.id)
     const newSelected = new Set(selectedImages)
 
@@ -284,227 +221,148 @@ function GalleryPage() {
     )
   }
 
+  // Get unique clubs and boat types for filters
+  const uniqueClubs = Array.from(new Set(savedImages.map(img => img.crew?.club?.name || img.crew?.clubName).filter(Boolean))).map(club => ({
+    value: club,
+    label: club
+  }))
+
+  const uniqueBoatTypes = Array.from(new Set(savedImages.map(img => img.crew?.boatType?.code).filter(Boolean))).map(boat => ({
+    value: boat,
+    label: boat
+  }))
+
+  // Filter function for SearchBar
+  const filterFunction = (image: SavedImage, query: string) => {
+    const crewName = image.crew?.name?.toLowerCase() || ''
+    const clubName = (image.crew?.club?.name || image.crew?.clubName)?.toLowerCase() || ''
+    const raceName = image.crew?.raceName?.toLowerCase() || ''
+    const boatType = image.crew?.boatType?.name?.toLowerCase() || ''
+    const rowerNames = image.crew?.crewNames?.join(' ')?.toLowerCase() || ''
+
+    return crewName.includes(query) ||
+           clubName.includes(query) ||
+           raceName.includes(query) ||
+           boatType.includes(query) ||
+           rowerNames.includes(query) ||
+           image.crew?.id?.toLowerCase().includes(query)
+  }
+
+  // Date range filter function
+  const dateRangeFilterFn = (image: SavedImage, value: string) => {
+    if (!value) return true
+    const [start, end] = value.split('|')
+    const imageDate = new Date(image.createdAt)
+    const startDate = start ? new Date(start) : null
+    const endDate = end ? new Date(end) : null
+
+    if (startDate && imageDate < startDate) return false
+    if (endDate && imageDate > endDate) return false
+    return true
+  }
+
+  // Date range value for SearchBar
+  const dateRangeValue = dateRange.start || dateRange.end ? `${dateRange.start}|${dateRange.end}` : ''
+
+  // Date range options (this is a bit different as it's not predefined options)
+  const dateRangeOptions = [
+    { value: '', label: 'Any Date' },
+    { value: `${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}|`, label: 'Last 7 days' },
+    { value: `${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}|`, label: 'Last 30 days' },
+    { value: `${new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}|`, label: 'Last 3 months' }
+  ]
+
+  const handleDateRangeChange = (value: string) => {
+    if (!value) {
+      setDateRange({ start: '', end: '' })
+    } else {
+      const [start, end] = value.split('|')
+      setDateRange({ start: start || '', end: end || '' })
+    }
+  }
+
   return (
     <div className="gallery-container">
       <div className="container">
-        {/* Professional Gallery Controls */}
-        <div className="gallery-controls">
-          {/* Primary Search & Controls Bar */}
-          <div className="primary-controls">
-            <div className="search-container">
-              <div className="search-input-wrapper">
-                <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="m21 21-4.35-4.35"></path>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search images..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input-modern"
-                />
-                {searchQuery && (
-                  <button
-                    className="search-clear"
-                    onClick={() => setSearchQuery('')}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="control-pills">
-              {/* Active Filters Pills */}
-              {selectedClub && (
-                <div className="filter-pill">
-                  <span className="pill-label">Club:</span>
-                  <span className="pill-value">{selectedClub}</span>
-                  <button className="pill-remove" onClick={() => setSelectedClub('')}>×</button>
-                </div>
-              )}
-
-              {selectedBoatType && (
-                <div className="filter-pill">
-                  <span className="pill-label">Boat:</span>
-                  <span className="pill-value">{selectedBoatType}</span>
-                  <button className="pill-remove" onClick={() => setSelectedBoatType('')}>×</button>
-                </div>
-              )}
-
-              {(dateRange.start || dateRange.end) && (
-                <div className="filter-pill">
-                  <span className="pill-label">Date:</span>
-                  <span className="pill-value">
-                    {dateRange.start || 'Any'} - {dateRange.end || 'Any'}
-                  </span>
-                  <button className="pill-remove" onClick={() => setDateRange({start: '', end: ''})}>×</button>
-                </div>
-              )}
-
-              {/* Filter Toggle Button */}
-              <button
-                className={`filter-toggle ${showAdvancedSearch ? 'active' : ''}`}
-                onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
-                </svg>
-                Filter
-                {(selectedClub || selectedBoatType || dateRange.start || dateRange.end) && (
-                  <span className="filter-count">
-                    {[selectedClub, selectedBoatType, dateRange.start || dateRange.end].filter(Boolean).length}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            <div className="layout-view-controls">
-              {/* Sort Dropdown */}
-              <div className="sort-dropdown">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="sort-select"
-                >
-                  <option value="recent">Latest</option>
-                  <option value="club">Club A→Z</option>
-                  <option value="boat">Boat Type</option>
-                  <option value="name">Crew Name</option>
-                </select>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Advanced Filters Panel */}
-          {showAdvancedSearch && (
-            <div className="advanced-filters-panel">
-              <div className="filters-header">
-                <h3>Advanced Filters</h3>
-                <button
-                  className="clear-all-btn"
-                  onClick={() => {
-                    setSelectedClub('')
-                    setSelectedBoatType('')
-                    setDateRange({start: '', end: ''})
-                    setSortBy('recent')
-                  }}
-                >
-                  Clear
+        <SearchBar
+          items={savedImages}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onItemsFiltered={setFilteredImages}
+          placeholder="Search images..."
+          filterFunction={filterFunction}
+          sortOptions={[
+            { value: 'recent', label: 'Latest', sortFn: (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() },
+            { value: 'club', label: 'Club A→Z', sortFn: (a, b) => (a.crew?.club?.name || a.crew?.clubName || '').localeCompare(b.crew?.club?.name || b.crew?.clubName || '') },
+            { value: 'boat', label: 'Boat Type', sortFn: (a, b) => (a.crew?.boatType?.code || '').localeCompare(b.crew?.boatType?.code || '') },
+            { value: 'name', label: 'Crew Name', sortFn: (a, b) => (a.crew?.name || '').localeCompare(b.crew?.name || '') }
+          ]}
+          selectedSort={sortBy}
+          onSortChange={(sort) => setSortBy(sort as any)}
+          advancedFilters={[
+            {
+              name: 'club',
+              label: 'Club',
+              options: [{ value: '', label: 'All Clubs' }, ...uniqueClubs],
+              selectedValue: selectedClub,
+              onValueChange: setSelectedClub,
+              filterFn: (image, value) => !value || (image.crew?.club?.name || image.crew?.clubName) === value
+            },
+            {
+              name: 'boatType',
+              label: 'Boat',
+              options: [{ value: '', label: 'All Boats' }, ...uniqueBoatTypes],
+              selectedValue: selectedBoatType,
+              onValueChange: setSelectedBoatType,
+              filterFn: (image, value) => !value || image.crew?.boatType?.code === value
+            },
+            {
+              name: 'dateRange',
+              label: 'Date',
+              options: dateRangeOptions,
+              selectedValue: dateRangeValue,
+              onValueChange: handleDateRangeChange,
+              filterFn: dateRangeFilterFn
+            }
+          ]}
+          showAdvancedFilters={showAdvancedSearch}
+          onToggleAdvancedFilters={() => setShowAdvancedSearch(!showAdvancedSearch)}
+          resultsCount={filteredImages.length}
+          leftActions={
+            selectedImages.size > 0 && (
+              <div className="selection-actions-inline">
+                <button className="action-btn download-btn" onClick={handleBatchDownload}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7,10 12,15 17,10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  Download ({selectedImages.size})
+                </button>
+                <button className="action-btn delete-btn" onClick={handleBatchDelete}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3,6 5,6 21,6"></polyline>
+                    <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2,2h4a2,2,0,0,1,2,2V6"></path>
+                  </svg>
+                  Delete ({selectedImages.size})
                 </button>
               </div>
+            )
+          }
+          actionButtons={[
+            {
+              label: selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All',
+              onClick: handleSelectAll,
+              variant: 'secondary'
+            },
+            {
+              label: 'Create New',
+              onClick: () => window.location.href = '/generate',
+              variant: 'primary'
+            }
+          ]}
+        />
 
-              <div className="filters-content">
-                <div className="inline-filters">
-                  {/* Club Filter */}
-                  <div className="filter-group">
-                    <span className="filter-label">Club:</span>
-                    <div className="filter-options">
-                      {Array.from(new Set(savedImages.map(img => img.crew?.club?.name).filter(Boolean))).map(club => (
-                        <button
-                          key={club}
-                          className={`option-pill ${selectedClub === club ? 'selected' : ''}`}
-                          onClick={() => setSelectedClub(selectedClub === club ? '' : club)}
-                        >
-                          {club}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Boat Type Filter */}
-                  <div className="filter-group">
-                    <span className="filter-label">Boat:</span>
-                    <div className="filter-options">
-                      {Array.from(new Set(savedImages.map(img => img.crew?.boatType?.code).filter(Boolean))).map(boat => (
-                        <button
-                          key={boat}
-                          className={`option-pill ${selectedBoatType === boat ? 'selected' : ''}`}
-                          onClick={() => setSelectedBoatType(selectedBoatType === boat ? '' : boat)}
-                        >
-                          {boat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Date Range Filter */}
-                  <div className="filter-group">
-                    <span className="filter-label">Date:</span>
-                    <div className="date-range-compact">
-                      <input
-                        type="date"
-                        value={dateRange.start}
-                        onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
-                        className="date-input-compact"
-                        placeholder="From"
-                      />
-                      <span className="date-separator">to</span>
-                      <input
-                        type="date"
-                        value={dateRange.end}
-                        onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
-                        className="date-input-compact"
-                        placeholder="To"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Results Bar */}
-          <div className="results-bar">
-            <div className="results-info">
-              <span className="results-count">{filteredImages.length}</span>
-              <span className="results-label">
-                {filteredImages.length === 1 ? 'image' : 'images'}
-              </span>
-              {selectedImages.size > 0 && (
-                <>
-                  <span className="separator">•</span>
-                  <span className="selected-count">{selectedImages.size} selected</span>
-                </>
-              )}
-            </div>
-
-            <div className="results-actions">
-              {selectedImages.size > 0 && (
-                <div className="batch-actions">
-                  <button className="action-btn download-btn" onClick={handleBatchDownload}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7,10 12,15 17,10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Download ({selectedImages.size})
-                  </button>
-                  <button className="action-btn delete-btn" onClick={handleBatchDelete}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3,6 5,6 21,6"></polyline>
-                      <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
-                    </svg>
-                    Delete ({selectedImages.size})
-                  </button>
-                </div>
-              )}
-
-              <button className="select-all-btn" onClick={handleSelectAll}>
-                {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
-              </button>
-
-              <a href="/generate" className="generate-btn">
-                Generate New
-              </a>
-            </div>
-          </div>
-        </div>
 
         {/* Gallery Content */}
         {filteredImages.length === 0 ? (
@@ -549,46 +407,16 @@ function GalleryPage() {
 
                 <div className="image-info">
                   <div className="image-title">
-                    {image.crew?.name || 'Unknown Crew'}
+                    {image.crew?.boatType.code || 'Unknown Boat'} - {image.crew?.name || 'Unknown Crew'}
                   </div>
-                  {image.crew?.club && (
-                    <div className="club-info">
-                      <span className="club-name-prominent">{image.crew.club.name}</span>
-                      <div className="color-swatches">
-                        <div
-                          className="color-swatch"
-                          style={{
-                            backgroundColor: image.crew.club.primaryColor,
-                          }}
-                          title={`Primary: ${image.crew.club.primaryColor}`}
-                        />
-                        <div
-                          className="color-swatch"
-                          style={{
-                            backgroundColor: image.crew.club.secondaryColor,
-                          }}
-                          title={`Secondary: ${image.crew.club.secondaryColor}`}
-                        />
-                      </div>
-                    </div>
-                  )}
                   <div className="image-subtitle">
-                    {image.crew?.boatType.code || 'Unknown Boat'}
-                    {image.crew?.raceName && ` • ${image.crew.raceName}`}
+                    {(image.crew?.club?.name || image.crew?.clubName) || 'No Club'}
+                    {image.crew?.raceName && ` - ${image.crew.raceName}`}
                   </div>
 
-                  {/* Enhanced Metadata */}
-                  <div className="image-metadata">
-                    <div className="metadata-row">
-                      <span className="metadata-label">Created:</span>
-                      <span className="metadata-value">{new Date(image.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    {image.metadata?.width && image.metadata?.height && (
-                      <div className="metadata-row">
-                        <span className="metadata-label">Resolution:</span>
-                        <span className="metadata-value">{image.metadata.width}x{image.metadata.height}</span>
-                      </div>
-                    )}
+                  {/* Created Date - Bottom Left */}
+                  <div className="image-created-date">
+                    {new Date(image.createdAt).toLocaleDateString()}
                   </div>
 
                   {/* Image Actions */}

@@ -832,6 +832,15 @@
   margin-bottom: 0.75rem;
 }
 
+.image-created-date {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  opacity: 0.8;
+}
+
 .club-info {
   display: flex;
   align-items: center;
