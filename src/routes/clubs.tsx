@@ -87,6 +87,16 @@ function ClubsPage() {
     },
   })
 
+  const bulkDeleteMutation = trpc.club.bulkDelete.useMutation({
+    onSuccess: () => {
+      setSelectedClubs(new Set())
+      refetch()
+    },
+    onError: (error) => {
+      alert(`Failed to delete clubs: ${error.message}`)
+    },
+  })
+
   const handleEdit = (club: any) => {
     setEditingClubId(club.id)
     setEditForm({
@@ -137,6 +147,18 @@ function ClubsPage() {
 
   const handleDelete = async (clubId: string) => {
     deleteMutation.mutate({ id: clubId })
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedClubs.size === 0) return
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${selectedClubs.size} club${selectedClubs.size > 1 ? 's' : ''}? This action cannot be undone.`
+    )
+
+    if (confirmed) {
+      bulkDeleteMutation.mutate({ ids: Array.from(selectedClubs) })
+    }
   }
 
   const handleClubSelection = (clubId: string, checked: boolean) => {
@@ -339,15 +361,20 @@ function ClubsPage() {
           resultsCount={filteredClubs.length}
           className="clubs-search-bar"
           actionButtons={[
+            ...(selectedClubs.size > 0 ? [{
+              label: 'Delete',
+              onClick: handleBulkDelete,
+              variant: 'crew-danger' as const
+            }] : []),
             ...(filteredClubs.length > 0 ? [{
               label: selectedClubs.size === filteredClubs.length ? 'Deselect All' : 'Select All',
               onClick: handleSelectAll,
-              variant: 'secondary'
+              variant: 'secondary' as const
             }] : []),
             {
               label: 'Create New',
               onClick: startNewClub,
-              variant: 'primary',
+              variant: 'primary' as const,
               disabled: isCreatingNew
             }
           ]}
@@ -442,11 +469,11 @@ function ClubsPage() {
                     </div>
                   </div>
                   <div className="preset-actions">
-                    <button className="preset-btn" onClick={cancelNewClub}>
+                    <button className="crew-action-btn secondary" onClick={cancelNewClub}>
                       Cancel
                     </button>
                     <button
-                      className="preset-btn primary"
+                      className="crew-action-btn primary"
                       onClick={saveNewClub}
                     >
                       Save
@@ -642,14 +669,20 @@ function ClubsPage() {
                       {isEditing ? (
                         <>
                           <button
-                            className="preset-btn"
-                            onClick={() => handleCancelEdit(club.id)}
+                            className="crew-action-btn secondary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleCancelEdit(club.id)
+                            }}
                           >
                             Cancel
                           </button>
                           <button
-                            className="preset-btn primary"
-                            onClick={() => handleSaveEdit(club)}
+                            className="crew-action-btn primary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleSaveEdit(club)
+                            }}
                           >
                             Save
                           </button>

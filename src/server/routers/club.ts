@@ -98,4 +98,16 @@ export const clubRouter = router({
         where: { id: input.id },
       })
     }),
+
+  bulkDelete: publicProcedure
+    .input(z.object({ ids: z.array(z.string()) }))
+    .mutation(async ({ input }) => {
+      return await prisma.club.deleteMany({
+        where: {
+          id: {
+            in: input.ids
+          }
+        },
+      })
+    }),
 })
