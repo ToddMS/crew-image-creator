@@ -473,22 +473,26 @@ function CreateCrewPage() {
                 </div>
               )}
 
-              <div className="crew-names-grid">
+              <div className={`crew-names-grid ${boatClass === '1x' ? 'single-sculler-grid' : ''}`}>
                 {crewNames.map((name, index) => {
                   const seatNumber = boatClassToSeats[boatClass] - index
                   const seatName =
-                    seatNumber === 1
-                      ? 'Bow Seat'
-                      : seatNumber === boatClassToSeats[boatClass]
-                        ? 'Stroke Seat'
-                        : `${seatNumber} Seat`
+                    boatClass === '1x'
+                      ? 'Single Sculler'
+                      : seatNumber === 1
+                        ? 'Bow Seat'
+                        : seatNumber === boatClassToSeats[boatClass]
+                          ? 'Stroke Seat'
+                          : `${seatNumber} Seat`
 
                   const placeholderText =
-                    seatNumber === 1
-                      ? "Enter bow's name"
-                      : seatNumber === boatClassToSeats[boatClass]
-                        ? "Enter stroke's name"
-                        : `Enter ${seatNumber}'s name`
+                    boatClass === '1x'
+                      ? "Enter sculler's name"
+                      : seatNumber === 1
+                        ? "Enter bow's name"
+                        : seatNumber === boatClassToSeats[boatClass]
+                          ? "Enter stroke's name"
+                          : `Enter ${seatNumber}'s name`
 
                   return (
                     <div key={index} className="crew-name-input">
@@ -566,7 +570,8 @@ function CreateCrewPage() {
                 <div className="crew-members-grid">
                   {crewNames.map((name, index) => {
                     const seatNumber = boatClassToSeats[boatClass] - index
-                    const seatName = seatNumber === 1 ? 'Bow seat' :
+                    const seatName = boatClass === '1x' ? 'Single sculler' :
+                                    seatNumber === 1 ? 'Bow seat' :
                                     seatNumber === boatClassToSeats[boatClass] ? 'Stroke seat' :
                                     `${seatNumber} seat`
 

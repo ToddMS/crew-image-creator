@@ -61,7 +61,7 @@ body {
   max-width: 577px;
 }
 
-/* Boat container - ultra large boat */
+/* Boat container - optimized for 1x */
 .boat-container {
   position: absolute;
   top: 50%;
@@ -76,7 +76,7 @@ body {
 }
 
 .boat-container .boat-image {
-  width: 950px !important;
+  width: 500px !important;
   height: 650px !important;
   opacity: 1;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
@@ -143,6 +143,45 @@ body {
 .crew-position[data-seat="B"] .member-name,
 .crew-position[data-seat="C"] .member-name {
   left: 65px; /* Badge width (50px) + gap (15px) */
+}
+
+/* Special styling for 1x - badge with name to the right */
+.crew-position[data-seat="1x"] {
+  position: absolute !important;
+  top: 60% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 15px !important;
+}
+
+.crew-position[data-seat="1x"] .position-badge {
+  display: flex !important;
+  background: white !important;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50% !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0px !important;
+  font-weight: normal !important;
+  color: transparent !important;
+  font-family: 'Inter', sans-serif !important;
+  border: 2px solid rgba(0, 0, 0, 0.1) !important;
+  position: static !important;
+}
+
+.crew-position[data-seat="1x"] .member-name {
+  position: static !important;
+  font-size: 32px !important;
+  font-weight: normal !important;
+  color: #094e2a !important;
+  white-space: nowrap !important;
+  transform: none !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
 }
 
 

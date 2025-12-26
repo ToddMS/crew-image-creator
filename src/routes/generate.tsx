@@ -212,7 +212,9 @@ function GenerateImagePage() {
                         }}
                       >
                         <h3 className="font-medium text-gray-900 mb-1 text-sm">
-                          {crew.name}
+                          {crew.boatType.code === '1x' && crew.crewNames && crew.crewNames.length > 0
+                            ? crew.crewNames[0]
+                            : crew.name}
                         </h3>
                         <div className="space-y-0.5 text-xs text-gray-600">
                           <p>Boat: {crew.boatType.name}</p>

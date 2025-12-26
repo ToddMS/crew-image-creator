@@ -159,7 +159,11 @@ function GalleryPage() {
 
   const handleDeleteImage = async (image: SavedImage) => {
     const isConfirmed = window.confirm(
-      `Are you sure you want to delete "${image.crew?.name || 'this image'}"?\n\nThis action cannot be undone.`,
+      `Are you sure you want to delete "${
+        image.crew?.boatType.code === '1x' && image.crew?.crewNames && image.crew.crewNames.length > 0
+          ? image.crew.crewNames[0]
+          : image.crew?.name || 'this image'
+      }"?\n\nThis action cannot be undone.`,
     )
 
     if (!isConfirmed) {
@@ -410,7 +414,11 @@ function GalleryPage() {
 
                 <div className="image-info">
                   <div className="image-title">
-                    {image.crew?.boatType.code || 'Unknown Boat'} - {image.crew?.name || 'Unknown Crew'}
+                    {image.crew?.boatType.code || 'Unknown Boat'} - {
+                      image.crew?.boatType.code === '1x' && image.crew?.crewNames && image.crew.crewNames.length > 0
+                        ? image.crew.crewNames[0]
+                        : image.crew?.name || 'Unknown Crew'
+                    }
                   </div>
                   <div className="image-subtitle">
                     {(image.crew?.club?.name || image.crew?.clubName) || 'No Club'}

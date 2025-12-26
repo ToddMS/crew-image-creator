@@ -324,6 +324,13 @@ html:has(.create-crew-container .step.active:first-child) {
   margin: 0 auto;
 }
 
+/* Center the single field for 1x boats */
+.crew-names-grid.single-sculler-grid {
+  grid-template-columns: 1fr;
+  justify-content: center;
+  max-width: 400px;
+}
+
 .crew-name-input {
   display: flex;
   flex-direction: column;

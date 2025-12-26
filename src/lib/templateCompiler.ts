@@ -650,7 +650,8 @@ export class TemplateCompiler {
         } else {
           // Handle rowers in reverse order (cox -> stroke -> ... -> bow)
           // For 8+: Tim(idx 1)=Stroke(8), Todd(idx 2)=7, ..., Alex(idx 8)=Bow(1)
-          const seatNumber = hasCox ? maxRowerSeat - (index - 1) : maxRowerSeat - index + 1
+          // For 1x: Todd(idx 0)=Stroke(1)
+          const seatNumber = hasCox ? maxRowerSeat - (index - 1) : maxRowerSeat - index
 
           // Only create rower positions for valid seat numbers (1 to maxRowerSeat)
           if (seatNumber >= 1 && seatNumber <= maxRowerSeat) {
@@ -721,6 +722,8 @@ export class TemplateCompiler {
     seatNumber: number,
     totalSeats: number,
   ): string {
+    // For single sculls (1x), treat the only rower as stroke
+    if (totalSeats === 1) return 'Stroke'
     if (seatNumber === 1) return 'Bow'
     if (seatNumber === totalSeats) return 'Stroke'
     return `Seat ${seatNumber}`
@@ -810,7 +813,8 @@ export class TemplateCompiler {
       } else if (member.POSITION === 'Bow') {
         badge = 'B'
       } else if (member.POSITION === 'Stroke') {
-        badge = 'S'
+        // Special case for 1x boats - use "1x" badge for better styling
+        badge = boatCode === '1x' ? '1x' : 'S'
       } else {
         // Extract seat number from "Seat X" format
         const seatMatch = member.POSITION.match(/Seat (\d+)/)
@@ -967,7 +971,8 @@ export class TemplateCompiler {
    */
   private static get1xPositions(badge: string): string {
     const positions: Record<string, string> = {
-      'S': 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+      'S': 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;',
+      '1x': 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
     }
     return positions[badge] || 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }
