@@ -46,8 +46,11 @@ function GenerateImagePage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [colorMode, setColorMode] = useState<'club' | 'custom'>('club')
   const [selectedClubId, setSelectedClubId] = useState<string>('')
-  const [primaryColor, setPrimaryColor] = useState<string>('#094E2A')
-  const [secondaryColor, setSecondaryColor] = useState<string>('#F3BFD4')
+  const [primaryColor, setPrimaryColor] = useState<string>('#FFFFFF')
+  const [secondaryColor, setSecondaryColor] = useState<string>('#FFFFFF')
+  const [crewError, setCrewError] = useState(false)
+  const [templateError, setTemplateError] = useState(false)
+  const [colorError, setColorError] = useState(false)
 
   const { data: crews, isLoading: crewsLoading } = trpc.crew.getAll.useQuery()
   const { data: clubs, isLoading: clubsLoading } = trpc.club.getAll.useQuery()
@@ -116,6 +119,49 @@ function GenerateImagePage() {
     })
   }
 
+  const handleGenerateClick = () => {
+    // Check what's missing and scroll to the first missing requirement
+    if (!selectedCrewId) {
+      setCrewError(true)
+      document.querySelector('[data-section="crew"]')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+      setTimeout(() => setCrewError(false), 3000) // Clear error after 3 seconds
+      return
+    }
+
+    // Check color requirements
+    const hasClubColors = colorMode === 'club' && selectedClubId
+    const hasCustomColors = colorMode === 'custom' && primaryColor && secondaryColor
+
+    if (!hasClubColors && !hasCustomColors) {
+      setColorError(true)
+      document.querySelector('[data-section="colors"]')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+      setTimeout(() => setColorError(false), 3000) // Clear error after 3 seconds
+      return
+    }
+
+    if (!selectedTemplateId) {
+      setTemplateError(true)
+      document.querySelector('[data-section="template"]')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+      setTimeout(() => setTemplateError(false), 3000) // Clear error after 3 seconds
+      return
+    }
+
+    // All requirements met, clear any remaining errors and proceed with generation
+    setCrewError(false)
+    setColorError(false)
+    setTemplateError(false)
+    handleGenerateImage()
+  }
+
   return (
     <>
       <style>{scrollbarStyles}</style>
@@ -124,51 +170,61 @@ function GenerateImagePage() {
 
           <div className="space-y-8">
             {/* Crew Selection */}
-            <section className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Select Crew</h2>
+            <section className="bg-white rounded-lg shadow p-6" data-section="crew">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Select Crew</h2>
+                {crewError && (
+                  <span className="text-red-600 text-sm font-medium animate-pulse">
+                    Please select a crew
+                  </span>
+                )}
+              </div>
 
               {crewsLoading ? (
                 <div className="animate-pulse">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[...Array(3)].map((_, i) => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {[...Array(5)].map((_, i) => (
                       <div
                         key={i}
-                        className="h-32 bg-gray-200 rounded-lg"
+                        className="h-20 bg-gray-200 rounded-md"
                       ></div>
                     ))}
                   </div>
                 </div>
               ) : crews && crews.length > 0 ? (
-                <div className="max-h-80 pr-4 custom-scrollbar">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="max-h-64 pr-4 custom-scrollbar">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {crews.map((crew) => (
                       <div
                         key={crew.id}
-                        className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        className={`p-3 rounded-md border-2 cursor-pointer transition-all ${
                           selectedCrewId === crew.id
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
-                        onClick={() => setSelectedCrewId(crew.id)}
+                        onClick={() => {
+                          setSelectedCrewId(crew.id)
+                          setCrewError(false)
+                        }}
                       >
-                        <h3 className="font-medium text-gray-900 mb-2">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">
                           {crew.name}
                         </h3>
-                        <div className="space-y-1 text-sm text-gray-600">
+                        <div className="space-y-0.5 text-xs text-gray-600">
                           <p>Boat: {crew.boatType.name}</p>
-                          <p>Race: {crew.raceName || 'No race specified'}</p>
+                          <p className="truncate">Race: {crew.raceName || 'No race specified'}</p>
                           {crew.club && (
-                            <div className="flex items-center gap-2">
-                              <span>Club: {crew.club.name}</span>
+                            <div className="flex items-center justify-between">
+                              <span className="truncate">Club: {crew.club.name}</span>
                               <div className="flex gap-1">
                                 <div
-                                  className="w-3 h-3 rounded-full border border-gray-300"
+                                  className="w-2.5 h-2.5 rounded-full border border-gray-300"
                                   style={{
                                     backgroundColor: crew.club.primaryColor,
                                   }}
                                 />
                                 <div
-                                  className="w-3 h-3 rounded-full border border-gray-300"
+                                  className="w-2.5 h-2.5 rounded-full border border-gray-300"
                                   style={{
                                     backgroundColor: crew.club.secondaryColor,
                                   }}
@@ -176,12 +232,6 @@ function GenerateImagePage() {
                               </div>
                             </div>
                           )}
-                        </div>
-                        <div className="mt-3">
-                          <p className="text-xs text-gray-500">
-                            {crew.crewNames.length || 0} rower
-                            {(crew.crewNames.length || 0) !== 1 ? 's' : ''}
-                          </p>
                         </div>
                       </div>
                     ))}
@@ -201,21 +251,27 @@ function GenerateImagePage() {
             </section>
 
             {/* Color Selection */}
-            <section className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Choose Colors</h2>
-
-              <div className="space-y-6">
-                {/* Color mode selection */}
-                <div className="flex gap-4">
+            <section className="bg-white rounded-lg shadow p-6" data-section="colors">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Choose Colors</h2>
+                <div className="flex items-center gap-6">
+                  {colorError && (
+                    <span className="text-red-600 text-sm font-medium animate-pulse">
+                      Please select a club or set custom colors
+                    </span>
+                  )}
+                  {/* Color mode selection */}
+                  <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
                       type="radio"
                       name="colorMode"
                       value="club"
                       checked={colorMode === 'club'}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setColorMode(e.target.value as 'club' | 'custom')
-                      }
+                        setColorError(false)
+                      }}
                       className="mr-2"
                     />
                     <span>Use Club Colors</span>
@@ -226,14 +282,19 @@ function GenerateImagePage() {
                       name="colorMode"
                       value="custom"
                       checked={colorMode === 'custom'}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setColorMode(e.target.value as 'club' | 'custom')
-                      }
+                        setColorError(false)
+                      }}
                       className="mr-2"
                     />
                     <span>Custom Colors</span>
                   </label>
+                  </div>
                 </div>
+              </div>
+
+              <div className="space-y-6">
 
                 {/* Club Colors Mode */}
                 {colorMode === 'club' && (
@@ -242,21 +303,21 @@ function GenerateImagePage() {
                       Select a Club
                     </h3>
                     {clubsLoading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[...Array(6)].map((_, i) => (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                        {[...Array(5)].map((_, i) => (
                           <div
                             key={i}
-                            className="h-32 bg-gray-200 rounded-lg animate-pulse"
+                            className="h-20 bg-gray-200 rounded-md animate-pulse"
                           ></div>
                         ))}
                       </div>
                     ) : clubs && clubs.length > 0 ? (
-                      <div className="max-h-80 pr-4 custom-scrollbar">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="max-h-64 pr-4 custom-scrollbar">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                           {clubs.map((club) => (
                             <div
                               key={club.id}
-                              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                              className={`p-3 rounded-md border-2 cursor-pointer transition-all ${
                                 selectedClubId === club.id
                                   ? 'border-blue-600 bg-blue-50'
                                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -265,39 +326,52 @@ function GenerateImagePage() {
                                 setSelectedClubId(club.id)
                                 setPrimaryColor(club.primaryColor)
                                 setSecondaryColor(club.secondaryColor)
+                                setColorError(false)
                               }}
                             >
-                              <div className="flex items-center gap-3 mb-3">
+                              <div className="flex items-center gap-2 mb-2">
                                 {club.logoUrl && (
                                   <img
                                     src={club.logoUrl}
                                     alt={`${club.name} logo`}
-                                    className="w-8 h-8 object-contain"
+                                    className="w-6 h-6 object-contain flex-shrink-0"
                                   />
                                 )}
-                                <h4 className="font-medium text-gray-900">
-                                  {club.name}
+                                <h4 className="font-medium text-gray-900 text-sm leading-tight min-h-[2.5rem] flex items-center justify-center text-center overflow-hidden">
+                                  <span
+                                    className="overflow-hidden text-center"
+                                    style={{
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical',
+                                      wordBreak: 'break-word'
+                                    }}
+                                  >
+                                    {club.name}
+                                  </span>
                                 </h4>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="w-6 h-6 rounded border border-gray-300"
-                                  style={{ backgroundColor: club.primaryColor }}
-                                />
-                                <span className="text-xs text-gray-600">
-                                  {club.primaryColor}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <div
-                                  className="w-6 h-6 rounded border border-gray-300"
-                                  style={{
-                                    backgroundColor: club.secondaryColor,
-                                  }}
-                                />
-                                <span className="text-xs text-gray-600">
-                                  {club.secondaryColor}
-                                </span>
+                              <div className="flex items-center gap-1 justify-between">
+                                <div className="flex items-center gap-1">
+                                  <div
+                                    className="w-4 h-4 rounded border border-gray-300"
+                                    style={{ backgroundColor: club.primaryColor }}
+                                  />
+                                  <span className="text-xs text-gray-600 truncate">
+                                    {club.primaryColor}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div
+                                    className="w-4 h-4 rounded border border-gray-300"
+                                    style={{
+                                      backgroundColor: club.secondaryColor,
+                                    }}
+                                  />
+                                  <span className="text-xs text-gray-600 truncate">
+                                    {club.secondaryColor}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -321,197 +395,125 @@ function GenerateImagePage() {
 
                 {/* Custom Colors Mode */}
                 {colorMode === 'custom' && (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <label className="block text-sm font-semibold text-gray-800 mb-3">
                         Primary Color
                       </label>
-                      <div className="flex gap-2 items-center">
-                        <input
-                          type="color"
-                          value={primaryColor}
-                          onChange={(e) => setPrimaryColor(e.target.value)}
-                          className="w-12 h-10 rounded border border-gray-300"
-                        />
-                        <input
-                          type="text"
-                          value={primaryColor}
-                          onChange={(e) => setPrimaryColor(e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                          placeholder="#000000"
-                        />
+                      <div className="flex gap-3 items-center">
+                        <div className="relative">
+                          <div
+                            className="w-14 h-14 rounded-lg border-2 border-white shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+                            style={{ backgroundColor: primaryColor }}
+                          ></div>
+                          <input
+                            type="color"
+                            value={primaryColor}
+                            onChange={(e) => {
+                              setPrimaryColor(e.target.value)
+                              setColorError(false)
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="absolute inset-0 rounded-lg border border-gray-200 pointer-events-none"></div>
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={primaryColor}
+                            onChange={(e) => {
+                              setPrimaryColor(e.target.value)
+                              setColorError(false)
+                            }}
+                            className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="#000000"
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <label className="block text-sm font-semibold text-gray-800 mb-3">
                         Secondary Color
                       </label>
-                      <div className="flex gap-2 items-center">
-                        <input
-                          type="color"
-                          value={secondaryColor}
-                          onChange={(e) => setSecondaryColor(e.target.value)}
-                          className="w-12 h-10 rounded border border-gray-300"
-                        />
-                        <input
-                          type="text"
-                          value={secondaryColor}
-                          onChange={(e) => setSecondaryColor(e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                          placeholder="#FFFFFF"
-                        />
+                      <div className="flex gap-3 items-center">
+                        <div className="relative">
+                          <div
+                            className="w-14 h-14 rounded-lg border-2 border-white shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+                            style={{ backgroundColor: secondaryColor }}
+                          ></div>
+                          <input
+                            type="color"
+                            value={secondaryColor}
+                            onChange={(e) => {
+                              setSecondaryColor(e.target.value)
+                              setColorError(false)
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="absolute inset-0 rounded-lg border border-gray-200 pointer-events-none"></div>
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={secondaryColor}
+                            onChange={(e) => {
+                              setSecondaryColor(e.target.value)
+                              setColorError(false)
+                            }}
+                            className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="#FFFFFF"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Current colors preview */}
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-2">Current Colors:</p>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-6 h-6 rounded border border-gray-300"
-                        style={{ backgroundColor: primaryColor }}
-                      />
-                      <span className="text-sm">Primary: {primaryColor}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-6 h-6 rounded border border-gray-300"
-                        style={{ backgroundColor: secondaryColor }}
-                      />
-                      <span className="text-sm">
-                        Secondary: {secondaryColor}
-                      </span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </section>
 
             {/* Template Selection */}
-            <section className="bg-white rounded-lg shadow p-6">
+            <section className="bg-white rounded-lg shadow p-6" data-section="template">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold">Choose a Template</h3>
+                {templateError && (
+                  <span className="text-red-600 text-sm font-medium animate-pulse">
+                    Please select a template
+                  </span>
+                )}
+              </div>
               <TemplateSelector
                 selectedTemplateId={selectedTemplateId}
-                onTemplateSelect={setSelectedTemplateId}
+                onTemplateSelect={(templateId) => {
+                  setSelectedTemplateId(templateId)
+                  setTemplateError(false)
+                }}
+                hideTitle={true}
               />
             </section>
 
-            {/* Preview & Generate */}
-            {selectedCrewId && selectedTemplateId && (
-              <section className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">
-                  Preview & Generate
-                </h2>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Selected crew info */}
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-3">
-                      Selected Crew
-                    </h3>
-                    {selectedCrew && (
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium mb-2">
-                          {selectedCrew.name}
-                        </h4>
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <p>Boat: {selectedCrew.boatType.name}</p>
-                          <p>
-                            Race: {selectedCrew.raceName || 'No race specified'}
-                          </p>
-                          {selectedCrew.club && (
-                            <p>Club: {selectedCrew.club.name}</p>
-                          )}
-                        </div>
-                        <div className="mt-3">
-                          <p className="text-sm font-medium text-gray-700 mb-1">
-                            Rowers:
-                          </p>
-                          <div className="text-sm text-gray-600">
-                            {selectedCrew.crewNames.map((rowerName, index) => (
-                              <span key={index}>
-                                {rowerName}
-                                {index <
-                                (selectedCrew.crewNames.length || 0) - 1
-                                  ? ', '
-                                  : ''}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+            {/* Generate Button - Always visible */}
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={handleGenerateClick}
+                disabled={isGenerating}
+                className={`px-8 py-3 rounded-lg font-medium transition-colors ${
+                  isGenerating
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {isGenerating ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    Generating...
                   </div>
-
-                  {/* Selected template info */}
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-3">
-                      Selected Template
-                    </h3>
-                    {selectedTemplate && (
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium mb-2">
-                          {selectedTemplate.name}
-                        </h4>
-                        <p className="text-sm text-gray-600 capitalize mb-3">
-                          {selectedTemplate.templateType} style
-                        </p>
-                        {selectedTemplate.metadata && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <span>Colors:</span>
-                            <div className="flex gap-1">
-                              {selectedTemplate.metadata.primaryColor && (
-                                <div
-                                  className="w-4 h-4 rounded-full border border-gray-300"
-                                  style={{
-                                    backgroundColor:
-                                      selectedTemplate.metadata.primaryColor,
-                                  }}
-                                />
-                              )}
-                              {selectedTemplate.metadata.secondaryColor && (
-                                <div
-                                  className="w-4 h-4 rounded-full border border-gray-300"
-                                  style={{
-                                    backgroundColor:
-                                      selectedTemplate.metadata.secondaryColor,
-                                  }}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Generate button */}
-                <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={handleGenerateImage}
-                    disabled={isGenerating}
-                    className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-                      isGenerating
-                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                  >
-                    {isGenerating ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                        Generating...
-                      </div>
-                    ) : (
-                      'Generate Image'
-                    )}
-                  </button>
-                </div>
-              </section>
-            )}
+                ) : (
+                  'Generate Image'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

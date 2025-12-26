@@ -5,12 +5,14 @@ interface TemplateSelectorProps {
   selectedTemplateId?: string
   onTemplateSelect: (templateId: string) => void
   className?: string
+  hideTitle?: boolean
 }
 
 export function TemplateSelector({
   selectedTemplateId,
   onTemplateSelect,
   className = '',
+  hideTitle = false,
 }: TemplateSelectorProps) {
   const [selectedType, setSelectedType] = useState<string>('all')
 
@@ -21,9 +23,9 @@ export function TemplateSelector({
       <div className={`${className}`}>
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 rounded w-32 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded-lg"></div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="aspect-square bg-gray-200 rounded-lg"></div>
             ))}
           </div>
         </div>
@@ -56,12 +58,14 @@ export function TemplateSelector({
 
   return (
     <div className={`${className}`}>
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4">Choose a Template</h3>
-      </div>
+      {!hideTitle && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-4">Choose a Template</h3>
+        </div>
+      )}
 
       {/* Template grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {filteredTemplates.map((template) => (
           <div
             key={template.id}
@@ -76,7 +80,7 @@ export function TemplateSelector({
             }}
           >
             {/* Template preview */}
-            <div className="aspect-square bg-gray-100 flex items-center justify-center relative overflow-hidden">
+            <div className="aspect-square bg-gray-100 relative overflow-hidden">
               {template.previewUrl ? (
                 <img
                   src={template.previewUrl}
