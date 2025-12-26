@@ -397,24 +397,6 @@ function GalleryPage() {
                 </select>
               </div>
 
-              {/* Layout Toggle */}
-              <div className="layout-toggle">
-                {[
-                  { key: 'compact', icon: '⊞', title: 'Compact Grid' },
-                  { key: 'large', icon: '⊠', title: 'Large Grid' },
-                  { key: 'list', icon: '☰', title: 'List View' },
-                  { key: 'masonry', icon: '⋮', title: 'Masonry' }
-                ].map(layout => (
-                  <button
-                    key={layout.key}
-                    className={`layout-btn ${layoutMode === layout.key ? 'active' : ''}`}
-                    onClick={() => setLayoutMode(layout.key as any)}
-                    title={layout.title}
-                  >
-                    {layout.icon}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
 
@@ -432,62 +414,62 @@ function GalleryPage() {
                     setSortBy('recent')
                   }}
                 >
-                  Clear all
+                  Clear
                 </button>
               </div>
 
-              <div className="filters-grid">
-                <div className="filter-section">
-                  <h4 className="section-title">Club</h4>
-                  <div className="filter-options">
-                    {Array.from(new Set(savedImages.map(img => img.crew?.club?.name).filter(Boolean))).map(club => (
-                      <button
-                        key={club}
-                        className={`option-btn ${selectedClub === club ? 'selected' : ''}`}
-                        onClick={() => setSelectedClub(selectedClub === club ? '' : club)}
-                      >
-                        {club}
-                        {selectedClub === club && <span className="selected-check">✓</span>}
-                      </button>
-                    ))}
+              <div className="filters-content">
+                <div className="inline-filters">
+                  {/* Club Filter */}
+                  <div className="filter-group">
+                    <span className="filter-label">Club:</span>
+                    <div className="filter-options">
+                      {Array.from(new Set(savedImages.map(img => img.crew?.club?.name).filter(Boolean))).map(club => (
+                        <button
+                          key={club}
+                          className={`option-pill ${selectedClub === club ? 'selected' : ''}`}
+                          onClick={() => setSelectedClub(selectedClub === club ? '' : club)}
+                        >
+                          {club}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <div className="filter-section">
-                  <h4 className="section-title">Boat Type</h4>
-                  <div className="filter-options">
-                    {Array.from(new Set(savedImages.map(img => img.crew?.boatType?.code).filter(Boolean))).map(boat => (
-                      <button
-                        key={boat}
-                        className={`option-btn ${selectedBoatType === boat ? 'selected' : ''}`}
-                        onClick={() => setSelectedBoatType(selectedBoatType === boat ? '' : boat)}
-                      >
-                        {boat}
-                        {selectedBoatType === boat && <span className="selected-check">✓</span>}
-                      </button>
-                    ))}
+                  {/* Boat Type Filter */}
+                  <div className="filter-group">
+                    <span className="filter-label">Boat:</span>
+                    <div className="filter-options">
+                      {Array.from(new Set(savedImages.map(img => img.crew?.boatType?.code).filter(Boolean))).map(boat => (
+                        <button
+                          key={boat}
+                          className={`option-pill ${selectedBoatType === boat ? 'selected' : ''}`}
+                          onClick={() => setSelectedBoatType(selectedBoatType === boat ? '' : boat)}
+                        >
+                          {boat}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <div className="filter-section">
-                  <h4 className="section-title">Date Range</h4>
-                  <div className="date-range-inputs">
-                    <div className="date-input-group">
-                      <label>From</label>
+                  {/* Date Range Filter */}
+                  <div className="filter-group">
+                    <span className="filter-label">Date:</span>
+                    <div className="date-range-compact">
                       <input
                         type="date"
                         value={dateRange.start}
                         onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
-                        className="date-input-modern"
+                        className="date-input-compact"
+                        placeholder="From"
                       />
-                    </div>
-                    <div className="date-input-group">
-                      <label>To</label>
+                      <span className="date-separator">to</span>
                       <input
                         type="date"
                         value={dateRange.end}
                         onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
-                        className="date-input-modern"
+                        className="date-input-compact"
+                        placeholder="To"
                       />
                     </div>
                   </div>
@@ -637,85 +619,34 @@ function GalleryPage() {
                         <span className="metadata-value">{image.metadata.width}x{image.metadata.height}</span>
                       </div>
                     )}
-                    {image.template?.name && (
-                      <div className="metadata-row">
-                        <span className="metadata-label">Template:</span>
-                        <span className="metadata-value" title={image.template.name}>
-                          {image.template.templateType || 'Unknown'}
-                        </span>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Hover Actions */}
-                  <div className="image-actions-hover">
-                    <div className="action-group">
+                  {/* Image Actions */}
+                  <div className="crew-actions">
+                    <div className="crew-actions-left">
+                    </div>
+                    <div className="crew-actions-right">
                       <button
-                        className="action-btn download"
+                        className="crew-action-btn secondary"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleDownload(image)
                         }}
-                        title="Download Image"
                       >
-                        ⬇
+                        Download
                       </button>
                       <button
-                        className="action-btn copy"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigator.clipboard.writeText(image.imageUrl)
-                          alert('Image URL copied to clipboard!')
-                        }}
-                        title="Copy Link"
-                      >
-                        📋
-                      </button>
-                      <button
-                        className="action-btn regenerate"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // Navigate to generate page with crew pre-selected
-                          window.location.href = `/generate?crew=${image.crew?.id}`
-                        }}
-                        title="Regenerate with this crew"
-                      >
-                        🔄
-                      </button>
-                      <button
-                        className="action-btn delete"
+                        className="crew-action-btn danger"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleDeleteImage(image)
                         }}
-                        title="Delete Image"
                       >
-                        🗑
+                        Delete
                       </button>
                     </div>
                   </div>
 
-                  {/* Fallback Actions for Mobile */}
-                  <div className="image-actions-mobile">
-                    <button
-                      className="btn btn-secondary btn-small"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDownload(image)
-                      }}
-                    >
-                      Download
-                    </button>
-                    <button
-                      className="btn btn-danger btn-small"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteImage(image)
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
                 </div>
               </div>
             ))}
@@ -791,7 +722,7 @@ function GalleryPage() {
             >
               <img
                 src={fullscreenImage.imageUrl}
-                alt={`${fullscreenImage.crew?.name} - ${fullscreenImage.template?.name}`}
+                alt={fullscreenImage.crew?.name || 'Crew Image'}
                 onClick={() => setFullscreenImage(null)}
                 style={{
                   maxWidth: '100%',
@@ -804,31 +735,6 @@ function GalleryPage() {
           </div>
         )}
 
-        {/* Floating Action Bar */}
-        <div className="floating-actions">
-          <button
-            className="fab fab-secondary"
-            onClick={() => {
-              const zip = confirm('Export all visible images as ZIP file?')
-              if (zip && filteredImages.length > 0) {
-                filteredImages.forEach((image, index) => {
-                  setTimeout(() => handleDownload(image), index * 200)
-                })
-              }
-            }}
-            title="Export All Images"
-          >
-            📦
-          </button>
-
-          <a
-            href="/generate"
-            className="fab fab-primary"
-            title="Generate New Image"
-          >
-            ✨
-          </a>
-        </div>
       </div>
     </div>
   )
