@@ -52,6 +52,16 @@ function GalleryPage() {
   )
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Advanced filtering state
+  const [selectedClub, setSelectedClub] = useState<string>('')
+  const [selectedBoatType, setSelectedBoatType] = useState<string>('')
+  const [dateRange, setDateRange] = useState<{start: string, end: string}>({start: '', end: ''})
+  const [sortBy, setSortBy] = useState<'recent' | 'club' | 'boat' | 'name'>('recent')
+
+  // Layout and display state
+  const [layoutMode, setLayoutMode] = useState<'compact' | 'large' | 'list' | 'masonry'>('compact')
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
+
   const {
     data: savedImages = [],
     isLoading: loading,
@@ -71,25 +81,65 @@ function GalleryPage() {
   const applyFilter = useCallback(() => {
     let filtered = [...savedImages]
 
-    // Apply search filter
+    // Apply search filter (enhanced)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (image) =>
-          image.crew.name.toLowerCase().includes(query) ||
-          image.template.name.toLowerCase().includes(query) ||
-          image.crew.id.toLowerCase().includes(query),
-      )
+      filtered = filtered.filter((image) => {
+        const crewName = image.crew?.name?.toLowerCase() || ''
+        const clubName = image.crew?.club?.name?.toLowerCase() || ''
+        const raceName = image.crew?.raceName?.toLowerCase() || ''
+        const boatType = image.crew?.boatType?.name?.toLowerCase() || ''
+        const rowerNames = image.crew?.crewNames?.join(' ')?.toLowerCase() || ''
+
+        return crewName.includes(query) ||
+               clubName.includes(query) ||
+               raceName.includes(query) ||
+               boatType.includes(query) ||
+               rowerNames.includes(query) ||
+               image.crew?.id?.toLowerCase().includes(query)
+      })
     }
 
-    // Sort by most recent first
-    filtered = filtered.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
+    // Apply club filter
+    if (selectedClub) {
+      filtered = filtered.filter(image => image.crew?.club?.name === selectedClub)
+    }
+
+    // Apply boat type filter
+    if (selectedBoatType) {
+      filtered = filtered.filter(image => image.crew?.boatType?.code === selectedBoatType)
+    }
+
+    // Apply date range filter
+    if (dateRange.start || dateRange.end) {
+      filtered = filtered.filter(image => {
+        const imageDate = new Date(image.createdAt)
+        const start = dateRange.start ? new Date(dateRange.start) : null
+        const end = dateRange.end ? new Date(dateRange.end) : null
+
+        if (start && imageDate < start) return false
+        if (end && imageDate > end) return false
+        return true
+      })
+    }
+
+    // Apply sorting
+    filtered = filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'club':
+          return (a.crew?.club?.name || '').localeCompare(b.crew?.club?.name || '')
+        case 'boat':
+          return (a.crew?.boatType?.code || '').localeCompare(b.crew?.boatType?.code || '')
+        case 'name':
+          return (a.crew?.name || '').localeCompare(b.crew?.name || '')
+        case 'recent':
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      }
+    })
 
     setFilteredImages(filtered)
-  }, [savedImages, searchQuery])
+  }, [savedImages, searchQuery, selectedClub, selectedBoatType, dateRange, sortBy])
 
   useEffect(() => {
     applyFilter()
@@ -129,6 +179,37 @@ function GalleryPage() {
     } else {
       setSelectedImages(new Set(filteredImages.map((img) => img.id)))
     }
+  }
+
+  const handleSelectByClub = (clubName: string) => {
+    const clubImages = filteredImages.filter(img => img.crew?.club?.name === clubName)
+    const clubImageIds = clubImages.map(img => img.id)
+    const newSelected = new Set(selectedImages)
+
+    // If all club images are selected, deselect them; otherwise select them
+    const allClubSelected = clubImageIds.every(id => newSelected.has(id))
+    if (allClubSelected) {
+      clubImageIds.forEach(id => newSelected.delete(id))
+    } else {
+      clubImageIds.forEach(id => newSelected.add(id))
+    }
+
+    setSelectedImages(newSelected)
+  }
+
+  const handleSelectByBoatType = (boatType: string) => {
+    const boatImages = filteredImages.filter(img => img.crew?.boatType?.code === boatType)
+    const boatImageIds = boatImages.map(img => img.id)
+    const newSelected = new Set(selectedImages)
+
+    const allBoatSelected = boatImageIds.every(id => newSelected.has(id))
+    if (allBoatSelected) {
+      boatImageIds.forEach(id => newSelected.delete(id))
+    } else {
+      boatImageIds.forEach(id => newSelected.add(id))
+    }
+
+    setSelectedImages(newSelected)
   }
 
   const handleBatchDownload = async () => {
@@ -225,42 +306,245 @@ function GalleryPage() {
   return (
     <div className="gallery-container">
       <div className="container">
-        {/* Gallery Controls */}
+        {/* Professional Gallery Controls */}
         <div className="gallery-controls">
-          <div className="gallery-search">
-            <input
-              type="text"
-              placeholder="Search by crew name, template, or ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
+          {/* Primary Search & Controls Bar */}
+          <div className="primary-controls">
+            <div className="search-container">
+              <div className="search-input-wrapper">
+                <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search images..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input-modern"
+                />
+                {searchQuery && (
+                  <button
+                    className="search-clear"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="control-pills">
+              {/* Active Filters Pills */}
+              {selectedClub && (
+                <div className="filter-pill">
+                  <span className="pill-label">Club:</span>
+                  <span className="pill-value">{selectedClub}</span>
+                  <button className="pill-remove" onClick={() => setSelectedClub('')}>×</button>
+                </div>
+              )}
+
+              {selectedBoatType && (
+                <div className="filter-pill">
+                  <span className="pill-label">Boat:</span>
+                  <span className="pill-value">{selectedBoatType}</span>
+                  <button className="pill-remove" onClick={() => setSelectedBoatType('')}>×</button>
+                </div>
+              )}
+
+              {(dateRange.start || dateRange.end) && (
+                <div className="filter-pill">
+                  <span className="pill-label">Date:</span>
+                  <span className="pill-value">
+                    {dateRange.start || 'Any'} - {dateRange.end || 'Any'}
+                  </span>
+                  <button className="pill-remove" onClick={() => setDateRange({start: '', end: ''})}>×</button>
+                </div>
+              )}
+
+              {/* Filter Toggle Button */}
+              <button
+                className={`filter-toggle ${showAdvancedSearch ? 'active' : ''}`}
+                onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
+                </svg>
+                Filter
+                {(selectedClub || selectedBoatType || dateRange.start || dateRange.end) && (
+                  <span className="filter-count">
+                    {[selectedClub, selectedBoatType, dateRange.start || dateRange.end].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <div className="layout-view-controls">
+              {/* Sort Dropdown */}
+              <div className="sort-dropdown">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="sort-select"
+                >
+                  <option value="recent">Latest</option>
+                  <option value="club">Club A→Z</option>
+                  <option value="boat">Boat Type</option>
+                  <option value="name">Crew Name</option>
+                </select>
+              </div>
+
+              {/* Layout Toggle */}
+              <div className="layout-toggle">
+                {[
+                  { key: 'compact', icon: '⊞', title: 'Compact Grid' },
+                  { key: 'large', icon: '⊠', title: 'Large Grid' },
+                  { key: 'list', icon: '☰', title: 'List View' },
+                  { key: 'masonry', icon: '⋮', title: 'Masonry' }
+                ].map(layout => (
+                  <button
+                    key={layout.key}
+                    className={`layout-btn ${layoutMode === layout.key ? 'active' : ''}`}
+                    onClick={() => setLayoutMode(layout.key as any)}
+                    title={layout.title}
+                  >
+                    {layout.icon}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="gallery-actions">
-            {selectedImages.size > 0 && (
-              <>
+          {/* Advanced Filters Panel */}
+          {showAdvancedSearch && (
+            <div className="advanced-filters-panel">
+              <div className="filters-header">
+                <h3>Advanced Filters</h3>
                 <button
-                  className="btn btn-secondary"
-                  onClick={handleBatchDownload}
+                  className="clear-all-btn"
+                  onClick={() => {
+                    setSelectedClub('')
+                    setSelectedBoatType('')
+                    setDateRange({start: '', end: ''})
+                    setSortBy('recent')
+                  }}
                 >
-                  Download Selected ({selectedImages.size})
+                  Clear all
                 </button>
-                <button className="btn btn-danger" onClick={handleBatchDelete}>
-                  Delete Selected ({selectedImages.size})
-                </button>
-              </>
-            )}
+              </div>
 
-            <button className="btn btn-secondary" onClick={handleSelectAll}>
-              {selectedImages.size === filteredImages.length
-                ? 'Deselect All'
-                : 'Select All'}
-            </button>
+              <div className="filters-grid">
+                <div className="filter-section">
+                  <h4 className="section-title">Club</h4>
+                  <div className="filter-options">
+                    {Array.from(new Set(savedImages.map(img => img.crew?.club?.name).filter(Boolean))).map(club => (
+                      <button
+                        key={club}
+                        className={`option-btn ${selectedClub === club ? 'selected' : ''}`}
+                        onClick={() => setSelectedClub(selectedClub === club ? '' : club)}
+                      >
+                        {club}
+                        {selectedClub === club && <span className="selected-check">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <a href="/generate" className="btn btn-primary">
-              Generate New Image
-            </a>
+                <div className="filter-section">
+                  <h4 className="section-title">Boat Type</h4>
+                  <div className="filter-options">
+                    {Array.from(new Set(savedImages.map(img => img.crew?.boatType?.code).filter(Boolean))).map(boat => (
+                      <button
+                        key={boat}
+                        className={`option-btn ${selectedBoatType === boat ? 'selected' : ''}`}
+                        onClick={() => setSelectedBoatType(selectedBoatType === boat ? '' : boat)}
+                      >
+                        {boat}
+                        {selectedBoatType === boat && <span className="selected-check">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="filter-section">
+                  <h4 className="section-title">Date Range</h4>
+                  <div className="date-range-inputs">
+                    <div className="date-input-group">
+                      <label>From</label>
+                      <input
+                        type="date"
+                        value={dateRange.start}
+                        onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
+                        className="date-input-modern"
+                      />
+                    </div>
+                    <div className="date-input-group">
+                      <label>To</label>
+                      <input
+                        type="date"
+                        value={dateRange.end}
+                        onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
+                        className="date-input-modern"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Results Bar */}
+          <div className="results-bar">
+            <div className="results-info">
+              <span className="results-count">{filteredImages.length}</span>
+              <span className="results-label">
+                {filteredImages.length === 1 ? 'image' : 'images'}
+              </span>
+              {selectedImages.size > 0 && (
+                <>
+                  <span className="separator">•</span>
+                  <span className="selected-count">{selectedImages.size} selected</span>
+                </>
+              )}
+            </div>
+
+            <div className="results-actions">
+              {selectedImages.size > 0 && (
+                <div className="batch-actions">
+                  <button className="action-btn download-btn" onClick={handleBatchDownload}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7,10 12,15 17,10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download ({selectedImages.size})
+                  </button>
+                  <button className="action-btn delete-btn" onClick={handleBatchDelete}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3,6 5,6 21,6"></polyline>
+                      <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                    </svg>
+                    Delete ({selectedImages.size})
+                  </button>
+                </div>
+              )}
+
+              <button className="select-all-btn" onClick={handleSelectAll}>
+                {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
+              </button>
+
+              <a href="/generate" className="generate-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                Generate New
+              </a>
+            </div>
           </div>
         </div>
 
@@ -277,7 +561,7 @@ function GalleryPage() {
             </a>
           </div>
         ) : (
-          <div className="gallery-grid">
+          <div className={`gallery-grid layout-${layoutMode}`}>
             {filteredImages.map((image) => (
               <div
                 key={image.id}
@@ -324,12 +608,14 @@ function GalleryPage() {
                           style={{
                             backgroundColor: image.crew.club.primaryColor,
                           }}
+                          title={`Primary: ${image.crew.club.primaryColor}`}
                         />
                         <div
                           className="color-swatch"
                           style={{
                             backgroundColor: image.crew.club.secondaryColor,
                           }}
+                          title={`Secondary: ${image.crew.club.secondaryColor}`}
                         />
                       </div>
                     </div>
@@ -338,10 +624,79 @@ function GalleryPage() {
                     {image.crew?.boatType.code || 'Unknown Boat'}
                     {image.crew?.raceName && ` • ${image.crew.raceName}`}
                   </div>
-                  <div className="image-date">
-                    {new Date(image.createdAt).toLocaleDateString()}
+
+                  {/* Enhanced Metadata */}
+                  <div className="image-metadata">
+                    <div className="metadata-row">
+                      <span className="metadata-label">Created:</span>
+                      <span className="metadata-value">{new Date(image.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    {image.metadata?.width && image.metadata?.height && (
+                      <div className="metadata-row">
+                        <span className="metadata-label">Resolution:</span>
+                        <span className="metadata-value">{image.metadata.width}x{image.metadata.height}</span>
+                      </div>
+                    )}
+                    {image.template?.name && (
+                      <div className="metadata-row">
+                        <span className="metadata-label">Template:</span>
+                        <span className="metadata-value" title={image.template.name}>
+                          {image.template.templateType || 'Unknown'}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="image-actions">
+
+                  {/* Hover Actions */}
+                  <div className="image-actions-hover">
+                    <div className="action-group">
+                      <button
+                        className="action-btn download"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDownload(image)
+                        }}
+                        title="Download Image"
+                      >
+                        ⬇
+                      </button>
+                      <button
+                        className="action-btn copy"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigator.clipboard.writeText(image.imageUrl)
+                          alert('Image URL copied to clipboard!')
+                        }}
+                        title="Copy Link"
+                      >
+                        📋
+                      </button>
+                      <button
+                        className="action-btn regenerate"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          // Navigate to generate page with crew pre-selected
+                          window.location.href = `/generate?crew=${image.crew?.id}`
+                        }}
+                        title="Regenerate with this crew"
+                      >
+                        🔄
+                      </button>
+                      <button
+                        className="action-btn delete"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteImage(image)
+                        }}
+                        title="Delete Image"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Fallback Actions for Mobile */}
+                  <div className="image-actions-mobile">
                     <button
                       className="btn btn-secondary btn-small"
                       onClick={(e) => {
@@ -448,6 +803,32 @@ function GalleryPage() {
             </div>
           </div>
         )}
+
+        {/* Floating Action Bar */}
+        <div className="floating-actions">
+          <button
+            className="fab fab-secondary"
+            onClick={() => {
+              const zip = confirm('Export all visible images as ZIP file?')
+              if (zip && filteredImages.length > 0) {
+                filteredImages.forEach((image, index) => {
+                  setTimeout(() => handleDownload(image), index * 200)
+                })
+              }
+            }}
+            title="Export All Images"
+          >
+            📦
+          </button>
+
+          <a
+            href="/generate"
+            className="fab fab-primary"
+            title="Generate New Image"
+          >
+            ✨
+          </a>
+        </div>
       </div>
     </div>
   )
