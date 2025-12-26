@@ -722,8 +722,8 @@ export class TemplateCompiler {
     seatNumber: number,
     totalSeats: number,
   ): string {
-    // For single sculls (1x), treat the only rower as stroke
-    if (totalSeats === 1) return 'Stroke'
+    // For single sculls (1x), treat the only rower as single sculler
+    if (totalSeats === 1) return 'Single Sculler'
     if (seatNumber === 1) return 'Bow'
     if (seatNumber === totalSeats) return 'Stroke'
     return `Seat ${seatNumber}`
