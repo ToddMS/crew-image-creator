@@ -294,7 +294,13 @@ function GalleryPage() {
                   />
                 </div>
 
-                <div className="image-preview">
+                <div
+                  className="image-preview"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setFullscreenImage(image)
+                  }}
+                >
                   <img
                     src={image.imageUrl}
                     alt={`${image.crew?.name || 'Crew Image'}`}
@@ -309,13 +315,9 @@ function GalleryPage() {
                   <div className="image-title">
                     {image.crew?.name || 'Unknown Crew'}
                   </div>
-                  <div className="image-subtitle">
-                    {image.template?.name || 'Unknown Template'} •{' '}
-                    {image.crew.boatType.code || 'Unknown Boat'}
-                  </div>
                   {image.crew?.club && (
-                    <div className="club-colors">
-                      <span className="club-name">{image.crew.club.name}</span>
+                    <div className="club-info">
+                      <span className="club-name-prominent">{image.crew.club.name}</span>
                       <div className="color-swatches">
                         <div
                           className="color-swatch"
@@ -332,6 +334,10 @@ function GalleryPage() {
                       </div>
                     </div>
                   )}
+                  <div className="image-subtitle">
+                    {image.crew?.boatType.code || 'Unknown Boat'}
+                    {image.crew?.raceName && ` • ${image.crew.raceName}`}
+                  </div>
                   <div className="image-date">
                     {new Date(image.createdAt).toLocaleDateString()}
                   </div>
@@ -344,15 +350,6 @@ function GalleryPage() {
                       }}
                     >
                       Download
-                    </button>
-                    <button
-                      className="btn btn-primary btn-small"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setFullscreenImage(image)
-                      }}
-                    >
-                      Preview
                     </button>
                     <button
                       className="btn btn-danger btn-small"
