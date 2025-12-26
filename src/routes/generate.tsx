@@ -121,14 +121,6 @@ function GenerateImagePage() {
       <style>{scrollbarStyles}</style>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Generate Crew Image
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Select a crew and template to generate your rowing crew image
-            </p>
-          </div>
 
           <div className="space-y-8">
             {/* Crew Selection */}
