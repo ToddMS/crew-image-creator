@@ -163,24 +163,30 @@
 }
 
 .filter-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  padding: 12px 24px !important;
+  border: none !important;
+  background: #f8fafc !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 20px !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+  min-height: 32px !important;
+  white-space: nowrap !important;
+  outline: none !important;
+  user-select: none !important;
 }
 
 .filter-toggle:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: #f1f5f9 !important;
+  border-color: #9ca3af !important;
 }
 
 .filter-toggle.active {

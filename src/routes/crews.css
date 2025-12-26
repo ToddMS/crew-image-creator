@@ -124,36 +124,6 @@
   max-width: 120px;
 }
 
-.crew-card-checkbox {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--gray-300);
-  border-radius: 0.25rem;
-  cursor: pointer;
-  position: relative;
-  transition: var(--transition);
-  background: var(--white);
-}
-
-.crew-card-checkbox:hover {
-  border-color: var(--primary);
-}
-
-.crew-card-checkbox.checked {
-  background: var(--primary);
-  border-color: var(--primary);
-}
-
-.crew-card-checkbox.checked::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--white);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
 
 /* Compact Info Row */
 .crew-compact-info {

@@ -1,0 +1,154 @@
+/* Generate Page - Crew Card Styling */
+
+.generate-crew-card {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.generate-crew-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.generate-crew-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--primary-light);
+}
+
+.generate-crew-card:hover::before {
+  transform: scaleX(1);
+}
+
+.generate-crew-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.generate-crew-card.selected::before {
+  transform: scaleX(1);
+}
+
+/* Generate Page - Club Card Styling */
+
+.generate-club-card {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.generate-club-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.generate-club-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--primary-light);
+}
+
+.generate-club-card:hover::before {
+  transform: scaleX(1);
+}
+
+.generate-club-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.generate-club-card.selected::before {
+  transform: scaleX(1);
+}
+
+/* Generate Page - Template Card Styling */
+
+.generate-template-card {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.generate-template-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  z-index: 10;
+}
+
+.generate-template-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--primary-light);
+}
+
+.generate-template-card:hover::before {
+  transform: scaleX(1);
+}
+
+.generate-template-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.generate-template-card.selected::before {
+  transform: scaleX(1);
+}
+
+/* Template card content styling */
+.generate-template-card .aspect-square {
+  border-radius: calc(var(--radius-lg) - 0.5rem);
+  overflow: hidden;
+}
+
+.generate-template-card h3 {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  text-align: center;
+}

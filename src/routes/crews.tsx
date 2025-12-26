@@ -312,11 +312,11 @@ function CrewsPage() {
                   variant: 'crew-secondary' as const
                 }
               ] : []),
-              {
+              ...(filteredCrews.length > 0 ? [{
                 label: selectedCrews.size === filteredCrews.length ? 'Deselect All' : 'Select All',
                 onClick: handleSelectAll,
                 variant: 'secondary'
-              },
+              }] : []),
               {
                 label: 'Create New',
                 onClick: () => navigate({ to: '/crews/create' }),
@@ -349,15 +349,6 @@ function CrewsPage() {
                             <span>{crew.boatClass}</span>
                           </div>
                         </div>
-                        <div
-                          className={`crew-card-checkbox ${selectedCrews.has(crew.id) ? 'checked' : ''}`}
-                          onClick={() =>
-                            handleCrewSelection(
-                              crew.id,
-                              !selectedCrews.has(crew.id),
-                            )
-                          }
-                        ></div>
                       </div>
 
                       <div className="crew-compact-info">

@@ -350,11 +350,23 @@ function GalleryPage() {
             )
           }
           actionButtons={[
-            {
+            ...(selectedImages.size > 0 ? [
+              {
+                label: 'Delete',
+                onClick: handleBatchDelete,
+                variant: 'crew-danger' as const
+              },
+              {
+                label: 'Download',
+                onClick: handleBatchDownload,
+                variant: 'crew-secondary' as const
+              }
+            ] : []),
+            ...(filteredImages.length > 0 ? [{
               label: selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All',
               onClick: handleSelectAll,
               variant: 'secondary'
-            },
+            }] : []),
             {
               label: 'Create New',
               onClick: () => window.location.href = '/generate',
@@ -384,15 +396,6 @@ function GalleryPage() {
                 className={`image-card ${selectedImages.has(image.id) ? 'selected' : ''}`}
                 onClick={() => handleImageSelect(image.id)}
               >
-                {/* Image Selection Checkbox */}
-                <div className="image-checkbox image-checkbox-right">
-                  <input
-                    type="checkbox"
-                    checked={selectedImages.has(image.id)}
-                    onChange={() => handleImageSelect(image.id)}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
 
                 <div className="image-preview">
                   <img

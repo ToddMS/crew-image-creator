@@ -42,6 +42,7 @@ function ClubsPage() {
   )
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredClubs, setFilteredClubs] = useState<any[]>([])
+  const [selectedClubs, setSelectedClubs] = useState<Set<string>>(new Set())
   const newLogoInputRef = useRef<HTMLInputElement>(null)
   const editLogoInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>(
     {},
@@ -136,6 +137,24 @@ function ClubsPage() {
 
   const handleDelete = async (clubId: string) => {
     deleteMutation.mutate({ id: clubId })
+  }
+
+  const handleClubSelection = (clubId: string, checked: boolean) => {
+    const newSelected = new Set(selectedClubs)
+    if (checked) {
+      newSelected.add(clubId)
+    } else {
+      newSelected.delete(clubId)
+    }
+    setSelectedClubs(newSelected)
+  }
+
+  const handleSelectAll = () => {
+    if (selectedClubs.size === filteredClubs.length) {
+      setSelectedClubs(new Set())
+    } else {
+      setSelectedClubs(new Set(filteredClubs.map((club) => club.id)))
+    }
   }
 
   const startNewClub = () => {
@@ -320,6 +339,11 @@ function ClubsPage() {
           resultsCount={filteredClubs.length}
           className="clubs-search-bar"
           actionButtons={[
+            ...(filteredClubs.length > 0 ? [{
+              label: selectedClubs.size === filteredClubs.length ? 'Deselect All' : 'Select All',
+              onClick: handleSelectAll,
+              variant: 'secondary'
+            }] : []),
             {
               label: 'Create New',
               onClick: startNewClub,
@@ -463,17 +487,25 @@ function ClubsPage() {
                 return (
                   <div
                     key={club.id}
-                    className={`preset-card ${isEditing ? 'editing' : ''}`}
+                    className={`preset-card ${isEditing ? 'editing' : ''} ${selectedClubs.has(club.id) ? 'selected' : ''}`}
+                    onClick={() =>
+                      handleClubSelection(
+                        club.id,
+                        !selectedClubs.has(club.id),
+                      )
+                    }
                   >
                     <div className="preset-header">
                       <div
                         className={`logo-section ${isEditing ? 'editable' : ''} ${(isEditing ? editData.logoUrl : club.logoUrl) ? 'has-logo' : 'empty'}`}
                         onClick={
                           isEditing
-                            ? () =>
+                            ? (e) => {
+                                e.stopPropagation()
                                 editData.logoUrl
                                   ? handleLogoRemove(club.id)
                                   : handleLogoClick(club.id)
+                              }
                             : undefined
                         }
                       >
@@ -501,6 +533,7 @@ function ClubsPage() {
                                 e.target.value,
                               )
                             }
+                            onClick={(e) => e.stopPropagation()}
                             style={{ width: '100%', paddingLeft: '0.5rem' }}
                           />
                         ) : (
@@ -535,6 +568,7 @@ function ClubsPage() {
                                   e.target.value,
                                 )
                               }
+                              onClick={(e) => e.stopPropagation()}
                             />
                             <input
                               type="text"
@@ -576,6 +610,7 @@ function ClubsPage() {
                                   e.target.value,
                                 )
                               }
+                              onClick={(e) => e.stopPropagation()}
                             />
                             <input
                               type="text"
@@ -622,14 +657,20 @@ function ClubsPage() {
                       ) : (
                         <>
                           <button
-                            className="btn-primary-small"
-                            onClick={() => handleEdit(club)}
+                            className="crew-action-btn primary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEdit(club)
+                            }}
                           >
                             Edit
                           </button>
                           <button
-                            className="btn-outline-danger-small"
-                            onClick={() => setShowDeleteConfirm(club.id)}
+                            className="crew-action-btn danger"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setShowDeleteConfirm(club.id)
+                            }}
                           >
                             Delete
                           </button>

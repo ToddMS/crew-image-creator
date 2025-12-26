@@ -344,22 +344,48 @@
   border-radius: var(--radius-lg);
   padding: 1rem 0.5rem;
   box-shadow: var(--shadow);
-  border: 2px solid var(--gray-200);
+  border: 2px solid transparent;
   transition: var(--transition);
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   max-width: 200px;
   width: 100%;
   min-height: 240px;
   height: auto;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
 }
 
+.preset-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
 .preset-card:hover {
-  transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
   border-color: var(--primary-light);
+}
+
+.preset-card:hover::before {
+  transform: scaleX(1);
+}
+
+.preset-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.preset-card.selected::before {
+  transform: scaleX(1);
 }
 
 .preset-card.favorite {

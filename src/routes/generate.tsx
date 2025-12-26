@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { TemplateSelector } from '../components/TemplateSelector'
 import { useAuth } from '../lib/auth-context'
+import './generate.css'
 
 // Custom scrollbar styles
 const scrollbarStyles = `
@@ -197,13 +198,16 @@ function GenerateImagePage() {
                     {crews.map((crew) => (
                       <div
                         key={crew.id}
-                        className={`p-3 rounded-md border-2 cursor-pointer transition-all ${
-                          selectedCrewId === crew.id
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        className={`generate-crew-card ${
+                          selectedCrewId === crew.id ? 'selected' : ''
                         }`}
                         onClick={() => {
-                          setSelectedCrewId(crew.id)
+                          // Allow deselection if clicking the same crew
+                          if (selectedCrewId === crew.id) {
+                            setSelectedCrewId('')
+                          } else {
+                            setSelectedCrewId(crew.id)
+                          }
                           setCrewError(false)
                         }}
                       >
@@ -317,15 +321,21 @@ function GenerateImagePage() {
                           {clubs.map((club) => (
                             <div
                               key={club.id}
-                              className={`p-3 rounded-md border-2 cursor-pointer transition-all ${
-                                selectedClubId === club.id
-                                  ? 'border-blue-600 bg-blue-50'
-                                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              className={`generate-club-card ${
+                                selectedClubId === club.id ? 'selected' : ''
                               }`}
                               onClick={() => {
-                                setSelectedClubId(club.id)
-                                setPrimaryColor(club.primaryColor)
-                                setSecondaryColor(club.secondaryColor)
+                                // Allow deselection if clicking the same club
+                                if (selectedClubId === club.id) {
+                                  setSelectedClubId('')
+                                  // Reset colors to default when deselecting
+                                  setPrimaryColor('#FFFFFF')
+                                  setSecondaryColor('#FFFFFF')
+                                } else {
+                                  setSelectedClubId(club.id)
+                                  setPrimaryColor(club.primaryColor)
+                                  setSecondaryColor(club.secondaryColor)
+                                }
                                 setColorError(false)
                               }}
                             >

@@ -747,23 +747,46 @@
 
 /* Image Cards */
 .image-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
   cursor: pointer;
   position: relative;
+  border: 2px solid transparent;
+}
+
+.image-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  z-index: 10;
 }
 
 .image-card:hover {
-  /* Removed transform and shadow effects */
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--primary-light);
+}
+
+.image-card:hover::before {
+  transform: scaleX(1);
 }
 
 .image-card.selected {
-  border: 3px solid #667eea;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.image-card.selected::before {
+  transform: scaleX(1);
 }
 
 .image-checkbox {

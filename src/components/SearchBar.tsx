@@ -136,15 +136,6 @@ export function SearchBar<T>({
 
         <div className="search-controls">
           <div className="search-controls-left">
-            {/* Active Filter Pills */}
-            {advancedFilters?.filter(f => f.selectedValue).map(filter => (
-              <div key={filter.name} className="filter-pill">
-                <span className="pill-label">{filter.label}:</span>
-                <span className="pill-value">{filter.selectedValue}</span>
-                <button className="pill-remove" onClick={() => filter.onValueChange('')}>×</button>
-              </div>
-            ))}
-
             {/* Advanced Filters Toggle */}
             {onToggleAdvancedFilters && (
               <button
