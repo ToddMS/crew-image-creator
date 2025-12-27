@@ -722,8 +722,8 @@ export class TemplateCompiler {
     seatNumber: number,
     totalSeats: number,
   ): string {
-    // For single sculls (1x), treat the only rower as single sculler
-    if (totalSeats === 1) return 'Single Sculler'
+    // For single sculls (1x), treat the only rower as stroke
+    if (totalSeats === 1) return 'Stroke'
     if (seatNumber === 1) return 'Bow'
     if (seatNumber === totalSeats) return 'Stroke'
     return `Seat ${seatNumber}`
@@ -971,8 +971,8 @@ export class TemplateCompiler {
    */
   private static get1xPositions(badge: string): string {
     const positions: Record<string, string> = {
-      'S': 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;',
-      '1x': 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
+      'S': 'top: 40% !important; left: 65% !important; transform: translate(-50%, -50%) !important;',
+      '1x': 'top: 40% !important; left: 65% !important; transform: translate(-50%, -50%) !important;'
     }
     return positions[badge] || 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }
