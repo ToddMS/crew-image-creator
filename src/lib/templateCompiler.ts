@@ -629,8 +629,8 @@ export class TemplateCompiler {
     if (crew.crewNames && Array.isArray(crew.crewNames)) {
       const boatSeats = crew.boatType?.seats || 8
       const hasCox = crew.boatType?.code?.includes('+') || false
-      // For coxed boats, rower seats are 1 to 8 (not 9), cox is separate
-      const maxRowerSeat = hasCox ? 8 : boatSeats
+      // For coxed boats, rower seats are total seats minus cox seat
+      const maxRowerSeat = hasCox ? boatSeats - 1 : boatSeats
 
       console.log(`🎯 DEBUG: boatSeats=${boatSeats}, hasCox=${hasCox}, maxRowerSeat=${maxRowerSeat}`)
 
@@ -961,10 +961,10 @@ export class TemplateCompiler {
    */
   private static get4xPositions(badge: string): string {
     const positions: Record<string, string> = {
-      'B': 'top: 45% !important; right: 360px !important;',
-      '2': 'top: 52% !important; left: 310px !important;',
-      '3': 'top: 59% !important; right: 360px !important;',
-      'S': 'top: 66% !important; left: 310px !important;'
+      'B': 'top: 37% !important; right: 320px !important;',
+      '2': 'top: 48% !important; left: 270px !important;',
+      '3': 'top: 59% !important; right: 320px !important;',
+      'S': 'top: 70% !important; left: 270px !important;'
     }
     return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }
