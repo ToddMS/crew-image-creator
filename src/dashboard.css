@@ -606,6 +606,9 @@ html {
   text-decoration: none;
   cursor: pointer;
   transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   }
 
 .btn-success-small:hover {

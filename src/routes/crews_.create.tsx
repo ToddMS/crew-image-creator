@@ -46,6 +46,7 @@ function CreateCrewPage() {
   const [activeStep, setActiveStep] = useState(0)
   const [boatClass, setBoatClass] = useState('')
   const [clubName, setClubName] = useState('')
+  const [selectedClubId, setSelectedClubId] = useState('')
   const [raceName, setRaceName] = useState('')
   const [boatName, setBoatName] = useState('')
   const [coachName, setCoachName] = useState('')
@@ -143,6 +144,10 @@ function CreateCrewPage() {
   const handleClubNameChange = (value: string) => {
     setClubName(value)
 
+    // If manually typing (not selecting from dropdown), clear the clubId
+    const exactMatch = existingClubs.find(club => club.name === value)
+    setSelectedClubId(exactMatch?.id || '')
+
     // Filter clubs based on input
     const clubNames = existingClubs.map(club => club.name)
     const filtered = value.length === 0
@@ -158,6 +163,11 @@ function CreateCrewPage() {
 
   const selectClub = (clubName: string) => {
     setClubName(clubName)
+
+    // Find the club ID if this is an existing club
+    const matchingClub = existingClubs.find(club => club.name === clubName)
+    setSelectedClubId(matchingClub?.id || '')
+
     setShowClubDropdown(false)
     setHighlightedClubIndex(-1)
   }
@@ -264,6 +274,7 @@ function CreateCrewPage() {
       await createCrewMutation.mutateAsync({
         name: boatName,
         clubName: clubName,
+        clubId: selectedClubId || undefined,
         raceName: raceName,
         boatTypeId: selectedBoatType.id,
         crewNames: allCrewNames,
@@ -473,7 +484,7 @@ function CreateCrewPage() {
                 </div>
               )}
 
-              <div className={`crew-names-grid ${boatClass === '1x' ? 'single-sculler-grid' : ''}`}>
+              <div className={`crew-names-grid ${boatClass === '1x' ? 'single-sculler-grid' : boatClass === '2x' || boatClass === '2-' ? 'two-seat-grid' : ''}`}>
                 {crewNames.map((name, index) => {
                   const seatNumber = boatClassToSeats[boatClass] - index
                   const seatName =

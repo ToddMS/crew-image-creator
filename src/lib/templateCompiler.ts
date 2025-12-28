@@ -237,7 +237,7 @@ export class TemplateCompiler {
       .map((member) => {
         let memberHtml = template
         memberHtml = memberHtml.replace(/\{\{POSITION\}\}/g, member.POSITION)
-        memberHtml = memberHtml.replace(/\{\{NAME\}\}/g, member.NAME)
+        memberHtml = memberHtml.replace(/\{\{NAME\}\}/g, this.formatName(member.NAME))
 
         // Special styling for Coxswain
         if (member.POSITION.toLowerCase().includes('cox')) {
@@ -289,7 +289,7 @@ export class TemplateCompiler {
     const crewMemberHtml = crewMembers
       .map((member) => {
         let memberHtml = template
-        memberHtml = memberHtml.replace(/\{\{name\}\}/g, member.name)
+        memberHtml = memberHtml.replace(/\{\{name\}\}/g, this.formatName(member.name))
         memberHtml = memberHtml.replace(/\{\{badge\}\}/g, member.badge)
         memberHtml = memberHtml.replace(/\{\{style\}\}/g, member.style)
         return memberHtml
@@ -639,13 +639,13 @@ export class TemplateCompiler {
           // Handle coxswain with "cox:" prefix
           crewMembers.push({
             POSITION: 'Coxswain',
-            NAME: name.replace(/^cox:\s*/i, '').trim(),
+            NAME: this.formatName(name.replace(/^cox:\s*/i, '').trim()),
           })
         } else if (hasCox && index === 0) {
           // First crew member in coxed boats is the coxswain
           crewMembers.push({
             POSITION: 'Coxswain',
-            NAME: name.trim(),
+            NAME: this.formatName(name.trim()),
           })
         } else {
           // Handle rowers in reverse order (cox -> stroke -> ... -> bow)
@@ -659,7 +659,7 @@ export class TemplateCompiler {
 
             crewMembers.push({
               POSITION: position,
-              NAME: name.trim(),
+              NAME: this.formatName(name.trim()),
             })
           }
         }
@@ -713,6 +713,31 @@ export class TemplateCompiler {
       boatImage: boatImageInfo.url,
       positions: this.generateOarPositions(boatCode),
     }
+  }
+
+  /**
+   * Format name as "First initial. Surname" (e.g., "Todd Sandler" -> "T. Sandler")
+   */
+  private static formatName(name: string): string {
+    if (!name || typeof name !== 'string') {
+      return name || ''
+    }
+
+    const trimmedName = name.trim()
+
+    // Split by space to get name parts
+    const nameParts = trimmedName.split(/\s+/)
+
+    if (nameParts.length === 1) {
+      // Single name - return as is
+      return nameParts[0]
+    }
+
+    // Multiple parts - use first initial + dot + last name
+    const firstInitial = nameParts[0].charAt(0).toUpperCase()
+    const lastName = nameParts[nameParts.length - 1]
+
+    return `${firstInitial}. ${lastName}`
   }
 
   /**
@@ -824,7 +849,7 @@ export class TemplateCompiler {
       const style = this.getPositionStyle(badge, boatCode)
 
       return {
-        name: member.NAME,
+        name: this.formatName(member.NAME),
         position: badge,
         badge: badge,
         style: style
@@ -949,8 +974,8 @@ export class TemplateCompiler {
    */
   private static get2xPositions(badge: string): string {
     const positions: Record<string, string> = {
-      'B': 'top: 48% !important; right: 360px !important;',
-      'S': 'top: 58% !important; left: 310px !important;'
+      'B': 'top: 46% !important; right: 340px !important;',
+      'S': 'top: 63% !important; left: 290px !important;'
     }
     return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }
@@ -960,8 +985,8 @@ export class TemplateCompiler {
    */
   private static get2MinusPositions(badge: string): string {
     const positions: Record<string, string> = {
-      'B': 'top: 48% !important; right: 360px !important;',
-      'S': 'top: 58% !important; left: 310px !important;'
+      'B': 'top: 49% !important; right: 340px !important;',
+      'S': 'top: 63% !important; left: 290px !important;'
     }
     return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }

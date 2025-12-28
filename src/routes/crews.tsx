@@ -344,11 +344,10 @@ function CrewsPage() {
                         <div className="crew-card-title">
                           <h3>{crew.boatName}</h3>
                           <div className="crew-card-subtitle">
-                            <span>{crew.boatClub}</span>
-                            <span>•</span>
-                            <span>{crew.boatClass}</span>
+                            <span className="club-name-full">{crew.boatClub}</span>
                           </div>
                         </div>
+                        <span className="boat-type-badge">{crew.boatClass}</span>
                       </div>
 
                       <div className="crew-compact-info">

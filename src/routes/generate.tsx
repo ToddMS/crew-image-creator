@@ -205,8 +205,20 @@ function GenerateImagePage() {
                           // Allow deselection if clicking the same crew
                           if (selectedCrewId === crew.id) {
                             setSelectedCrewId('')
+                            // Clear club selection when deselecting crew
+                            setSelectedClubId('')
+                            setPrimaryColor('#FFFFFF')
+                            setSecondaryColor('#FFFFFF')
                           } else {
                             setSelectedCrewId(crew.id)
+
+                            // Auto-select club colors if crew has an associated club
+                            if (crew.club) {
+                              setColorMode('club')
+                              setSelectedClubId(crew.club.id)
+                              setPrimaryColor(crew.club.primaryColor)
+                              setSecondaryColor(crew.club.secondaryColor)
+                            }
                           }
                           setCrewError(false)
                         }}
@@ -220,23 +232,7 @@ function GenerateImagePage() {
                           <p>Boat: {crew.boatType.name}</p>
                           <p className="truncate">Race: {crew.raceName || 'No race specified'}</p>
                           {crew.club && (
-                            <div className="flex items-center justify-between">
-                              <span className="truncate">Club: {crew.club.name}</span>
-                              <div className="flex gap-1">
-                                <div
-                                  className="w-2.5 h-2.5 rounded-full border border-gray-300"
-                                  style={{
-                                    backgroundColor: crew.club.primaryColor,
-                                  }}
-                                />
-                                <div
-                                  className="w-2.5 h-2.5 rounded-full border border-gray-300"
-                                  style={{
-                                    backgroundColor: crew.club.secondaryColor,
-                                  }}
-                                />
-                              </div>
-                            </div>
+                            <p className="truncate">Club: {crew.club.name}</p>
                           )}
                         </div>
                       </div>

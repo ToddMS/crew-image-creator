@@ -24,7 +24,7 @@ async function main() {
     // Sweep boats (each rower has one oar)
     { name: 'Pair', code: '2-', seats: 2, category: 'sweep' },
     { name: 'Coxed Pair', code: '2+', seats: 3, category: 'sweep' },
-    { name: 'Four', code: '4-', seats: 4, category: 'sweep' },
+    { name: 'Coxless Four', code: '4-', seats: 4, category: 'sweep' },
     { name: 'Coxed Four', code: '4+', seats: 5, category: 'sweep' },
     { name: 'Eight', code: '8+', seats: 9, category: 'sweep' },
   ]

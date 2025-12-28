@@ -331,6 +331,13 @@ html:has(.create-crew-container .step.active:first-child) {
   max-width: 400px;
 }
 
+/* Center the two fields for 2x and 2- boats */
+.crew-names-grid.two-seat-grid {
+  grid-template-columns: repeat(2, 1fr);
+  justify-content: center;
+  max-width: 600px;
+}
+
 .crew-name-input {
   display: flex;
   flex-direction: column;

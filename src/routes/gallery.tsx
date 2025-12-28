@@ -413,12 +413,14 @@ function GalleryPage() {
                 </div>
 
                 <div className="image-info">
-                  <div className="image-title">
-                    {image.crew?.boatType.code || 'Unknown Boat'} - {
-                      image.crew?.boatType.code === '1x' && image.crew?.crewNames && image.crew.crewNames.length > 0
+                  <div className="image-header">
+                    <div className="image-title">
+                      {image.crew?.boatType.code === '1x' && image.crew?.crewNames && image.crew.crewNames.length > 0
                         ? image.crew.crewNames[0]
                         : image.crew?.name || 'Unknown Crew'
-                    }
+                      }
+                    </div>
+                    <span className="boat-type-badge">{image.crew?.boatType.code || 'Unknown'}</span>
                   </div>
                   <div className="image-subtitle">
                     {(image.crew?.club?.name || image.crew?.clubName) || 'No Club'}
