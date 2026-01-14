@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { TemplateSelector } from '../components/TemplateSelector'
 import { useAuth } from '../lib/auth-context'
@@ -101,6 +101,40 @@ function GenerateImagePage() {
       alert(`Failed to generate batch images: ${error.message}`)
     },
   })
+
+  // Auto-select Auriol Kensington club and crews with different boat sizes for testing
+  useEffect(() => {
+    if (clubs && crews && !selectedClubId && selectedCrewIds.length === 0) {
+      // Find Auriol Kensington club
+      const auriolClub = clubs.find(club =>
+        club.name.toLowerCase().includes('auriol') &&
+        club.name.toLowerCase().includes('kensington')
+      )
+
+      if (auriolClub) {
+        setSelectedClubId(auriolClub.id)
+      }
+
+      // Select crews with different boat sizes: 8+, 4x, 4-, 4+, 2-, 2x, 1x
+      const targetBoatTypes = ['8+', '4x', '4-', '4+', '2-', '2x', '1x']
+      const selectedCrewsByBoatType: string[] = []
+
+      // Find one crew for each boat type
+      targetBoatTypes.forEach(boatType => {
+        const crew = crews.find(c =>
+          c.boatType?.code === boatType &&
+          !selectedCrewsByBoatType.includes(c.id)
+        )
+        if (crew) {
+          selectedCrewsByBoatType.push(crew.id)
+        }
+      })
+
+      if (selectedCrewsByBoatType.length > 0) {
+        setSelectedCrewIds(selectedCrewsByBoatType)
+      }
+    }
+  }, [clubs, crews, selectedClubId, selectedCrewIds.length])
 
   const handleGenerateImage = async () => {
     console.log('🎪 DEBUG: Frontend handleGenerateImage called with:')
