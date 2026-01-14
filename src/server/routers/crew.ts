@@ -37,6 +37,19 @@ export const crewRouter = router({
       })
     }),
 
+  getByIds: publicProcedure
+    .input(z.object({ ids: z.array(z.string()) }))
+    .query(async ({ input }) => {
+      return await prisma.crew.findMany({
+        where: { id: { in: input.ids } },
+        include: {
+          boatType: true,
+          user: true,
+          club: true,
+        },
+      })
+    }),
+
   getByUserId: publicProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {

@@ -42,9 +42,10 @@ export const Route = createFileRoute('/generate')({
 function GenerateImagePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [selectedCrewId, setSelectedCrewId] = useState<string>('')
+  const [selectedCrewIds, setSelectedCrewIds] = useState<string[]>([])
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 })
   const [colorMode, setColorMode] = useState<'club' | 'custom'>('club')
   const [selectedClubId, setSelectedClubId] = useState<string>('')
   const [primaryColor, setPrimaryColor] = useState<string>('#FFFFFF')
@@ -55,9 +56,9 @@ function GenerateImagePage() {
 
   const { data: crews, isLoading: crewsLoading } = trpc.crew.getAll.useQuery()
   const { data: clubs, isLoading: clubsLoading } = trpc.club.getAll.useQuery()
-  const { data: selectedCrew } = trpc.crew.getById.useQuery(
-    { id: selectedCrewId },
-    { enabled: !!selectedCrewId },
+  const { data: selectedCrews } = trpc.crew.getByIds.useQuery(
+    { ids: selectedCrewIds },
+    { enabled: selectedCrewIds.length > 0 },
   )
   const { data: selectedTemplate } = trpc.template.getById.useQuery(
     { id: selectedTemplateId },
@@ -80,15 +81,36 @@ function GenerateImagePage() {
     },
   })
 
+  const generateBatchMutation = trpc.savedImage.generateBatch.useMutation({
+    onSuccess: (data) => {
+      setIsGenerating(false)
+      setGenerationProgress({ current: 0, total: 0 })
+
+      if (data.successful > 0) {
+        const successMsg = `Successfully generated ${data.successful} image${data.successful === 1 ? '' : 's'}`
+        const errorMsg = data.failed > 0 ? `, ${data.failed} failed` : ''
+        alert(`${successMsg}${errorMsg}`)
+        navigate({ to: '/gallery' })
+      } else {
+        alert(`Failed to generate any images. ${data.errors.length} error${data.errors.length === 1 ? '' : 's'} occurred.`)
+      }
+    },
+    onError: (error) => {
+      setIsGenerating(false)
+      setGenerationProgress({ current: 0, total: 0 })
+      alert(`Failed to generate batch images: ${error.message}`)
+    },
+  })
+
   const handleGenerateImage = async () => {
     console.log('🎪 DEBUG: Frontend handleGenerateImage called with:')
-    console.log('  - selectedCrewId:', selectedCrewId)
+    console.log('  - selectedCrewIds:', selectedCrewIds)
     console.log('  - selectedTemplateId:', selectedTemplateId)
-    console.log('  - selectedCrew:', selectedCrew?.name)
+    console.log('  - selectedCrews:', selectedCrews?.map(c => c.name))
     console.log('  - selectedTemplate:', selectedTemplate?.name)
 
-    if (!selectedCrewId || !selectedTemplateId) {
-      alert('Please select both a crew and a template')
+    if (!selectedCrewIds.length || !selectedTemplateId) {
+      alert('Please select at least one crew and a template')
       return
     }
 
@@ -111,18 +133,30 @@ function GenerateImagePage() {
       }
     }
 
-    generateImageMutation.mutate({
-      crewId: selectedCrewId,
-      templateId: selectedTemplateId,
-      userId,
-      clubId: selectedClubId || undefined,
-      colors,
-    })
+    // Use batch generation if multiple crews selected, otherwise single generation
+    if (selectedCrewIds.length === 1) {
+      generateImageMutation.mutate({
+        crewId: selectedCrewIds[0],
+        templateId: selectedTemplateId,
+        userId,
+        clubId: selectedClubId || undefined,
+        colors,
+      })
+    } else {
+      setGenerationProgress({ current: 0, total: selectedCrewIds.length })
+      generateBatchMutation.mutate({
+        crewIds: selectedCrewIds,
+        templateId: selectedTemplateId,
+        userId,
+        clubId: selectedClubId || undefined,
+        colors,
+      })
+    }
   }
 
   const handleGenerateClick = () => {
     // Check what's missing and scroll to the first missing requirement
-    if (!selectedCrewId) {
+    if (!selectedCrewIds.length) {
       setCrewError(true)
       document.querySelector('[data-section="crew"]')?.scrollIntoView({
         behavior: 'smooth',
@@ -173,10 +207,30 @@ function GenerateImagePage() {
             {/* Crew Selection */}
             <section className="bg-white rounded-lg shadow p-6" data-section="crew">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Select Crew</h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="text-xl font-semibold">Select Crews</h2>
+                  {selectedCrewIds.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        {selectedCrewIds.length} crew{selectedCrewIds.length === 1 ? '' : 's'} selected
+                      </span>
+                      <button
+                        onClick={() => {
+                          setSelectedCrewIds([])
+                          setSelectedClubId('')
+                          setPrimaryColor('#FFFFFF')
+                          setSecondaryColor('#FFFFFF')
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700 px-2 py-1 rounded border border-red-200 hover:border-red-300"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  )}
+                </div>
                 {crewError && (
                   <span className="text-red-600 text-sm font-medium animate-pulse">
-                    Please select a crew
+                    Please select at least one crew
                   </span>
                 )}
               </div>
@@ -199,21 +253,27 @@ function GenerateImagePage() {
                       <div
                         key={crew.id}
                         className={`generate-crew-card ${
-                          selectedCrewId === crew.id ? 'selected' : ''
+                          selectedCrewIds.includes(crew.id) ? 'selected' : ''
                         }`}
                         onClick={() => {
-                          // Allow deselection if clicking the same crew
-                          if (selectedCrewId === crew.id) {
-                            setSelectedCrewId('')
-                            // Clear club selection when deselecting crew
-                            setSelectedClubId('')
-                            setPrimaryColor('#FFFFFF')
-                            setSecondaryColor('#FFFFFF')
-                          } else {
-                            setSelectedCrewId(crew.id)
+                          const isSelected = selectedCrewIds.includes(crew.id)
 
-                            // Auto-select club colors if crew has an associated club
-                            if (crew.club) {
+                          if (isSelected) {
+                            // Remove from selection
+                            setSelectedCrewIds(prev => prev.filter(id => id !== crew.id))
+
+                            // If this was the only crew selected and had club colors, clear them
+                            if (selectedCrewIds.length === 1 && crew.club?.id === selectedClubId) {
+                              setSelectedClubId('')
+                              setPrimaryColor('#FFFFFF')
+                              setSecondaryColor('#FFFFFF')
+                            }
+                          } else {
+                            // Add to selection
+                            setSelectedCrewIds(prev => [...prev, crew.id])
+
+                            // Auto-select club colors if this is the first crew and it has an associated club
+                            if (selectedCrewIds.length === 0 && crew.club) {
                               setColorMode('club')
                               setSelectedClubId(crew.club.id)
                               setPrimaryColor(crew.club.primaryColor)
@@ -515,10 +575,19 @@ function GenerateImagePage() {
                 {isGenerating ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    Generating...
+                    {generationProgress.total > 1
+                      ? `Generating ${generationProgress.current}/${generationProgress.total} images...`
+                      : selectedCrewIds.length > 1
+                        ? `Generating ${selectedCrewIds.length} images...`
+                        : 'Generating...'
+                    }
                   </div>
                 ) : (
-                  'Generate Image'
+                  selectedCrewIds.length > 1
+                    ? `Generate ${selectedCrewIds.length} Images`
+                    : selectedCrewIds.length === 1
+                      ? 'Generate Image'
+                      : 'Generate Images'
                 )}
               </button>
             </div>
