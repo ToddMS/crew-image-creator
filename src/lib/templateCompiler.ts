@@ -196,8 +196,6 @@ export class TemplateCompiler {
 
     // Handle club logo conditional
     const hasClubLogo = !!(data as any).clubLogo
-    console.log('Club logo data:', (data as any).clubLogo, 'hasClubLogo:', hasClubLogo)
-
     compiledHtml = this.processConditionalBlock(
       compiledHtml,
       'clubLogo',
@@ -829,6 +827,8 @@ export class TemplateCompiler {
    * Generate crew positions with styling for Template 4
    */
   private static generateCrewPositions(crewMembers: Array<any>, boatCode: string) {
+    console.log(`🔍 DEBUG: generateCrewPositions for ${boatCode}, crewMembers:`, crewMembers.map(m => ({ position: m.POSITION, name: m.NAME })))
+
     return crewMembers.map((member, index) => {
       // member.POSITION already contains the correct position string
       let badge: string
@@ -846,6 +846,7 @@ export class TemplateCompiler {
         badge = seatMatch ? seatMatch[1] : member.POSITION
       }
 
+      console.log(`🔍 DEBUG: Member "${member.NAME}" - Position: "${member.POSITION}" -> Badge: "${badge}"`)
       const style = this.getPositionStyle(badge, boatCode)
 
       return {
@@ -934,9 +935,9 @@ export class TemplateCompiler {
    */
   private static get4PlusPositions(badge: string): string {
     const positions: Record<string, string> = {
-      'B': 'top: 42% !important; right: 360px !important;',
-      '2': 'top: 50% !important; left: 310px !important;',
-      '3': 'top: 58% !important; right: 360px !important;',
+      'B': 'top: 45% !important; right: 360px !important;',
+      '2': 'top: 52% !important; left: 310px !important;',
+      '3': 'top: 59% !important; right: 360px !important;',
       'S': 'top: 66% !important; left: 310px !important;',
       'C': 'top: 72% !important; right: 520px !important;'
     }
