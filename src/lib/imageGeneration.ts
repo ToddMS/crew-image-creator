@@ -232,6 +232,7 @@ export class ImageGenerationService {
     const crewName = crew.name || 'Crew'
     const boatType = crew.boatType.name || 'Eight'
     const raceName = crew.raceName || 'Championship Race'
+    const raceCategory = crew.raceCategory || null
 
     return `
       <div style="
@@ -252,7 +253,7 @@ export class ImageGenerationService {
           ${crewName}
         </h2>
         <h3 style="font-size: 22px; margin: 0 0 25px 0; font-weight: 500;">
-          ${boatType} • ${raceName}
+          ${boatType} • ${raceName}${raceCategory ? ` • ${raceCategory}` : ''}
         </h3>
         <div style="
           display: grid;

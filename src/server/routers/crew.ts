@@ -76,6 +76,7 @@ export const crewRouter = router({
         raceName: z.string().optional(),
         boatName: z.string().optional(),
         coachName: z.string().optional(),
+        raceCategory: z.string().optional(), // Optional race category like "Heat 2", "Final H"
         crewNames: z.array(z.string()),
         boatTypeId: z.string(),
         userId: z.string(),
@@ -101,6 +102,7 @@ export const crewRouter = router({
         raceName: z.string().optional(),
         boatName: z.string().optional(),
         coachName: z.string().optional(),
+        raceCategory: z.string().optional(),
         crewNames: z.array(z.string()).optional(),
         boatTypeId: z.string().optional(),
       }),

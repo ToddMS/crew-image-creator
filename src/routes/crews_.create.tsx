@@ -50,6 +50,7 @@ function CreateCrewPage() {
   const [raceName, setRaceName] = useState('')
   const [boatName, setBoatName] = useState('')
   const [coachName, setCoachName] = useState('')
+  const [raceCategory, setRaceCategory] = useState('')
   const [crewNames, setCrewNames] = useState<Array<string>>([])
   const [coxName, setCoxName] = useState('')
   const [saving, setSaving] = useState(false)
@@ -279,6 +280,7 @@ function CreateCrewPage() {
         boatTypeId: selectedBoatType.id,
         crewNames: allCrewNames,
         coachName: coachName.trim() || undefined,
+        raceCategory: raceCategory.trim() || undefined,
         userId: user.id,
       })
     } catch (error) {
@@ -423,8 +425,20 @@ function CreateCrewPage() {
                   id="coachName"
                   value={coachName}
                   onChange={(e) => setCoachName(e.target.value)}
-                  onKeyDown={(e) => handleInputKeyDown(e, 4, 5, false)} // Coach name is field 4 out of 5 in step 1 (last field in step 1)
+                  onKeyDown={(e) => handleInputKeyDown(e, 4, 6, false)} // Coach name is field 4 out of 6 in step 1
                   placeholder="Enter coach name (optional)"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="raceCategory">Race Category (Optional)</label>
+                <input
+                  type="text"
+                  id="raceCategory"
+                  value={raceCategory}
+                  onChange={(e) => setRaceCategory(e.target.value)}
+                  onKeyDown={(e) => handleInputKeyDown(e, 5, 6, false)} // Race category is field 5 out of 6 in step 1 (last field in step 1)
+                  placeholder="e.g., Heat 2, Final H"
                 />
               </div>
             </div>
@@ -564,6 +578,12 @@ function CreateCrewPage() {
                   <div className="review-item-compact crew-detail-coach">
                     <span className="review-label">Coach:</span>
                     <span className="review-value">{coachName}</span>
+                  </div>
+                )}
+                {raceCategory && (
+                  <div className="review-item-compact">
+                    <span className="review-label">Race Category:</span>
+                    <span className="review-value">{raceCategory}</span>
                   </div>
                 )}
               </div>

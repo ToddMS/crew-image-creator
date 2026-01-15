@@ -152,3 +152,24 @@
   color: var(--gray-900);
   text-align: center;
 }
+
+/* Fix text overflow for crew card titles and content */
+.generate-crew-card h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.generate-crew-card p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Fix club name overflow */
+.generate-club-card h4 span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

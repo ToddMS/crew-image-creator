@@ -15,6 +15,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
     raceName: '',
     boatName: '',
     coachName: '',
+    raceCategory: '',
     crewNames: [] as Array<string>,
     boatTypeId: '',
   })
@@ -34,6 +35,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
         raceName: '',
         boatName: '',
         coachName: '',
+        raceCategory: '',
         crewNames: [],
         boatTypeId: '',
       })
@@ -190,43 +192,58 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
         </div>
 
         {/* Optional Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Race/Event</label>
-            <input
-              type="text"
-              value={formData.raceName}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, raceName: e.target.value }))
-              }
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Head of the River"
-            />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Race/Event</label>
+              <input
+                type="text"
+                value={formData.raceName}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, raceName: e.target.value }))
+                }
+                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., Head of the River"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Boat Name</label>
+              <input
+                type="text"
+                value={formData.boatName}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, boatName: e.target.value }))
+                }
+                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., Thunder"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Coach</label>
+              <input
+                type="text"
+                value={formData.coachName}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, coachName: e.target.value }))
+                }
+                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., Coach Smith"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Boat Name</label>
+            <label className="block text-sm font-medium mb-2">Race Category</label>
             <input
               type="text"
-              value={formData.boatName}
+              value={formData.raceCategory}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, boatName: e.target.value }))
+                setFormData((prev) => ({ ...prev, raceCategory: e.target.value }))
               }
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Thunder"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Coach</label>
-            <input
-              type="text"
-              value={formData.coachName}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, coachName: e.target.value }))
-              }
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Coach Smith"
+              placeholder="e.g., Heat 2, Final H"
             />
           </div>
         </div>

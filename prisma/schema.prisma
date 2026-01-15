@@ -110,6 +110,8 @@ model Crew {
   raceName    String?
   boatName    String?
   coachName   String?
+  category    String?  // Optional category like "M1 Senior Men", "W2 Junior Women", etc.
+  raceCategory String? // Optional race category like "Heat 2", "Final H", "Semi-Final A", etc.
   crewNames   String[] // Array of crew member names
   boatTypeId  String
   userId      String

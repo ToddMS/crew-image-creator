@@ -677,7 +677,7 @@ export class TemplateCompiler {
 
     // Enhanced data for Template 4 (Professional Layout)
     const crewMembersWithPositions = this.generateCrewPositions(crewMembers, boatCode)
-    const crewCategory = this.generateCrewCategory(crew)
+    const crewCategory = this.generateCrewCategory(crew, template)
 
     // For Template 2: Put crew in Bow to Stroke order with Cox at end
     const rowers = crewMembers.filter(m => m.POSITION !== 'Coxswain')
@@ -702,7 +702,6 @@ export class TemplateCompiler {
       CREW_MEMBERS: reversedCrewOrder,
       BOAT_IMAGE_URL: boatImageInfo.url,
       BOAT_IMAGE_AVAILABLE: boatImageInfo.available,
-      // Enhanced Template 4 data
       raceName: crew.raceName || 'Championship Regatta 2025',
       crewCategory: crewCategory,
       crewMembers: crewMembersWithPositions,
@@ -745,8 +744,8 @@ export class TemplateCompiler {
     seatNumber: number,
     totalSeats: number,
   ): string {
-    // For single sculls (1x), treat the only rower as stroke
-    if (totalSeats === 1) return 'Stroke'
+    // For single sculls (1x), use 'Sculler' instead of 'Stroke'
+    if (totalSeats === 1) return 'Sculler'
     if (seatNumber === 1) return 'Bow'
     if (seatNumber === totalSeats) return 'Stroke'
     return `Seat ${seatNumber}`
@@ -840,6 +839,9 @@ export class TemplateCompiler {
       } else if (member.POSITION === 'Stroke') {
         // Special case for 1x boats - use "1x" badge for better styling
         badge = boatCode === '1x' ? '1x' : 'S'
+      } else if (member.POSITION === 'Sculler') {
+        // Handle single scull - use "1x" badge for styling consistency
+        badge = '1x'
       } else {
         // Extract seat number from "Seat X" format
         const seatMatch = member.POSITION.match(/Seat (\d+)/)
@@ -859,14 +861,57 @@ export class TemplateCompiler {
   }
 
   /**
-   * Generate crew category string (e.g., "M1 Senior Men | Open Club 8+")
+   * Generate crew category string with different formats for different templates
+   * Template 1: "Heat 2 | 8+" format
+   * Template 2: "boat name | race category" format
    */
-  private static generateCrewCategory(crew: any): string {
-    const category = crew.category || 'M1 Senior Men'
-    const competition = crew.competition || 'Open Club'
+  private static generateCrewCategory(crew: any, template?: any): string {
+    const raceCategory = crew.raceCategory || null
     const boatCode = crew.boatType?.code || '8+'
+    const boatName = crew.boatName || crew.name || null
+    const templateId = template?.id
 
-    return `${category} | ${competition} ${boatCode}`
+    console.log('🔍 DEBUG generateCrewCategory:')
+    console.log('  - crew.raceCategory:', crew.raceCategory)
+    console.log('  - crew.boatName:', crew.boatName)
+    console.log('  - crew.name:', crew.name)
+    console.log('  - boatCode:', boatCode)
+    console.log('  - templateId:', templateId)
+    console.log('  - crew object keys:', Object.keys(crew))
+
+    // Template 2: Use "boat name - race category" format (no boat code)
+    if (templateId && (templateId.includes('template-2') || templateId.includes('template2'))) {
+      console.log('  - Using Template 2 format: boat name - race category (no boat code)')
+      if (boatName && raceCategory) {
+        console.log('  - Result:', `${boatName} - ${raceCategory}`)
+        return `${boatName} - ${raceCategory}`
+      } else if (boatName) {
+        console.log('  - Result (no race category):', `${boatName}`)
+        return boatName
+      } else if (raceCategory) {
+        console.log('  - Result (no boat name):', `${raceCategory}`)
+        return raceCategory
+      } else {
+        console.log('  - Result (fallback):', `Open Club`)
+        return 'Open Club'
+      }
+    }
+
+    // Template 1 and others: Use "boat name - race category" format (no boat code)
+    console.log('  - Using Template 1 format: boat name - race category')
+    if (boatName && raceCategory) {
+      console.log('  - Result:', `${boatName} - ${raceCategory}`)
+      return `${boatName} - ${raceCategory}`
+    } else if (boatName) {
+      console.log('  - Result (no race category):', `${boatName} - Open Club`)
+      return `${boatName} - Open Club`
+    } else if (raceCategory) {
+      console.log('  - Result (no boat name):', `Open Club - ${raceCategory}`)
+      return `Open Club - ${raceCategory}`
+    } else {
+      console.log('  - Result (fallback):', `Open Club - Open Club`)
+      return `Open Club - Open Club`
+    }
   }
 
   /**
@@ -962,10 +1007,10 @@ export class TemplateCompiler {
    */
   private static get4xPositions(badge: string): string {
     const positions: Record<string, string> = {
-      'B': 'top: 37% !important; right: 320px !important;',
-      '2': 'top: 48% !important; left: 270px !important;',
-      '3': 'top: 59% !important; right: 320px !important;',
-      'S': 'top: 70% !important; left: 270px !important;'
+      'B': 'top: 42% !important; right: 385px !important;',
+      '2': 'top: 51% !important; left: 335px !important;',
+      '3': 'top: 60% !important; right: 385px !important;',
+      'S': 'top: 69% !important; left: 335px !important;'
     }
     return positions[badge] || 'top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }
@@ -997,8 +1042,9 @@ export class TemplateCompiler {
    */
   private static get1xPositions(badge: string): string {
     const positions: Record<string, string> = {
-      'S': 'top: 40% !important; left: 65% !important; transform: translate(-50%, -50%) !important;',
-      '1x': 'top: 40% !important; left: 65% !important; transform: translate(-50%, -50%) !important;'
+      'S': 'top: 35% !important; left: 65% !important; transform: translate(-50%, -50%) !important;',
+      '1x': 'top: 35% !important; left: 65% !important; transform: translate(-50%, -50%) !important;',
+      'Sculler': 'top: 35% !important; left: 65% !important; transform: translate(-50%, -50%) !important;'
     }
     return positions[badge] || 'top: 53% !important; left: 50% !important; transform: translate(-50%, -50%) !important;'
   }

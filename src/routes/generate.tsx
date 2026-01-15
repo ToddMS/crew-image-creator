@@ -102,40 +102,6 @@ function GenerateImagePage() {
     },
   })
 
-  // Auto-select Auriol Kensington club and crews with different boat sizes for testing
-  useEffect(() => {
-    if (clubs && crews && !selectedClubId && selectedCrewIds.length === 0) {
-      // Find Auriol Kensington club
-      const auriolClub = clubs.find(club =>
-        club.name.toLowerCase().includes('auriol') &&
-        club.name.toLowerCase().includes('kensington')
-      )
-
-      if (auriolClub) {
-        setSelectedClubId(auriolClub.id)
-      }
-
-      // Select crews with different boat sizes: 8+, 4x, 4-, 4+, 2-, 2x, 1x
-      const targetBoatTypes = ['8+', '4x', '4-', '4+', '2-', '2x', '1x']
-      const selectedCrewsByBoatType: Array<string> = []
-
-      // Find one crew for each boat type
-      targetBoatTypes.forEach(boatType => {
-        const crew = crews.find(c =>
-          c.boatType?.code === boatType &&
-          !selectedCrewsByBoatType.includes(c.id)
-        )
-        if (crew) {
-          selectedCrewsByBoatType.push(crew.id)
-        }
-      })
-
-      if (selectedCrewsByBoatType.length > 0) {
-        setSelectedCrewIds(selectedCrewsByBoatType)
-      }
-    }
-  }, [clubs, crews, selectedClubId, selectedCrewIds.length])
-
   const handleGenerateImage = async () => {
     console.log('🎪 DEBUG: Frontend handleGenerateImage called with:')
     console.log('  - selectedCrewIds:', selectedCrewIds)
@@ -325,6 +291,9 @@ function GenerateImagePage() {
                         <div className="space-y-0.5 text-xs text-gray-600">
                           <p>Boat: {crew.boatType.name}</p>
                           <p className="truncate">Race: {crew.raceName || 'No race specified'}</p>
+                          {crew.raceCategory && (
+                            <p className="truncate">Category: {crew.raceCategory}</p>
+                          )}
                           {crew.club && (
                             <p className="truncate">Club: {crew.club.name}</p>
                           )}

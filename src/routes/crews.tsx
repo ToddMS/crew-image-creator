@@ -357,6 +357,14 @@ function CrewsPage() {
                             {crew.raceName || 'No race'}
                           </span>
                         </div>
+                        {crew.raceCategory && (
+                          <div className="crew-compact-row">
+                            <span className="crew-compact-label">Category:</span>
+                            <span className="crew-compact-value">
+                              {crew.raceCategory}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="crew-members">
