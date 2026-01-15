@@ -419,7 +419,7 @@ function GalleryPage() {
 
                   {/* Created Date - Bottom Left */}
                   <div className="image-created-date">
-                    {new Date(image.createdAt).toLocaleDateString()}
+                    {new Date(image.createdAt).toLocaleDateString('en-GB')}
                   </div>
 
                   {/* Image Actions */}
