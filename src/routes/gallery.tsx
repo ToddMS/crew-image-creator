@@ -14,39 +14,72 @@ interface SavedImage {
   id: string
   imageUrl: string
   filename: string
-  createdAt: string
+  fileSize: number | null
+  dimensions: any
+  metadata: any
+  createdAt: Date | string
+  updatedAt: Date | string
+  crewId: string
+  templateId: string
+  userId: string
   crew?: {
     id: string
     name: string
+    clubName?: string | null
+    raceName?: string | null
+    boatName?: string | null
+    coachName?: string | null
+    crewNames: Array<string>
+    boatTypeId: string
+    userId: string
+    clubId?: string | null
+    createdAt: Date | string
+    updatedAt: Date | string
     boatType: {
+      id: string
       name: string
       code: string
+      seats: number
+      category: string
+      metadata: any
+      createdAt: Date | string
+      updatedAt: Date | string
     }
     club?: {
+      id: string
       name: string
       primaryColor: string
       secondaryColor: string
-    }
-    raceName?: string
+      logoUrl: string | null
+      createdAt: Date | string
+      updatedAt: Date | string
+      userId: string
+    } | null
   }
   template?: {
+    id: string
     name: string
     templateType: string
+    previewUrl: string
+    isActive: boolean
+    metadata: any
+    createdAt: Date | string
+    updatedAt: Date | string
   }
-  metadata?: {
-    width?: number
-    height?: number
-    colors?: {
-      primaryColor?: string
-      secondaryColor?: string
-    }
-    generatedAt?: string
+  user: {
+    id: string
+    name: string
+    email: string
+    emailVerified: Date | null
+    image: string | null
+    password: string | null
+    preferences: any
+    createdAt: Date | string
+    updatedAt: Date | string
   }
 }
 
 function GalleryPage() {
-  // Mock user for now - in production this would come from auth context
-  const user = { name: 'Demo User' }
 
   const [filteredImages, setFilteredImages] = useState<Array<SavedImage>>([])
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set())
@@ -59,21 +92,22 @@ function GalleryPage() {
   const [sortBy, setSortBy] = useState<'recent' | 'club' | 'boat' | 'name'>('recent')
 
   // Layout and display state
-  const [layoutMode, setLayoutMode] = useState<'compact' | 'large' | 'list' | 'masonry'>('compact')
+  const [layoutMode] = useState<'compact' | 'large' | 'list' | 'masonry'>('compact')
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
 
   const {
-    data: savedImages = [],
+    data: savedImagesRaw = [],
     isLoading: loading,
-    error,
     refetch: loadImages,
   } = trpc.savedImage.getAll.useQuery()
 
+  const savedImages = (savedImagesRaw as unknown) as Array<SavedImage>
+
   const deleteImageMutation = trpc.savedImage.delete.useMutation({
-    onSuccess: () => {
+    onSuccess: (): void => {
       loadImages()
     },
-    onError: (error) => {
+    onError: (error: { message: string }): void => {
       alert(`Failed to delete image: ${error.message}`)
     },
   })
@@ -115,36 +149,7 @@ function GalleryPage() {
     }
   }
 
-  const handleSelectByClub = (clubName: string) => {
-    const clubImages = filteredImages.filter(img => (img.crew?.club?.name || img.crew?.clubName) === clubName)
-    const clubImageIds = clubImages.map(img => img.id)
-    const newSelected = new Set(selectedImages)
-
-    // If all club images are selected, deselect them; otherwise select them
-    const allClubSelected = clubImageIds.every(id => newSelected.has(id))
-    if (allClubSelected) {
-      clubImageIds.forEach(id => newSelected.delete(id))
-    } else {
-      clubImageIds.forEach(id => newSelected.add(id))
-    }
-
-    setSelectedImages(newSelected)
-  }
-
-  const handleSelectByBoatType = (boatType: string) => {
-    const boatImages = filteredImages.filter(img => img.crew?.boatType?.code === boatType)
-    const boatImageIds = boatImages.map(img => img.id)
-    const newSelected = new Set(selectedImages)
-
-    const allBoatSelected = boatImageIds.every(id => newSelected.has(id))
-    if (allBoatSelected) {
-      boatImageIds.forEach(id => newSelected.delete(id))
-    } else {
-      boatImageIds.forEach(id => newSelected.add(id))
-    }
-
-    setSelectedImages(newSelected)
-  }
+  // Function removed as it was unused
 
   const handleBatchDownload = async () => {
     const selectedImagesList = savedImages.filter((img) =>
@@ -160,9 +165,9 @@ function GalleryPage() {
   const handleDeleteImage = async (image: SavedImage) => {
     const isConfirmed = window.confirm(
       `Are you sure you want to delete "${
-        image.crew?.boatType.code === '1x' && image.crew?.crewNames && image.crew.crewNames.length > 0
-          ? image.crew.crewNames[0]
-          : image.crew?.name || 'this image'
+        image.crew?.boatType.code === '1x'
+          ? (image.crew.crewNames[0] || image.crew.name || 'this image')
+          : (image.crew?.name || 'this image')
       }"?\n\nThis action cannot be undone.`,
     )
 
@@ -182,35 +187,20 @@ function GalleryPage() {
     const selectedImagesList = savedImages.filter((img) =>
       selectedImages.has(img.id),
     )
-    if (selectedImagesList.length > 0) {
-      const confirmMessage = `Are you sure you want to delete ${selectedImagesList.length} images? This action cannot be undone.`
-      if (window.confirm(confirmMessage)) {
-        try {
-          for (const image of selectedImagesList) {
-            await deleteImageMutation.mutateAsync({ id: image.id })
-          }
-          setSelectedImages(new Set())
-        } catch (error) {
-          console.error('Error deleting images:', error)
+    const confirmMessage = `Are you sure you want to delete ${selectedImagesList.length} images? This action cannot be undone.`
+    if (window.confirm(confirmMessage)) {
+      try {
+        for (const image of selectedImagesList) {
+          await deleteImageMutation.mutateAsync({ id: image.id })
         }
+        setSelectedImages(new Set())
+      } catch (error) {
+        console.error('Error deleting images:', error)
       }
     }
   }
 
 
-  if (!user) {
-    return (
-      <div className="gallery-container">
-        <div className="container">
-          <div className="empty-state">
-            <h2>Image Gallery</h2>
-            <p>Sign in to view and manage your generated crew images</p>
-            <button className="btn btn-primary">Sign In to View Gallery</button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   if (loading) {
     return (
@@ -226,30 +216,30 @@ function GalleryPage() {
   }
 
   // Get unique clubs and boat types for filters
-  const uniqueClubs = Array.from(new Set(savedImages.map(img => img.crew?.club?.name || img.crew?.clubName).filter(Boolean))).map(club => ({
+  const uniqueClubs = Array.from(new Set(savedImages.map(img => img.crew?.club?.name || img.crew?.clubName).filter((name): name is string => Boolean(name)))).map(club => ({
     value: club,
     label: club
   }))
 
-  const uniqueBoatTypes = Array.from(new Set(savedImages.map(img => img.crew?.boatType?.code).filter(Boolean))).map(boat => ({
+  const uniqueBoatTypes = Array.from(new Set(savedImages.map(img => img.crew?.boatType.code).filter((code): code is string => Boolean(code)))).map(boat => ({
     value: boat,
     label: boat
   }))
 
   // Filter function for SearchBar
-  const filterFunction = (image: SavedImage, query: string) => {
-    const crewName = image.crew?.name?.toLowerCase() || ''
+  const filterFunction = (image: SavedImage, query: string): boolean => {
+    const crewName = image.crew?.name.toLowerCase() || ''
     const clubName = (image.crew?.club?.name || image.crew?.clubName)?.toLowerCase() || ''
     const raceName = image.crew?.raceName?.toLowerCase() || ''
-    const boatType = image.crew?.boatType?.name?.toLowerCase() || ''
-    const rowerNames = image.crew?.crewNames?.join(' ')?.toLowerCase() || ''
+    const boatType = image.crew?.boatType.name.toLowerCase() || ''
+    const rowerNames = image.crew?.crewNames.join(' ').toLowerCase() || ''
 
     return crewName.includes(query) ||
            clubName.includes(query) ||
            raceName.includes(query) ||
            boatType.includes(query) ||
            rowerNames.includes(query) ||
-           image.crew?.id?.toLowerCase().includes(query)
+           (image.crew?.id.toLowerCase().includes(query) || false)
   }
 
   // Date range filter function
@@ -298,11 +288,11 @@ function GalleryPage() {
           sortOptions={[
             { value: 'recent', label: 'Latest', sortFn: (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() },
             { value: 'club', label: 'Club A→Z', sortFn: (a, b) => (a.crew?.club?.name || a.crew?.clubName || '').localeCompare(b.crew?.club?.name || b.crew?.clubName || '') },
-            { value: 'boat', label: 'Boat Type', sortFn: (a, b) => (a.crew?.boatType?.code || '').localeCompare(b.crew?.boatType?.code || '') },
+            { value: 'boat', label: 'Boat Type', sortFn: (a, b) => (a.crew?.boatType.code || '').localeCompare(b.crew?.boatType.code || '') },
             { value: 'name', label: 'Crew Name', sortFn: (a, b) => (a.crew?.name || '').localeCompare(b.crew?.name || '') }
           ]}
           selectedSort={sortBy}
-          onSortChange={(sort) => setSortBy(sort as any)}
+          onSortChange={(sort) => setSortBy(sort as 'recent' | 'club' | 'boat' | 'name')}
           advancedFilters={[
             {
               name: 'club',
@@ -318,7 +308,7 @@ function GalleryPage() {
               options: [{ value: '', label: 'All Boats' }, ...uniqueBoatTypes],
               selectedValue: selectedBoatType,
               onValueChange: setSelectedBoatType,
-              filterFn: (image, value) => !value || image.crew?.boatType?.code === value
+              filterFn: (image, value) => !value || image.crew?.boatType.code === value
             },
             {
               name: 'dateRange',
@@ -369,12 +359,12 @@ function GalleryPage() {
             ...(filteredImages.length > 0 ? [{
               label: selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All',
               onClick: handleSelectAll,
-              variant: 'secondary'
+              variant: 'secondary' as const
             }] : []),
             {
               label: 'Create New',
               onClick: () => window.location.href = '/generate',
-              variant: 'primary'
+              variant: 'primary' as const
             }
           ]}
         />
@@ -389,7 +379,7 @@ function GalleryPage() {
               image
             </p>
             <a href="/generate" className="btn btn-primary">
-              🎨 Generate Your First Image
+              Generate Your First Image
             </a>
           </div>
         ) : (
@@ -415,7 +405,7 @@ function GalleryPage() {
                 <div className="image-info">
                   <div className="image-header">
                     <div className="image-title">
-                      {image.crew?.boatType.code === '1x' && image.crew?.crewNames && image.crew.crewNames.length > 0
+                      {image.crew?.boatType.code === '1x' && image.crew.crewNames.length > 0
                         ? image.crew.crewNames[0]
                         : image.crew?.name || 'Unknown Crew'
                       }

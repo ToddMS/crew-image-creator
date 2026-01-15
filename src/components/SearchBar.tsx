@@ -1,9 +1,6 @@
 import React, { useState } from 'react'
 import './Button.css'
 
-/* Add missing React import for useEffect */
-import React from 'react'
-
 interface SearchBarProps<T> {
   items: Array<T>
   searchQuery: string
