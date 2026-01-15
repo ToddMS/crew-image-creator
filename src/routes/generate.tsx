@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { TemplateSelector } from '../components/TemplateSelector'
 import { useAuth } from '../lib/auth-context'
@@ -42,7 +42,7 @@ export const Route = createFileRoute('/generate')({
 function GenerateImagePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [selectedCrewIds, setSelectedCrewIds] = useState<string[]>([])
+  const [selectedCrewIds, setSelectedCrewIds] = useState<Array<string>>([])
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 })
@@ -70,7 +70,7 @@ function GenerateImagePage() {
   )
 
   const generateImageMutation = trpc.savedImage.generate.useMutation({
-    onSuccess: (data) => {
+    onSuccess: () => {
       setIsGenerating(false)
       // Navigate to gallery instead of showing toast
       navigate({ to: '/gallery' })
@@ -117,7 +117,7 @@ function GenerateImagePage() {
 
       // Select crews with different boat sizes: 8+, 4x, 4-, 4+, 2-, 2x, 1x
       const targetBoatTypes = ['8+', '4x', '4-', '4+', '2-', '2x', '1x']
-      const selectedCrewsByBoatType: string[] = []
+      const selectedCrewsByBoatType: Array<string> = []
 
       // Find one crew for each boat type
       targetBoatTypes.forEach(boatType => {

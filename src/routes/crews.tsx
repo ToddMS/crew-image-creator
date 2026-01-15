@@ -22,7 +22,7 @@ function CrewsPage() {
     new Set(),
   )
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredCrews, setFilteredCrews] = useState<any[]>([])
+  const [filteredCrews, setFilteredCrews] = useState<Array<any>>([])
   const [selectedClub, setSelectedClub] = useState<string>('')
   const [selectedBoatClass, setSelectedBoatClass] = useState<string>('')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)

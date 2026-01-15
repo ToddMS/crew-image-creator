@@ -55,7 +55,7 @@ function CreateCrewPage() {
   const [saving, setSaving] = useState(false)
   const [showValidation, setShowValidation] = useState(false)
   const [showClubDropdown, setShowClubDropdown] = useState(false)
-  const [filteredClubs, setFilteredClubs] = useState<string[]>([])
+  const [filteredClubs, setFilteredClubs] = useState<Array<string>>([])
   const [highlightedClubIndex, setHighlightedClubIndex] = useState(-1)
 
   // Get boat types for the mutation
@@ -102,7 +102,7 @@ function CreateCrewPage() {
   }
 
   const getValidationMessage = (step: number): string => {
-    const missingFields: string[] = []
+    const missingFields: Array<string> = []
 
     switch (step) {
       case 0:

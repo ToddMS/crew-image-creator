@@ -241,7 +241,7 @@ export const savedImageRouter = router({
         const generatedImage = await ImageGenerationService.generateCrewImage(
           crewWithSelectedClub,
           template,
-          input.colors,
+          input.colors && input.colors.primaryColor && input.colors.secondaryColor ? input.colors : undefined,
         )
 
         // Save to database
@@ -249,7 +249,7 @@ export const savedImageRouter = router({
           data: {
             crewId: input.crewId,
             templateId: input.templateId,
-            userId: userId,
+            userId: userId!, // userId is guaranteed to be valid at this point
             imageUrl: generatedImage.imageUrl,
             filename: generatedImage.filename,
             metadata: {
@@ -358,7 +358,7 @@ export const savedImageRouter = router({
         const generatedImage = await ImageGenerationService.generateCrewImage(
           crewWithSelectedClub,
           template,
-          input.colors,
+          input.colors && input.colors.primaryColor && input.colors.secondaryColor ? input.colors : undefined,
         )
 
         return {
@@ -482,7 +482,7 @@ export const savedImageRouter = router({
             const generatedImage = await ImageGenerationService.generateCrewImage(
               crewWithSelectedClub,
               template,
-              input.colors,
+              input.colors && input.colors.primaryColor && input.colors.secondaryColor ? input.colors : undefined,
             )
 
             // Save to database
@@ -490,7 +490,7 @@ export const savedImageRouter = router({
               data: {
                 crewId: crewId,
                 templateId: input.templateId,
-                userId: userId,
+                userId: userId!, // userId is guaranteed to be valid at this point
                 imageUrl: generatedImage.imageUrl,
                 filename: generatedImage.filename,
                 metadata: {

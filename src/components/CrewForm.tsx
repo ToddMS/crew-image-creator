@@ -50,7 +50,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
   }, [selectedBoatType])
 
   const handleBoatTypeChange = (boatTypeId: string) => {
-    const boatType = boatTypesArr.find((bt) => bt.id === boatTypeId) || null
+    const boatType = boatTypes?.find((bt) => bt.id === boatTypeId) || null
     setSelectedBoatType(boatType)
     setFormData((prev) => ({ ...prev, boatTypeId }))
   }
@@ -170,7 +170,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select club preset...</option>
-              {clubsArr.map((club) => (
+              {clubs?.map((club) => (
                 <option key={club.id} value={club.id}>
                   {club.name}
                 </option>

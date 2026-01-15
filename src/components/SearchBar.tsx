@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import './Button.css'
 
+/* Add missing React import for useEffect */
+import React from 'react'
+
 interface SearchBarProps<T> {
-  items: T[]
+  items: Array<T>
   searchQuery: string
   onSearchChange: (query: string) => void
-  onItemsFiltered: (filtered: T[]) => void
+  onItemsFiltered: (filtered: Array<T>) => void
   placeholder?: string
   filterFunction: (item: T, query: string) => boolean
   sortOptions?: Array<{
@@ -58,7 +61,7 @@ export function SearchBar<T>({
   actionButtons = [],
   leftActions
 }: SearchBarProps<T>) {
-  const [internalFiltered, setInternalFiltered] = useState<T[]>(items)
+  const [internalFiltered, setInternalFiltered] = useState<Array<T>>(items)
 
   // Apply all filters whenever dependencies change
   const applyAllFilters = () => {
@@ -236,6 +239,3 @@ export function SearchBar<T>({
     </div>
   )
 }
-
-/* Add missing React import for useEffect */
-import React from 'react'

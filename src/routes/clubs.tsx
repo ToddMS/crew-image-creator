@@ -41,7 +41,7 @@ function ClubsPage() {
     null,
   )
   const [searchTerm, setSearchTerm] = useState('')
-  const [filteredClubs, setFilteredClubs] = useState<any[]>([])
+  const [filteredClubs, setFilteredClubs] = useState<Array<any>>([])
   const [selectedClubs, setSelectedClubs] = useState<Set<string>>(new Set())
   const newLogoInputRef = useRef<HTMLInputElement>(null)
   const editLogoInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>(

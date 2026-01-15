@@ -13,7 +13,7 @@ const navItems = [
 export function Navigation() {
   const router = useRouterState()
   const currentPath = router.location.pathname
-  const { user, setUser, showAuthModal, setShowAuthModal, isLoading } = useAuth()
+  const { user, setUser, setShowAuthModal, isLoading } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
 
   const isActiveRoute = (href: string) => {
@@ -31,7 +31,7 @@ export function Navigation() {
     <nav className="main-nav">
       <div className="nav-container">
         {/* Logo */}
-        <Link to="/" className="logo">
+        <Link to="/" search={{}} className="logo">
           <img src="/RowGramImage.svg" alt="RowGram" className="logo-icon" />
           <span>RowGram</span>
         </Link>
@@ -71,10 +71,10 @@ export function Navigation() {
                   transition: 'background-color 0.2s',
                 }}
                 onMouseEnter={(e) =>
-                  (e.target.style.backgroundColor = '#f3f4f6')
+                  ((e.target as HTMLElement).style.backgroundColor = '#f3f4f6')
                 }
                 onMouseLeave={(e) =>
-                  (e.target.style.backgroundColor = 'transparent')
+                  ((e.target as HTMLElement).style.backgroundColor = 'transparent')
                 }
               >
                 <img

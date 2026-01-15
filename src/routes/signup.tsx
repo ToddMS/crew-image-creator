@@ -230,7 +230,7 @@ function SignupPage() {
         >
           Already have an account?{' '}
           <button
-            onClick={() => navigate({ to: '/login' })}
+            onClick={() => navigate({ to: '/' })}
             style={{
               background: 'none',
               border: 'none',

@@ -50,9 +50,7 @@ function DashboardPage() {
     }
   }, [auth, userParam, error, setUser])
 
-  const handleActionClick = (action: string) => {
-    // Navigation is handled by the Link components directly
-  }
+  // Navigation is handled by the Link components directly
 
   return (
     <div className="dashboard-container">
