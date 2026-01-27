@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { TemplateSelector } from '../components/TemplateSelector'
@@ -41,6 +41,7 @@ export const Route = createFileRoute('/generate')({
 
 function GenerateImagePage() {
   const navigate = useNavigate()
+  const router = useRouter()
   const { user } = useAuth()
   const [selectedCrewIds, setSelectedCrewIds] = useState<Array<string>>([])
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
@@ -101,6 +102,17 @@ function GenerateImagePage() {
       alert(`Failed to generate batch images: ${error.message}`)
     },
   })
+
+  // Auto-select crew from navigation state if provided
+  useEffect(() => {
+    const routerState = router.state
+    const navigationState = routerState?.location?.state as any
+
+    if (navigationState?.selectedCrewIds && Array.isArray(navigationState.selectedCrewIds)) {
+      console.log('🎯 Auto-selecting crews from navigation state:', navigationState.selectedCrewIds)
+      setSelectedCrewIds(navigationState.selectedCrewIds)
+    }
+  }, [router.state])
 
   const handleGenerateImage = async () => {
     console.log('🎪 DEBUG: Frontend handleGenerateImage called with:')
