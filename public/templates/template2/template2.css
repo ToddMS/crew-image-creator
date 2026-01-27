@@ -140,16 +140,28 @@ body {
 }
 
 .race-name {
-  font-size: 53px;
+  font-size: 45px;
   font-weight: bold;
   font-family: 'Inter', sans-serif;
   margin: 0;
-  line-height: 1;
+  line-height: 1.1;
   color: #094e2a; /* Will be replaced with primary color */
   max-width: 732px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-wrap: break-word;
+  hyphens: auto;
+  text-align: center;
+}
+
+.race-category {
+  font-size: 32px;
+  font-weight: normal;
+  font-family: 'Inter', sans-serif;
+  margin: 8px 0 0 0;
+  line-height: 1.2;
+  color: #094e2a; /* Will be replaced with primary color */
+  max-width: 732px;
+  word-wrap: break-word;
+  text-align: center;
 }
 
 /* Boat container - positioned on the left like template 1 */
@@ -261,7 +273,7 @@ body {
   position: absolute;
   bottom: 100px;
   left: 100px;
-  font-size: 30px;
+  font-size:  32px;
   font-weight: 500;
   font-family: 'Inter', sans-serif;
   color: #094e2a; /* Will be replaced with primary color */
@@ -270,4 +282,5 @@ body {
   line-height: 1.2;
   padding: 8px 12px;
   border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.9);
 }

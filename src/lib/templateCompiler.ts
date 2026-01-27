@@ -8,6 +8,7 @@ export interface TemplateData {
   BOAT_CODE: string
   SEATS: number
   RACE_NAME: string
+  RACE_CATEGORY?: string
   BOAT_NAME: string
   COACH_NAME: string
   CREW_MEMBERS: Array<{
@@ -200,6 +201,14 @@ export class TemplateCompiler {
       compiledHtml,
       'clubLogo',
       hasClubLogo,
+    )
+
+    // Handle race category conditional
+    const hasRaceCategory = !!(data as any).RACE_CATEGORY
+    compiledHtml = this.processConditionalBlock(
+      compiledHtml,
+      'RACE_CATEGORY',
+      hasRaceCategory,
     )
 
     // Apply color scheme
@@ -712,8 +721,9 @@ export class TemplateCompiler {
         crewMembers.filter((m) => m.POSITION !== 'Coxswain').length ||
         8,
       RACE_NAME: crew.raceName || 'Championship Race',
+      RACE_CATEGORY: crew.raceCategory || undefined,
       BOAT_NAME: crew.boatName || `${crew.boatType?.name || 'Eight'} Shell`,
-      COACH_NAME: crew.coachName || crew.coach?.name || 'Head Coach',
+      COACH_NAME: this.formatName(crew.coachName || crew.coach?.name || 'Head Coach'),
       CREW_MEMBERS: this.isTemplate2(template)
         ? abbreviatedCrewOrder
         : reversedCrewOrder,
