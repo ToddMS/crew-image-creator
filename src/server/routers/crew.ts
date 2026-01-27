@@ -74,6 +74,7 @@ export const crewRouter = router({
         clubName: z.string().optional(), // Optional fallback club name
         clubId: z.string().optional(), // Optional club preset reference
         raceName: z.string().optional(),
+        raceDate: z.string().optional(), // Optional race date for cover images
         boatName: z.string().optional(),
         coachName: z.string().optional(),
         raceCategory: z.string().optional(), // Optional race category like "Heat 2", "Final H"

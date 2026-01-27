@@ -108,6 +108,7 @@ model Crew {
   name        String
   clubName    String?  // Fallback club name if not using club preset
   raceName    String?
+  raceDate    String?  // Race date for cover images (format: "March 15, 2024")
   boatName    String?
   coachName   String?
   category    String?  // Optional category like "M1 Senior Men", "W2 Junior Women", etc.

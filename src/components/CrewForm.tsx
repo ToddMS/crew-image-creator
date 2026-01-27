@@ -13,6 +13,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
     clubId: '',
     clubName: '',
     raceName: '',
+    raceDate: '',
     boatName: '',
     coachName: '',
     raceCategory: '',
@@ -33,6 +34,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
         clubId: '',
         clubName: '',
         raceName: '',
+        raceDate: '',
         boatName: '',
         coachName: '',
         raceCategory: '',
@@ -193,7 +195,7 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
 
         {/* Optional Details */}
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Race/Event</label>
               <input
@@ -204,6 +206,19 @@ export default function CrewForm({ onSuccess, userId }: CrewFormProps) {
                 }
                 className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="e.g., Head of the River"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Race Date</label>
+              <input
+                type="text"
+                value={formData.raceDate}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, raceDate: e.target.value }))
+                }
+                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., March 15, 2024"
               />
             </div>
 

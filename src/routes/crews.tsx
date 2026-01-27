@@ -108,19 +108,6 @@ function CrewsPage() {
   }))
 
 
-  const distributeCrewsIntoColumns = (
-    crews: Array<any>,
-    columnCount: number = 4,
-  ) => {
-    const columns: Array<Array<any>> = Array.from({ length: columnCount }, () => [])
-
-    crews.forEach((crew, index) => {
-      const columnIndex = index % columnCount
-      columns[columnIndex].push(crew)
-    })
-
-    return columns
-  }
 
   const handleDeleteCrew = async (crew: any) => {
     const isConfirmed = window.confirm(
@@ -326,20 +313,17 @@ function CrewsPage() {
           />
 
           <div className="crews-grid">
-            {distributeCrewsIntoColumns(filteredCrews).map(
-              (column, columnIndex) => (
-                <div key={columnIndex} className="crew-column">
-                  {column.map((crew) => (
-                    <div
-                      key={crew.id}
-                      className={`crew-card ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
-                      onClick={() =>
-                        handleCrewSelection(
-                          crew.id,
-                          !selectedCrews.has(crew.id),
-                        )
-                      }
-                    >
+            {filteredCrews.map((crew) => (
+              <div
+                key={crew.id}
+                className={`crew-card ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
+                onClick={() =>
+                  handleCrewSelection(
+                    crew.id,
+                    !selectedCrews.has(crew.id),
+                  )
+                }
+              >
                       <div className="crew-card-header">
                         <div className="crew-card-title">
                           <h3>{crew.boatName}</h3>
@@ -495,10 +479,7 @@ function CrewsPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ),
-            )}
+            ))}
           </div>
         </div>
       </div>

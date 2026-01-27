@@ -48,6 +48,7 @@ function CreateCrewPage() {
   const [clubName, setClubName] = useState('')
   const [selectedClubId, setSelectedClubId] = useState('')
   const [raceName, setRaceName] = useState('')
+  const [raceDate, setRaceDate] = useState('')
   const [boatName, setBoatName] = useState('')
   const [coachName, setCoachName] = useState('')
   const [raceCategory, setRaceCategory] = useState('')
@@ -277,6 +278,7 @@ function CreateCrewPage() {
         clubName: clubName,
         clubId: selectedClubId || undefined,
         raceName: raceName,
+        raceDate: raceDate.trim() || undefined,
         boatTypeId: selectedBoatType.id,
         crewNames: allCrewNames,
         coachName: coachName.trim() || undefined,
@@ -389,7 +391,7 @@ function CreateCrewPage() {
                   id="raceName"
                   value={raceName}
                   onChange={(e) => setRaceName(e.target.value)}
-                  onKeyDown={(e) => handleInputKeyDown(e, 2, 5, false)} // Race name is field 2 out of 5 in step 1
+                  onKeyDown={(e) => handleInputKeyDown(e, 2, 6, false)} // Race name is field 2 out of 6 in step 1
                   className={showValidation && !raceName ? 'error' : ''}
                   placeholder="Enter race or event name"
                   required
@@ -397,6 +399,18 @@ function CreateCrewPage() {
                 {showValidation && !raceName && (
                   <div className="error-message">Please enter race name</div>
                 )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="raceDate">Race Date (Optional)</label>
+                <input
+                  type="date"
+                  id="raceDate"
+                  value={raceDate}
+                  onChange={(e) => setRaceDate(e.target.value)}
+                  onKeyDown={(e) => handleInputKeyDown(e, 3, 6, false)} // Race date is field 3 out of 6 in step 1
+                  placeholder="Select race date"
+                />
               </div>
 
               <div className="form-group">
@@ -408,7 +422,7 @@ function CreateCrewPage() {
                   id="boatName"
                   value={boatName}
                   onChange={(e) => setBoatName(e.target.value)}
-                  onKeyDown={(e) => handleInputKeyDown(e, 3, 5, false)} // Boat name is field 3 out of 5 in step 1
+                  onKeyDown={(e) => handleInputKeyDown(e, 4, 6, false)} // Boat name is field 4 out of 6 in step 1
                   className={showValidation && !boatName ? 'error' : ''}
                   placeholder="Enter boat name"
                   required
@@ -425,7 +439,7 @@ function CreateCrewPage() {
                   id="coachName"
                   value={coachName}
                   onChange={(e) => setCoachName(e.target.value)}
-                  onKeyDown={(e) => handleInputKeyDown(e, 4, 6, false)} // Coach name is field 4 out of 6 in step 1
+                  onKeyDown={(e) => handleInputKeyDown(e, 5, 6, false)} // Coach name is field 5 out of 6 in step 1
                   placeholder="Enter coach name (optional)"
                 />
               </div>
@@ -570,6 +584,12 @@ function CreateCrewPage() {
                   <span className="review-label">Race:</span>
                   <span className="review-value">{raceName}</span>
                 </div>
+                {raceDate && (
+                  <div className="review-item-compact">
+                    <span className="review-label">Race Date:</span>
+                    <span className="review-value">{raceDate}</span>
+                  </div>
+                )}
                 <div className="review-item-compact">
                   <span className="review-label">Boat Name:</span>
                   <span className="review-value">{boatName}</span>

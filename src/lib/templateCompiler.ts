@@ -9,6 +9,7 @@ export interface TemplateData {
   SEATS: number
   RACE_NAME: string
   RACE_CATEGORY?: string
+  RACE_DATE?: string
   BOAT_NAME: string
   COACH_NAME: string
   CREW_MEMBERS: Array<{
@@ -209,6 +210,14 @@ export class TemplateCompiler {
       compiledHtml,
       'RACE_CATEGORY',
       hasRaceCategory,
+    )
+
+    // Handle race date conditional
+    const hasRaceDate = !!(data as any).RACE_DATE
+    compiledHtml = this.processConditionalBlock(
+      compiledHtml,
+      'RACE_DATE',
+      hasRaceDate,
     )
 
     // Apply color scheme
@@ -722,6 +731,7 @@ export class TemplateCompiler {
         8,
       RACE_NAME: crew.raceName || 'Championship Race',
       RACE_CATEGORY: crew.raceCategory || undefined,
+      RACE_DATE: crew.raceDate || undefined,
       BOAT_NAME: crew.boatName || `${crew.boatType?.name || 'Eight'} Shell`,
       COACH_NAME: this.formatName(crew.coachName || crew.coach?.name || 'Head Coach'),
       CREW_MEMBERS: this.isTemplate2(template)

@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { publicProcedure, router } from '../../lib/trpc'
 import { prisma } from '../../lib/prisma'
 import { ImageGenerationService } from '../../lib/imageGeneration'
+import JSZip from 'jszip'
 
 export const savedImageRouter = router({
   getAll: publicProcedure.query(async () => {
@@ -544,6 +545,110 @@ export const savedImageRouter = router({
         console.error('Batch image generation error:', error)
         throw new Error(
           `Failed to generate batch images: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
+      }
+    }),
+
+  downloadWithCover: publicProcedure
+    .input(z.object({
+      savedImageId: z.string()
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        console.log('🚀 DEBUG: downloadWithCover mutation called with input:', input.savedImageId)
+
+        // Get saved image with all related data
+        const savedImage = await prisma.savedImage.findUnique({
+          where: { id: input.savedImageId },
+          include: {
+            crew: {
+              include: {
+                boatType: true,
+                club: true,
+              },
+            },
+            template: true,
+            user: true,
+          },
+        })
+
+        if (!savedImage) {
+          throw new Error('Saved image not found')
+        }
+
+        console.log('  - Found saved image:', savedImage.filename)
+        console.log('  - Crew:', savedImage.crew.name, savedImage.crew.raceName)
+
+        // Generate cover image using the crew's race data
+        const raceData = {
+          raceName: savedImage.crew.raceName || 'Crew Announcement',
+          raceDate: savedImage.crew.raceDate,
+          club: savedImage.crew.club,
+        }
+
+        // Use colors from the saved image metadata if available
+        const colors = savedImage.metadata?.colors ? {
+          primaryColor: savedImage.metadata.colors.primaryColor,
+          secondaryColor: savedImage.metadata.colors.secondaryColor,
+        } : undefined
+
+        console.log('  - Generating cover image with race data:', raceData)
+        const coverImage = await ImageGenerationService.generateCoverImage(
+          raceData,
+          savedImage.template,
+          colors
+        )
+
+        console.log('  - Cover image generated:', coverImage.filename)
+
+        // Create ZIP file
+        const zip = new JSZip()
+
+        // Fetch original crew image
+        console.log('  - Fetching crew image from:', savedImage.imageUrl)
+        const crewImageResponse = await fetch(savedImage.imageUrl)
+        if (!crewImageResponse.ok) {
+          throw new Error('Failed to fetch crew image')
+        }
+        const crewImageBlob = await crewImageResponse.blob()
+        const crewImageBuffer = await crewImageBlob.arrayBuffer()
+
+        // Fetch cover image
+        console.log('  - Fetching cover image from:', coverImage.imageUrl)
+        const coverImageResponse = await fetch(coverImage.imageUrl)
+        if (!coverImageResponse.ok) {
+          throw new Error('Failed to fetch cover image')
+        }
+        const coverImageBlob = await coverImageResponse.blob()
+        const coverImageBuffer = await coverImageBlob.arrayBuffer()
+
+        // Add files to ZIP
+        const crewFilename = savedImage.filename
+        const coverFilename = `${savedImage.crew.raceName || 'race'}-cover.png`
+
+        zip.file(crewFilename, crewImageBuffer)
+        zip.file(coverFilename, coverImageBuffer)
+
+        console.log('  - Added files to ZIP:', crewFilename, coverFilename)
+
+        // Generate ZIP buffer
+        const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
+
+        // Convert to base64 for transmission
+        const zipBase64 = zipBuffer.toString('base64')
+
+        console.log('  - ZIP created successfully, size:', zipBuffer.length, 'bytes')
+
+        return {
+          zipData: zipBase64,
+          filename: `${savedImage.crew.name || savedImage.crew.raceName || 'crew'}-images.zip`,
+          size: zipBuffer.length
+        }
+
+      } catch (error) {
+        console.error('Download with cover error:', error)
+        throw new Error(
+          `Failed to create download package: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       }
     }),

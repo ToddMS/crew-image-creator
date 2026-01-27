@@ -37,6 +37,60 @@ interface GenerateImageOptions {
 
 export class ImageGenerationService {
   /**
+   * Generate a cover image for crew announcements
+   */
+  static async generateCoverImage(
+    raceData: {
+      raceName: string
+      raceDate?: string
+      club?: { name: string; primaryColor: string; secondaryColor: string; logoUrl?: string }
+    },
+    template: Template,
+    colors?: { primaryColor: string; secondaryColor: string },
+  ): Promise<GeneratedImage> {
+    console.log('🎯 DEBUG: ImageGeneration.generateCoverImage called with:')
+    console.log('  - Race Name:', raceData.raceName)
+    console.log('  - Race Date:', raceData.raceDate)
+    console.log('  - Template ID:', template.id, 'Template Name:', template.name)
+
+    const filename = `${raceData.raceName.toLowerCase().replace(/\s+/g, '-')}-cover.png`
+    console.log('  - Generated filename:', filename)
+    const outputPath = path.join(process.cwd(), 'public', 'uploads', filename)
+
+    // Ensure output directory exists
+    await this.ensureOutputDirectory(outputPath)
+
+    // Use club colors if no custom colors provided
+    const finalColors = colors || {
+      primaryColor: raceData.club?.primaryColor || '#15803d',
+      secondaryColor: raceData.club?.secondaryColor || '#f9a8d4',
+    }
+
+    // Create template data for cover
+    const coverData: any = {
+      RACE_NAME: raceData.raceName || 'Championship Race',
+      RACE_DATE: raceData.raceDate || undefined,
+      CLUB_NAME: raceData.club?.name || 'Rowing Club',
+      clubLogo: raceData.club?.logoUrl || undefined,
+    }
+
+    // Generate cover image
+    await this.generateCoverFromTemplate({
+      coverData,
+      template,
+      colors: finalColors,
+      outputPath,
+    })
+
+    return {
+      imageUrl: `/uploads/${filename}`,
+      filename,
+      width: 1080,
+      height: 1080,
+    }
+  }
+
+  /**
    * Generate a crew image using HTML templates and Puppeteer
    */
   static async generateCrewImage(
@@ -345,6 +399,69 @@ export class ImageGenerationService {
   private static async ensureOutputDirectory(filePath: string): Promise<void> {
     const dir = path.dirname(filePath)
     await fs.mkdir(dir, { recursive: true })
+  }
+
+  /**
+   * Generate cover image from HTML template
+   */
+  private static async generateCoverFromTemplate(options: {
+    coverData: any
+    template: Template
+    colors: { primaryColor: string; secondaryColor: string }
+    outputPath: string
+  }): Promise<void> {
+    const { coverData, template, colors, outputPath } = options
+
+    // Load and compile cover template
+    const templateHtml = await this.loadCoverTemplate(template, coverData, colors)
+
+    // Generate image using Puppeteer
+    await this.convertHtmlToImage(templateHtml, outputPath)
+  }
+
+  /**
+   * Load and compile cover template with race data and colors
+   */
+  private static async loadCoverTemplate(
+    template: Template,
+    coverData: any,
+    colors: { primaryColor: string; secondaryColor: string },
+  ): Promise<string> {
+    // Determine cover template paths based on template
+    let htmlPath: string
+    let cssPath: string
+
+    if (template.metadata?.cssFile?.includes('template2') ||
+        template.metadata?.htmlFile?.includes('template2') ||
+        template.name?.toLowerCase().includes('corner brackets')) {
+      // Template 2 cover
+      htmlPath = path.join(process.cwd(), 'public', 'templates/template2/cover/cover.html')
+      cssPath = path.join(process.cwd(), 'public', 'templates/template2/cover/cover.css')
+    } else {
+      // Template 1 cover (default)
+      htmlPath = path.join(process.cwd(), 'public', 'templates/template1/cover/cover.html')
+      cssPath = path.join(process.cwd(), 'public', 'templates/template1/cover/cover.css')
+    }
+
+    let htmlContent = await fs.readFile(htmlPath, 'utf-8')
+    const cssContent = await fs.readFile(cssPath, 'utf-8')
+
+    // Embed CSS into HTML
+    const cssTag = `<style>${cssContent}</style>`
+    htmlContent = htmlContent.replace('</head>', `${cssTag}</head>`)
+
+    // Remove external CSS link
+    htmlContent = htmlContent.replace(/<link[^>]*rel=\"stylesheet\"[^>]*>/g, '')
+
+    // Use TemplateCompiler for placeholders
+    htmlContent = TemplateCompiler.compileTemplate(
+      htmlContent,
+      coverData,
+      colors,
+      template.metadata,
+    )
+
+    return htmlContent
   }
 
   /**

@@ -113,21 +113,36 @@ function GalleryPage() {
   })
 
 
+  const downloadWithCoverMutation = trpc.savedImage.downloadWithCover.useMutation()
+
   const handleDownload = async (image: SavedImage) => {
     try {
-      const response = await fetch(image.imageUrl)
-      const blob = await response.blob()
+      console.log('Downloading image with cover:', image.id)
+      const result = await downloadWithCoverMutation.mutateAsync({
+        savedImageId: image.id
+      })
+
+      // Convert base64 to blob
+      const byteCharacters = atob(result.zipData)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'application/zip' })
+
+      // Create download link
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = image.filename
+      link.download = result.filename
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Error downloading image:', error)
-      alert('Failed to download image. Please try again.')
+      console.error('Error downloading image with cover:', error)
+      alert('Failed to download image package. Please try again.')
     }
   }
 
