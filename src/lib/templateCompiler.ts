@@ -687,6 +687,21 @@ export class TemplateCompiler {
       reversedCrewOrder.push(coxswain) // Add cox at the end
     }
 
+    // Create abbreviated version for Template 2
+    const abbreviatedCrewOrder = reversedCrewOrder.map(member => ({
+      ...member,
+      POSITION: this.getAbbreviatedPosition(member.POSITION)
+    }))
+
+    const isTemplate2 = this.isTemplate2(template)
+    console.log('🔍 DEBUG Template Compiler:')
+    console.log('  - Template ID:', template?.id)
+    console.log('  - Template Name:', template?.name)
+    console.log('  - Template CSS File:', template?.metadata?.cssFile)
+    console.log('  - Is Template 2?', isTemplate2)
+    console.log('  - Original positions:', reversedCrewOrder.map(m => m.POSITION))
+    console.log('  - Abbreviated positions:', abbreviatedCrewOrder.map(m => m.POSITION))
+
     return {
       CLUB_NAME: crew.club?.name || crew.clubName || 'Rowing Club',
       CREW_NAME: crew.name || 'Crew',
@@ -699,7 +714,9 @@ export class TemplateCompiler {
       RACE_NAME: crew.raceName || 'Championship Race',
       BOAT_NAME: crew.boatName || `${crew.boatType?.name || 'Eight'} Shell`,
       COACH_NAME: crew.coachName || crew.coach?.name || 'Head Coach',
-      CREW_MEMBERS: reversedCrewOrder,
+      CREW_MEMBERS: this.isTemplate2(template)
+        ? abbreviatedCrewOrder
+        : reversedCrewOrder,
       BOAT_IMAGE_URL: boatImageInfo.url,
       BOAT_IMAGE_AVAILABLE: boatImageInfo.available,
       raceName: crew.raceName || 'Championship Regatta 2025',
@@ -912,6 +929,46 @@ export class TemplateCompiler {
       console.log('  - Result (fallback):', `Open Club - Open Club`)
       return `Open Club - Open Club`
     }
+  }
+
+  /**
+   * Check if the template is Template 2 based on metadata or ID
+   */
+  private static isTemplate2(template?: any): boolean {
+    // Check template metadata paths first (most reliable)
+    if (template?.metadata?.cssFile?.includes('template2') ||
+        template?.metadata?.htmlFile?.includes('template2')) {
+      return true
+    }
+
+    // Fallback to checking template ID or name
+    if (template?.id?.includes('template-2') ||
+        template?.id?.includes('template2') ||
+        template?.name?.toLowerCase().includes('corner brackets')) {
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Get abbreviated position for template 2 (first letter/number)
+   */
+  private static getAbbreviatedPosition(position: string): string {
+    // Handle numbered seats - check both formats: "2 Seat", "Seat 2"
+    const numberMatch = position.match(/(\d+)/)
+    if (numberMatch) {
+      return numberMatch[1]
+    }
+
+    // Handle special positions
+    const pos = position.toLowerCase()
+    if (pos.includes('bow')) return 'B'
+    if (pos.includes('stroke')) return 'S'
+    if (pos.includes('cox')) return 'C'
+
+    // Default to first letter, uppercase
+    return position.charAt(0).toUpperCase()
   }
 
   /**

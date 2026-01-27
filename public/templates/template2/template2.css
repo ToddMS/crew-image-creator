@@ -177,7 +177,7 @@ body {
 .right-content {
   position: absolute;
   top: 50%;
-  left: 540px;
+  left: 580px;
   right: 80px;
   transform: translateY(-50%);
   z-index: 10;
