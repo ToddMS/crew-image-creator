@@ -53,6 +53,8 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  max-width: 350px;
+  width: 100%;
 }
 
 .crew-card::before {

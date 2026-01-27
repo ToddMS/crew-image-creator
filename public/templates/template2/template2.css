@@ -259,17 +259,15 @@ body {
 /* Coach name in bottom left */
 .coach-name {
   position: absolute;
-  bottom: 40px;
-  left: 40px;
-  font-size: 24px;
+  bottom: 100px;
+  left: 100px;
+  font-size: 30px;
   font-weight: 500;
   font-family: 'Inter', sans-serif;
   color: #094e2a; /* Will be replaced with primary color */
   z-index: 15;
   text-align: left;
   line-height: 1.2;
-  background-color: rgba(255, 255, 255, 0.9);
   padding: 8px 12px;
   border-radius: 6px;
-  backdrop-filter: blur(4px);
 }
