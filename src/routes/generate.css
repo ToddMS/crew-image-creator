@@ -12,6 +12,7 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  min-height: 100px;
 }
 
 .generate-crew-card::before {
@@ -153,11 +154,11 @@
   text-align: center;
 }
 
-/* Fix text overflow for crew card titles and content */
+/* Allow crew card titles to wrap */
 .generate-crew-card h3 {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
+  word-wrap: break-word;
 }
 
 .generate-crew-card p {

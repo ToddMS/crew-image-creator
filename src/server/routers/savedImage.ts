@@ -3,6 +3,8 @@ import { publicProcedure, router } from '../../lib/trpc'
 import { prisma } from '../../lib/prisma'
 import { ImageGenerationService } from '../../lib/imageGeneration'
 import JSZip from 'jszip'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
 export const savedImageRouter = router({
   getAll: publicProcedure.query(async () => {
@@ -578,6 +580,7 @@ export const savedImageRouter = router({
 
         console.log('  - Found saved image:', savedImage.filename)
         console.log('  - Crew:', savedImage.crew.name, savedImage.crew.raceName)
+        console.log('🎯 DEBUG: Full crew club data:', JSON.stringify(savedImage.crew.club, null, 2))
 
         // Generate cover image using the crew's race data
         const raceData = {
@@ -592,7 +595,11 @@ export const savedImageRouter = router({
           secondaryColor: savedImage.metadata.colors.secondaryColor,
         } : undefined
 
-        console.log('  - Generating cover image with race data:', raceData)
+        console.log('🎯 DEBUG: Race data being passed to generateCoverImage:')
+        console.log('  - Race Name:', raceData.raceName)
+        console.log('  - Race Date:', raceData.raceDate)
+        console.log('  - Club Name:', raceData.club?.name)
+        console.log('  - Club Logo URL:', raceData.club?.logoUrl)
         const coverImage = await ImageGenerationService.generateCoverImage(
           raceData,
           savedImage.template,
@@ -604,23 +611,15 @@ export const savedImageRouter = router({
         // Create ZIP file
         const zip = new JSZip()
 
-        // Fetch original crew image
-        console.log('  - Fetching crew image from:', savedImage.imageUrl)
-        const crewImageResponse = await fetch(savedImage.imageUrl)
-        if (!crewImageResponse.ok) {
-          throw new Error('Failed to fetch crew image')
-        }
-        const crewImageBlob = await crewImageResponse.blob()
-        const crewImageBuffer = await crewImageBlob.arrayBuffer()
+        // Read original crew image from filesystem
+        const crewImagePath = path.join(process.cwd(), 'public', savedImage.imageUrl)
+        console.log('  - Reading crew image from filesystem:', crewImagePath)
+        const crewImageBuffer = await fs.readFile(crewImagePath)
 
-        // Fetch cover image
-        console.log('  - Fetching cover image from:', coverImage.imageUrl)
-        const coverImageResponse = await fetch(coverImage.imageUrl)
-        if (!coverImageResponse.ok) {
-          throw new Error('Failed to fetch cover image')
-        }
-        const coverImageBlob = await coverImageResponse.blob()
-        const coverImageBuffer = await coverImageBlob.arrayBuffer()
+        // Read cover image from filesystem
+        const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
+        console.log('  - Reading cover image from filesystem:', coverImagePath)
+        const coverImageBuffer = await fs.readFile(coverImagePath)
 
         // Add files to ZIP
         const crewFilename = savedImage.filename
@@ -649,6 +648,250 @@ export const savedImageRouter = router({
         console.error('Download with cover error:', error)
         throw new Error(
           `Failed to create download package: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      }
+    }),
+
+  batchDownload: publicProcedure
+    .input(z.object({
+      savedImageIds: z.array(z.string()),
+      mode: z.enum(['auto', 'no-cover', 'group-by-race', 'force-single']).optional().default('auto')
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        console.log('🚀 DEBUG: batchDownload called with:', input.savedImageIds.length, 'images, mode:', input.mode)
+
+        // Get all saved images with related data
+        const savedImages = await prisma.savedImage.findMany({
+          where: { id: { in: input.savedImageIds } },
+          include: {
+            crew: {
+              include: {
+                boatType: true,
+                club: true,
+              },
+            },
+            template: true,
+            user: true,
+          },
+        })
+
+        if (savedImages.length === 0) {
+          throw new Error('No images found')
+        }
+
+        // Analyze race/club groupings
+        const raceGroups = new Map<string, typeof savedImages>()
+        const clubGroups = new Map<string, typeof savedImages>()
+
+        for (const image of savedImages) {
+          const raceKey = image.crew.raceName || 'No Race'
+          const clubKey = image.crew.club?.name || image.crew.clubName || 'No Club'
+
+          if (!raceGroups.has(raceKey)) raceGroups.set(raceKey, [])
+          if (!clubGroups.has(clubKey)) clubGroups.set(clubKey, [])
+
+          raceGroups.get(raceKey)!.push(image)
+          clubGroups.get(clubKey)!.push(image)
+        }
+
+        const hasMultipleRaces = raceGroups.size > 1
+        const hasMultipleClubs = clubGroups.size > 1
+        const isMixed = hasMultipleRaces || hasMultipleClubs
+
+        console.log('  - Analysis:', {
+          totalImages: savedImages.length,
+          races: Array.from(raceGroups.keys()),
+          clubs: Array.from(clubGroups.keys()),
+          isMixed
+        })
+
+        // Determine action based on mode and analysis
+        if (input.mode === 'auto' && isMixed) {
+          // Return analysis for frontend to show modal
+          console.log('🚀 DEBUG: Returning analysis data for modal')
+          return {
+            requiresUserChoice: true,
+            analysisData: {
+              totalImages: savedImages.length,
+              raceGroups: Array.from(raceGroups.entries()).map(([raceName, images]) => ({
+                raceName,
+                count: images.length
+              })),
+              clubGroups: Array.from(clubGroups.entries()).map(([clubName, images]) => ({
+                clubName,
+                count: images.length
+              })),
+              hasMixedRaces: hasMultipleRaces,
+              hasMixedClubs: hasMultipleClubs
+            }
+          }
+        }
+
+        // Single ZIP with all images
+        if (input.mode === 'no-cover' || (!isMixed && input.mode === 'auto')) {
+          const zip = new JSZip()
+
+          // Add all crew images to ZIP
+          for (const image of savedImages) {
+            const crewImagePath = path.join(process.cwd(), 'public', image.imageUrl)
+            const crewImageBuffer = await fs.readFile(crewImagePath)
+            zip.file(image.filename, crewImageBuffer)
+          }
+
+          // Add cover image only if not mixed
+          if (!isMixed) {
+            const firstImage = savedImages[0]
+            const raceData = {
+              raceName: firstImage.crew.raceName || 'Race',
+              raceDate: firstImage.crew.raceDate || undefined,
+              club: firstImage.crew.club
+            }
+
+            const colors = {
+              primaryColor: firstImage.crew.club?.primaryColor || '#15803d',
+              secondaryColor: firstImage.crew.club?.secondaryColor || '#f9a8d4',
+            }
+
+            const coverImage = await ImageGenerationService.generateCoverImage(
+              raceData,
+              firstImage.template!,
+              colors
+            )
+
+            const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
+            const coverImageBuffer = await fs.readFile(coverImagePath)
+            const coverFilename = `${firstImage.crew.raceName || 'race'}-cover.png`
+            zip.file(coverFilename, coverImageBuffer)
+
+            console.log('  - Added cover image:', coverFilename)
+          }
+
+          // Generate ZIP
+          const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
+          const zipBase64 = zipBuffer.toString('base64')
+
+          const filename = isMixed
+            ? `multiple-races-${savedImages.length}-images.zip`
+            : `${savedImages[0].crew.raceName || 'race'}-${savedImages.length}-images.zip`
+
+          console.log('🚀 DEBUG: Returning download data, filename:', filename, 'size:', zipBuffer.length)
+          return {
+            downloads: [{
+              zipData: zipBase64,
+              filename
+            }]
+          }
+        }
+
+        // Mode: group-by-race - Create separate ZIPs for each race
+        if (input.mode === 'group-by-race') {
+          const downloads = []
+
+          for (const [raceName, raceImages] of raceGroups.entries()) {
+            const zip = new JSZip()
+
+            // Add crew images for this race
+            for (const image of raceImages) {
+              const crewImagePath = path.join(process.cwd(), 'public', image.imageUrl)
+              const crewImageBuffer = await fs.readFile(crewImagePath)
+              zip.file(image.filename, crewImageBuffer)
+            }
+
+            // Add race cover image
+            const firstImage = raceImages[0]
+            const raceData = {
+              raceName,
+              raceDate: firstImage.crew.raceDate || undefined,
+              club: firstImage.crew.club
+            }
+
+            const colors = {
+              primaryColor: firstImage.crew.club?.primaryColor || '#15803d',
+              secondaryColor: firstImage.crew.club?.secondaryColor || '#f9a8d4',
+            }
+
+            const coverImage = await ImageGenerationService.generateCoverImage(
+              raceData,
+              firstImage.template!,
+              colors
+            )
+
+            const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
+            const coverImageBuffer = await fs.readFile(coverImagePath)
+            const coverFilename = `${raceName}-cover.png`
+            zip.file(coverFilename, coverImageBuffer)
+
+            // Generate ZIP for this race
+            const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
+            const zipBase64 = zipBuffer.toString('base64')
+            const filename = `${raceName.toLowerCase().replace(/\s+/g, '-')}-${raceImages.length}-images.zip`
+
+            downloads.push({
+              zipData: zipBase64,
+              filename
+            })
+          }
+
+          console.log('🚀 DEBUG: Returning group-by-race downloads:', downloads.length, 'ZIPs')
+          return { downloads }
+        }
+
+        // Mode: force-single - Create one ZIP with cover from first race/club
+        if (input.mode === 'force-single') {
+          const zip = new JSZip()
+
+          // Add all crew images
+          for (const image of savedImages) {
+            const crewImagePath = path.join(process.cwd(), 'public', image.imageUrl)
+            const crewImageBuffer = await fs.readFile(crewImagePath)
+            zip.file(image.filename, crewImageBuffer)
+          }
+
+          // Add cover image using first image's race/club info
+          const firstImage = savedImages[0]
+          const raceData = {
+            raceName: firstImage.crew.raceName || 'Mixed Races',
+            raceDate: firstImage.crew.raceDate || undefined,
+            club: firstImage.crew.club
+          }
+
+          const colors = {
+            primaryColor: firstImage.crew.club?.primaryColor || '#15803d',
+            secondaryColor: firstImage.crew.club?.secondaryColor || '#f9a8d4',
+          }
+
+          const coverImage = await ImageGenerationService.generateCoverImage(
+            raceData,
+            firstImage.template!,
+            colors
+          )
+
+          const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
+          const coverImageBuffer = await fs.readFile(coverImagePath)
+          const coverFilename = `${raceData.raceName}-cover.png`
+          zip.file(coverFilename, coverImageBuffer)
+
+          // Generate ZIP
+          const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
+          const zipBase64 = zipBuffer.toString('base64')
+          const filename = `mixed-content-${savedImages.length}-images.zip`
+
+          console.log('🚀 DEBUG: Returning force-single download, filename:', filename)
+          return {
+            downloads: [{
+              zipData: zipBase64,
+              filename
+            }]
+          }
+        }
+
+        throw new Error(`Mode ${input.mode} not implemented`)
+
+      } catch (error) {
+        console.error('Batch download error:', error)
+        throw new Error(
+          `Failed to create batch download: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       }
     }),

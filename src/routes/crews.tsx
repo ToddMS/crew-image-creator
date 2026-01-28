@@ -107,8 +107,6 @@ function CrewsPage() {
     label: boatClass
   }))
 
-
-
   const handleDeleteCrew = async (crew: any) => {
     const isConfirmed = window.confirm(
       `Are you sure you want to delete "${crew.boatName}"?\n\nThis action cannot be undone.`,
@@ -324,161 +322,161 @@ function CrewsPage() {
                   )
                 }
               >
-                      <div className="crew-card-header">
-                        <div className="crew-card-title">
-                          <h3>{crew.boatName}</h3>
-                          <div className="crew-card-subtitle">
-                            <span className="club-name-full">{crew.boatClub}</span>
+                <div className="crew-card-header">
+                  <div className="crew-card-title">
+                    <h3>{crew.boatName}</h3>
+                    <div className="crew-card-subtitle">
+                      <span className="club-name-full">{crew.boatClub}</span>
+                    </div>
+                  </div>
+                  <span className="boat-type-badge">{crew.boatClass}</span>
+                </div>
+
+                <div className="crew-compact-info">
+                  <div className="crew-compact-row">
+                    <span className="crew-compact-label">Race:</span>
+                    <span className="crew-compact-value">
+                      {crew.raceName || 'No race'}
+                    </span>
+                  </div>
+                  {crew.raceCategory && (
+                    <div className="crew-compact-row">
+                      <span className="crew-compact-label">Category:</span>
+                      <span className="crew-compact-value">
+                        {crew.raceCategory}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="crew-members">
+                  <div
+                    className="crew-members-header"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleCrewMembersExpansion(crew.id)
+                    }}
+                  >
+                    <span className="crew-members-title">
+                      {crew.crewMembers.length} Crew Members
+                    </span>
+                    <span
+                      className={`crew-members-toggle ${expandedCrewMembers.has(crew.id) ? 'expanded' : ''}`}
+                    >
+                      ▼
+                    </span>
+                  </div>
+
+                  {expandedCrewMembers.has(crew.id) && (
+                    <div
+                      className="crew-boat-layout"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleCrewMembersExpansion(crew.id)
+                      }}
+                    >
+                      {/* Coach floated left */}
+                      {crew.coachName && (
+                        <div className="coach-position">
+                          <div className="crew-member-seat coach">
+                            Coach
+                          </div>
+                          <div className="crew-member-name">
+                            {crew.coachName}
                           </div>
                         </div>
-                        <span className="boat-type-badge">{crew.boatClass}</span>
-                      </div>
+                      )}
 
-                      <div className="crew-compact-info">
-                        <div className="crew-compact-row">
-                          <span className="crew-compact-label">Race:</span>
-                          <span className="crew-compact-value">
-                            {crew.raceName || 'No race'}
-                          </span>
-                        </div>
-                        {crew.raceCategory && (
-                          <div className="crew-compact-row">
-                            <span className="crew-compact-label">Category:</span>
-                            <span className="crew-compact-value">
-                              {crew.raceCategory}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="crew-members">
-                        <div
-                          className="crew-members-header"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            toggleCrewMembersExpansion(crew.id)
-                          }}
-                        >
-                          <span className="crew-members-title">
-                            {crew.crewMembers.length} Crew Members
-                          </span>
-                          <span
-                            className={`crew-members-toggle ${expandedCrewMembers.has(crew.id) ? 'expanded' : ''}`}
-                          >
-                            ▼
-                          </span>
-                        </div>
-
-                        {expandedCrewMembers.has(crew.id) && (
-                          <div
-                            className="crew-boat-layout"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              toggleCrewMembersExpansion(crew.id)
-                            }}
-                          >
-                            {/* Coach floated left */}
-                            {crew.coachName && (
-                              <div className="coach-position">
-                                <div className="crew-member-seat coach">
-                                  Coach
+                      {/* Cox at top center if exists */}
+                      {crew.crewMembers.some(
+                        (member: any) => member.seat === 'C',
+                      ) && (
+                        <div className="cox-position">
+                          {crew.crewMembers
+                            .filter((member: any) => member.seat === 'C')
+                            .map((member: any, idx: number) => (
+                              <div key={idx} className="crew-member-boat">
+                                <div className="crew-member-seat">
+                                  {member.seat}
                                 </div>
                                 <div className="crew-member-name">
-                                  {crew.coachName}
+                                  {member.name}
                                 </div>
                               </div>
-                            )}
+                            ))}
+                        </div>
+                      )}
 
-                            {/* Cox at top center if exists */}
-                            {crew.crewMembers.some(
-                              (member: any) => member.seat === 'C',
-                            ) && (
-                              <div className="cox-position">
-                                {crew.crewMembers
-                                  .filter((member: any) => member.seat === 'C')
-                                  .map((member: any, idx: number) => (
-                                    <div key={idx} className="crew-member-boat">
-                                      <div className="crew-member-seat">
-                                        {member.seat}
-                                      </div>
-                                      <div className="crew-member-name">
-                                        {member.name}
-                                      </div>
-                                    </div>
-                                  ))}
+                      {/* Rowers in single column */}
+                      <div className="rowers-layout">
+                        {crew.crewMembers
+                          .filter((member: any) => member.seat !== 'C')
+                          .map((member: any, idx: number) => (
+                            <div key={idx} className="rower-position">
+                              <div className="crew-member-boat">
+                                <div className="crew-member-seat">
+                                  {member.seat}
+                                </div>
+                                <div className="crew-member-name">
+                                  {member.name}
+                                </div>
                               </div>
-                            )}
-
-                            {/* Rowers in single column */}
-                            <div className="rowers-layout">
-                              {crew.crewMembers
-                                .filter((member: any) => member.seat !== 'C')
-                                .map((member: any, idx: number) => (
-                                  <div key={idx} className="rower-position">
-                                    <div className="crew-member-boat">
-                                      <div className="crew-member-seat">
-                                        {member.seat}
-                                      </div>
-                                      <div className="crew-member-name">
-                                        {member.name}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
                             </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="crew-actions">
-                        <div className="crew-actions-left">
-                          <Link
-                            to="/crews/create"
-                            className="crew-action-btn primary"
-                            state={{
-                              editingCrew: {
-                                id: crew.id,
-                                boatClass: crew.boatClass,
-                                clubName: crew.boatClub,
-                                raceName: crew.raceName,
-                                boatName: crew.boatName,
-                                crewNames: crew.crewMembers
-                                  .filter(
-                                    (member: any) => member.seat !== 'Cox',
-                                  )
-                                  .map((member: any) => member.name),
-                                coxName:
-                                  crew.crewMembers.find(
-                                    (member: any) => member.seat === 'Cox',
-                                  )?.name || '',
-                              },
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            Edit
-                          </Link>
-                        </div>
-                        <div className="crew-actions-right">
-                          <Link
-                            to="/generate"
-                            className="crew-action-btn secondary"
-                            state={{ selectedCrewIds: [crew.id] }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            Generate
-                          </Link>
-                          <button
-                            className="crew-action-btn danger"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteCrew(crew)
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                          ))}
                       </div>
                     </div>
+                  )}
+                </div>
+
+                <div className="crew-actions">
+                  <div className="crew-actions-left">
+                    <Link
+                      to="/crews/create"
+                      className="crew-action-btn primary"
+                      state={{
+                        editingCrew: {
+                          id: crew.id,
+                          boatClass: crew.boatClass,
+                          clubName: crew.boatClub,
+                          raceName: crew.raceName,
+                          boatName: crew.boatName,
+                          crewNames: crew.crewMembers
+                            .filter(
+                              (member: any) => member.seat !== 'Cox',
+                            )
+                            .map((member: any) => member.name),
+                          coxName:
+                            crew.crewMembers.find(
+                              (member: any) => member.seat === 'Cox',
+                            )?.name || '',
+                        },
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                  <div className="crew-actions-right">
+                    <Link
+                      to="/generate"
+                      className="crew-action-btn secondary"
+                      state={{ selectedCrewIds: [crew.id] }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Generate
+                    </Link>
+                    <button
+                      className="crew-action-btn danger"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteCrew(crew)
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>

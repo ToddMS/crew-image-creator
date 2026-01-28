@@ -66,13 +66,35 @@ export class ImageGenerationService {
       secondaryColor: raceData.club?.secondaryColor || '#f9a8d4',
     }
 
+    // Convert club logo to base64 data URL if it exists
+    let clubLogoDataUrl: string | undefined = undefined
+    if (raceData.club?.logoUrl) {
+      try {
+        const logoPath = path.join(process.cwd(), 'public', raceData.club.logoUrl)
+        const logoBuffer = await fs.readFile(logoPath)
+        const logoExtension = path.extname(raceData.club.logoUrl).toLowerCase()
+        const mimeType = logoExtension === '.webp' ? 'image/webp' :
+                        logoExtension === '.png' ? 'image/png' :
+                        logoExtension === '.jpg' || logoExtension === '.jpeg' ? 'image/jpeg' : 'image/png'
+        clubLogoDataUrl = `data:${mimeType};base64,${logoBuffer.toString('base64')}`
+        console.log('🎯 DEBUG: Successfully converted club logo to base64 data URL')
+      } catch (error) {
+        console.error('🎯 ERROR: Failed to load club logo:', error)
+      }
+    }
+
     // Create template data for cover
     const coverData: any = {
       RACE_NAME: raceData.raceName || 'Championship Race',
       RACE_DATE: raceData.raceDate || undefined,
       CLUB_NAME: raceData.club?.name || 'Rowing Club',
-      clubLogo: raceData.club?.logoUrl || undefined,
+      clubLogo: clubLogoDataUrl,
     }
+
+    console.log('🎯 DEBUG: Cover data with base64 logo:', {
+      clubLogo: clubLogoDataUrl ? `data URL (${clubLogoDataUrl.length} chars)` : undefined,
+      originalLogoUrl: raceData.club?.logoUrl
+    })
 
     // Generate cover image
     await this.generateCoverFromTemplate({

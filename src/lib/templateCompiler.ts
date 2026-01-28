@@ -198,11 +198,26 @@ export class TemplateCompiler {
 
     // Handle club logo conditional
     const hasClubLogo = !!(data as any).clubLogo
+    console.log('🎯 DEBUG: Club logo conditional processing:', {
+      hasClubLogo,
+      clubLogoValue: (data as any).clubLogo
+    })
     compiledHtml = this.processConditionalBlock(
       compiledHtml,
       'clubLogo',
       hasClubLogo,
     )
+
+    // Debug: Check if the club logo section is actually included
+    if (hasClubLogo) {
+      const hasLogoSection = compiledHtml.includes('class="club-logo"')
+      console.log('🎯 DEBUG: Club logo section included in HTML:', hasLogoSection)
+      if (hasLogoSection) {
+        // Extract and log the img src
+        const imgMatch = compiledHtml.match(/src="([^"]*)"[^>]*alt="Club Logo"/)
+        console.log('🎯 DEBUG: Club logo img src found:', imgMatch ? imgMatch[1] : 'NOT FOUND')
+      }
+    }
 
     // Handle race category conditional
     const hasRaceCategory = !!(data as any).RACE_CATEGORY
@@ -389,6 +404,7 @@ export class TemplateCompiler {
       { from: '#059669', to: colors.primaryColor },
       { from: '#15803d', to: colors.primaryColor },
       { from: '#094e2a', to: colors.primaryColor }, // Text colors
+      { from: '#080a54', to: colors.primaryColor }, // Cover template text color
       { from: '#10b981', to: colors.secondaryColor },
       // Secondary color mappings
       { from: '#f9a8d4', to: colors.secondaryColor },

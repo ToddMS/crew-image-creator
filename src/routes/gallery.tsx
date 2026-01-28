@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { SearchBar } from '../components/SearchBar'
+import { BatchDownloadModal } from '../components/BatchDownloadModal'
 import '../components/SearchBar.css'
 import '../components/Button.css'
 import './gallery.css'
@@ -95,6 +96,10 @@ function GalleryPage() {
   const [layoutMode] = useState<'compact' | 'large' | 'list' | 'masonry'>('compact')
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
 
+  // Modal state
+  const [showBatchModal, setShowBatchModal] = useState(false)
+  const [batchAnalysisData, setBatchAnalysisData] = useState<any>(null)
+
   const {
     data: savedImagesRaw = [],
     isLoading: loading,
@@ -114,6 +119,7 @@ function GalleryPage() {
 
 
   const downloadWithCoverMutation = trpc.savedImage.downloadWithCover.useMutation()
+  const batchDownloadMutation = trpc.savedImage.batchDownload.useMutation()
 
   const handleDownload = async (image: SavedImage) => {
     try {
@@ -167,14 +173,101 @@ function GalleryPage() {
   // Function removed as it was unused
 
   const handleBatchDownload = async () => {
-    const selectedImagesList = savedImages.filter((img) =>
-      selectedImages.has(img.id),
-    )
-    for (const image of selectedImagesList) {
-      await handleDownload(image)
-      await new Promise((resolve) => setTimeout(resolve, 500)) // Small delay between downloads
+    if (selectedImages.size === 0) return
+
+    try {
+      console.log('Starting smart batch download for images:', Array.from(selectedImages))
+
+      const result = await batchDownloadMutation.mutateAsync({
+        savedImageIds: Array.from(selectedImages),
+        mode: 'auto'
+      })
+
+      if (result.requiresUserChoice) {
+        // Mixed scenario detected - show modal for user choice
+        setBatchAnalysisData(result.analysisData)
+        setShowBatchModal(true)
+        return
+      }
+
+      // Direct download - single group detected
+      if (result.downloads) {
+        for (const download of result.downloads) {
+          // Convert base64 to blob and download
+          const byteCharacters = atob(download.zipData)
+          const byteNumbers = new Array(byteCharacters.length)
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i)
+          }
+          const byteArray = new Uint8Array(byteNumbers)
+          const blob = new Blob([byteArray], { type: 'application/zip' })
+
+          // Create download link
+          const url = window.URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = download.filename
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          window.URL.revokeObjectURL(url)
+
+          // Small delay between downloads if multiple
+          if (result.downloads.length > 1) {
+            await new Promise((resolve) => setTimeout(resolve, 500))
+          }
+        }
+      }
+
+      setSelectedImages(new Set())
+    } catch (error) {
+      console.error('Error in batch download:', error)
+      alert('Failed to download images. Please try again.')
     }
-    setSelectedImages(new Set())
+  }
+
+  const handleModalProceed = async (mode: 'no-cover' | 'group-by-race' | 'force-single') => {
+    try {
+      console.log('Proceeding with batch download mode:', mode)
+
+      const result = await batchDownloadMutation.mutateAsync({
+        savedImageIds: Array.from(selectedImages),
+        mode: mode
+      })
+
+      if (result.downloads) {
+        for (const download of result.downloads) {
+          // Convert base64 to blob and download
+          const byteCharacters = atob(download.zipData)
+          const byteNumbers = new Array(byteCharacters.length)
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i)
+          }
+          const byteArray = new Uint8Array(byteNumbers)
+          const blob = new Blob([byteArray], { type: 'application/zip' })
+
+          // Create download link
+          const url = window.URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = download.filename
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          window.URL.revokeObjectURL(url)
+
+          // Small delay between downloads if multiple
+          if (result.downloads.length > 1) {
+            await new Promise((resolve) => setTimeout(resolve, 500))
+          }
+        }
+      }
+
+      setSelectedImages(new Set())
+    } catch (error) {
+      console.error('Error in modal proceed download:', error)
+      alert('Failed to download images. Please try again.')
+    }
   }
 
   const handleDeleteImage = async (image: SavedImage) => {
@@ -469,6 +562,18 @@ function GalleryPage() {
           </div>
         )}
 
+        {/* Batch Download Modal */}
+        {batchAnalysisData && (
+          <BatchDownloadModal
+            isOpen={showBatchModal}
+            onClose={() => {
+              setShowBatchModal(false)
+              setBatchAnalysisData(null)
+            }}
+            onProceed={handleModalProceed}
+            analysisData={batchAnalysisData}
+          />
+        )}
 
       </div>
     </div>

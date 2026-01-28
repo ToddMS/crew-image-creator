@@ -281,6 +281,15 @@
   flex-wrap: wrap;
 }
 
+/* Force boat class options to appear on new line */
+.filter-group:nth-child(2) {
+  align-items: flex-start;
+}
+
+.filter-group:nth-child(2) .filter-options {
+  flex-basis: 100%;
+}
+
 .filter-label {
   font-size: 0.875rem;
   font-weight: 500;

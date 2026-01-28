@@ -2,7 +2,10 @@ import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { TemplateSelector } from '../components/TemplateSelector'
+import { SearchBar } from '../components/SearchBar'
 import { useAuth } from '../lib/auth-context'
+import '../components/SearchBar.css'
+import '../components/Button.css'
 import './generate.css'
 
 // Custom scrollbar styles
@@ -47,16 +50,16 @@ function GenerateImagePage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 })
-  const [colorMode, setColorMode] = useState<'club' | 'custom'>('club')
-  const [selectedClubId, setSelectedClubId] = useState<string>('')
-  const [primaryColor, setPrimaryColor] = useState<string>('#FFFFFF')
-  const [secondaryColor, setSecondaryColor] = useState<string>('#FFFFFF')
   const [crewError, setCrewError] = useState(false)
   const [templateError, setTemplateError] = useState(false)
-  const [colorError, setColorError] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredCrews, setFilteredCrews] = useState<Array<any>>([])
+  const [selectedClub, setSelectedClub] = useState<string>('')
+  const [selectedBoatClass, setSelectedBoatClass] = useState<string>('')
+  const [sortBy, setSortBy] = useState<string>('recent')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
   const { data: crews, isLoading: crewsLoading } = trpc.crew.getAll.useQuery()
-  const { data: clubs, isLoading: clubsLoading } = trpc.club.getAll.useQuery()
   const { data: selectedCrews } = trpc.crew.getByIds.useQuery(
     { ids: selectedCrewIds },
     { enabled: selectedCrewIds.length > 0 },
@@ -64,10 +67,6 @@ function GenerateImagePage() {
   const { data: selectedTemplate } = trpc.template.getById.useQuery(
     { id: selectedTemplateId },
     { enabled: !!selectedTemplateId },
-  )
-  const { data: selectedClub } = trpc.club.getById.useQuery(
-    { id: selectedClubId },
-    { enabled: !!selectedClubId },
   )
 
   const generateImageMutation = trpc.savedImage.generate.useMutation({
@@ -114,6 +113,44 @@ function GenerateImagePage() {
     }
   }, [router.state])
 
+  // Filter function for SearchBar
+  const filterFunction = (crew: any, query: string) => {
+    const crewName = crew.name?.toLowerCase() || ''
+    const clubName = crew.club?.name.toLowerCase() || ''
+    const raceName = crew.raceName?.toLowerCase() || ''
+    const raceCategory = crew.raceCategory?.toLowerCase() || ''
+    const boatTypeCode = crew.boatType.code.toLowerCase() || ''
+    const boatTypeName = crew.boatType.name.toLowerCase() || ''
+    const crewNames = crew.crewNames?.join(' ').toLowerCase() || ''
+
+    return crewName.includes(query) ||
+           clubName.includes(query) ||
+           raceName.includes(query) ||
+           raceCategory.includes(query) ||
+           boatTypeCode.includes(query) ||
+           boatTypeName.includes(query) ||
+           crewNames.includes(query)
+  }
+
+  // Get unique values for filters
+  const uniqueClubs = Array.from(new Set(crews?.map(crew => crew.club?.name).filter(Boolean))).map(club => ({
+    value: club!,
+    label: club!
+  }))
+
+  const uniqueBoatClasses = (() => {
+    const boatClassOrder = ['8+', '4+', '4x', '4-', '2x', '2-', '1x']
+    const availableClasses = Array.from(new Set(crews?.map(crew => crew.boatType.code).filter(Boolean)))
+
+    // Sort according to specified order
+    const sortedClasses = boatClassOrder.filter(boatClass => availableClasses.includes(boatClass))
+
+    return sortedClasses.map(boatClass => ({
+      value: boatClass,
+      label: boatClass
+    }))
+  })()
+
   const handleGenerateImage = async () => {
     console.log('🎪 DEBUG: Frontend handleGenerateImage called with:')
     console.log('  - selectedCrewIds:', selectedCrewIds)
@@ -131,28 +168,12 @@ function GenerateImagePage() {
     // Use authenticated user ID or fall back to undefined (backend handles demo user)
     const userId = user?.id
 
-    // Determine colors to use
-    let colors = undefined
-    if (colorMode === 'custom') {
-      colors = {
-        primaryColor,
-        secondaryColor,
-      }
-    } else if (selectedClub) {
-      colors = {
-        primaryColor: selectedClub.primaryColor,
-        secondaryColor: selectedClub.secondaryColor,
-      }
-    }
-
     // Use batch generation if multiple crews selected, otherwise single generation
     if (selectedCrewIds.length === 1) {
       generateImageMutation.mutate({
         crewId: selectedCrewIds[0],
         templateId: selectedTemplateId,
         userId,
-        clubId: selectedClubId || undefined,
-        colors,
       })
     } else {
       setGenerationProgress({ current: 0, total: selectedCrewIds.length })
@@ -160,8 +181,6 @@ function GenerateImagePage() {
         crewIds: selectedCrewIds,
         templateId: selectedTemplateId,
         userId,
-        clubId: selectedClubId || undefined,
-        colors,
       })
     }
   }
@@ -178,20 +197,6 @@ function GenerateImagePage() {
       return
     }
 
-    // Check color requirements
-    const hasClubColors = colorMode === 'club' && selectedClubId
-    const hasCustomColors = colorMode === 'custom' && primaryColor && secondaryColor
-
-    if (!hasClubColors && !hasCustomColors) {
-      setColorError(true)
-      document.querySelector('[data-section="colors"]')?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      })
-      setTimeout(() => setColorError(false), 3000) // Clear error after 3 seconds
-      return
-    }
-
     if (!selectedTemplateId) {
       setTemplateError(true)
       document.querySelector('[data-section="template"]')?.scrollIntoView({
@@ -204,10 +209,11 @@ function GenerateImagePage() {
 
     // All requirements met, clear any remaining errors and proceed with generation
     setCrewError(false)
-    setColorError(false)
     setTemplateError(false)
     handleGenerateImage()
   }
+
+  // Use filteredCrews from SearchBar instead of manual filtering
 
   return (
     <>
@@ -215,7 +221,47 @@ function GenerateImagePage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-4">
 
-          <div className="space-y-8">
+          <div className="space-y-6">
+            {/* Search Section */}
+            <SearchBar
+                items={crews || []}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onItemsFiltered={setFilteredCrews}
+                placeholder="Search crews by name, club, race, boat type..."
+                filterFunction={filterFunction}
+                sortOptions={[
+                  { value: 'recent', label: 'Recently Created', sortFn: (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime() },
+                  { value: 'club', label: 'Club Name', sortFn: (a, b) => (a.club?.name || '').localeCompare(b.club?.name || '') },
+                  { value: 'race', label: 'Race Name', sortFn: (a, b) => (a.raceName || '').localeCompare(b.raceName || '') },
+                  { value: 'boat_class', label: 'Boat Class', sortFn: (a, b) => a.boatType.code.localeCompare(b.boatType.code) }
+                ]}
+                selectedSort={sortBy}
+                onSortChange={setSortBy}
+                advancedFilters={[
+                  {
+                    name: 'club',
+                    label: 'Club',
+                    options: [{ value: '', label: 'All Clubs' }, ...uniqueClubs],
+                    selectedValue: selectedClub,
+                    onValueChange: setSelectedClub,
+                    filterFn: (crew, value) => !value || crew.club?.name === value
+                  },
+                  {
+                    name: 'boatClass',
+                    label: 'Boat Class',
+                    options: [{ value: '', label: 'All Boat Classes' }, ...uniqueBoatClasses],
+                    selectedValue: selectedBoatClass,
+                    onValueChange: setSelectedBoatClass,
+                    filterFn: (crew, value) => !value || crew.boatType.code === value
+                  }
+                ]}
+                showAdvancedFilters={showAdvancedFilters}
+                onToggleAdvancedFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                resultsCount={filteredCrews.length}
+                className="mb-6"
+              />
+
             {/* Crew Selection */}
             <section className="bg-white rounded-lg shadow p-6" data-section="crew">
               <div className="flex items-center justify-between mb-4">
@@ -229,9 +275,6 @@ function GenerateImagePage() {
                       <button
                         onClick={() => {
                           setSelectedCrewIds([])
-                          setSelectedClubId('')
-                          setPrimaryColor('#FFFFFF')
-                          setSecondaryColor('#FFFFFF')
                         }}
                         className="text-xs text-red-600 hover:text-red-700 px-2 py-1 rounded border border-red-200 hover:border-red-300"
                       >
@@ -258,10 +301,10 @@ function GenerateImagePage() {
                     ))}
                   </div>
                 </div>
-              ) : crews && crews.length > 0 ? (
-                <div className="max-h-64 pr-4 custom-scrollbar">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                    {crews.map((crew) => (
+              ) : crews && crews.length > 0 && filteredCrews && filteredCrews.length > 0 ? (
+                <div className="max-h-60 pr-4 custom-scrollbar">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredCrews?.map((crew) => (
                       <div
                         key={crew.id}
                         className={`generate-crew-card ${
@@ -271,37 +314,51 @@ function GenerateImagePage() {
                           const isSelected = selectedCrewIds.includes(crew.id)
 
                           if (isSelected) {
-                            // Remove from selection
                             setSelectedCrewIds(prev => prev.filter(id => id !== crew.id))
-
-                            // If this was the only crew selected and had club colors, clear them
-                            if (selectedCrewIds.length === 1 && crew.club?.id === selectedClubId) {
-                              setSelectedClubId('')
-                              setPrimaryColor('#FFFFFF')
-                              setSecondaryColor('#FFFFFF')
-                            }
                           } else {
-                            // Add to selection
                             setSelectedCrewIds(prev => [...prev, crew.id])
-
-                            // Auto-select club colors if this is the first crew and it has an associated club
-                            if (selectedCrewIds.length === 0 && crew.club) {
-                              setColorMode('club')
-                              setSelectedClubId(crew.club.id)
-                              setPrimaryColor(crew.club.primaryColor)
-                              setSecondaryColor(crew.club.secondaryColor)
-                            }
                           }
                           setCrewError(false)
                         }}
                       >
-                        <h3 className="font-medium text-gray-900 mb-1 text-sm">
+                        {/* Badge top right */}
+                        <span className="absolute top-2 right-2 bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
+                          {crew.boatType.code}
+                        </span>
+
+                        {/* Club logo/colors bottom right */}
+                        {crew.club && (
+                          <div className="absolute bottom-2 right-2">
+                            {crew.club.logoUrl ? (
+                              <img
+                                src={crew.club.logoUrl}
+                                alt={`${crew.club.name} logo`}
+                                className="w-6 h-6 object-contain"
+                              />
+                            ) : (
+                              <div className="flex gap-1">
+                                <div
+                                  className="w-3 h-3 rounded border border-gray-300"
+                                  style={{ backgroundColor: crew.club.primaryColor }}
+                                  title={crew.club.primaryColor}
+                                />
+                                <div
+                                  className="w-3 h-3 rounded border border-gray-300"
+                                  style={{ backgroundColor: crew.club.secondaryColor }}
+                                  title={crew.club.secondaryColor}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Crew name spanning full width */}
+                        <h3 className="font-medium text-gray-900 mb-2 text-base pr-12 -ml-1 -mt-1">
                           {crew.boatType.code === '1x' && crew.crewNames && crew.crewNames.length > 0
                             ? crew.crewNames[0]
                             : crew.name}
                         </h3>
-                        <div className="space-y-0.5 text-xs text-gray-600">
-                          <p>Boat: {crew.boatType.name}</p>
+                        <div className="space-y-1 text-sm text-gray-600 -ml-1">
                           <p className="truncate">Race: {crew.raceName || 'No race specified'}</p>
                           {crew.raceCategory && (
                             <p className="truncate">Category: {crew.raceCategory}</p>
@@ -313,6 +370,11 @@ function GenerateImagePage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              ) : crews && crews.length > 0 && (!filteredCrews || filteredCrews.length === 0) ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No crews match your search criteria.</p>
+                  <p className="text-sm mt-2">Try adjusting your search or filters.</p>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
@@ -327,234 +389,6 @@ function GenerateImagePage() {
               )}
             </section>
 
-            {/* Color Selection */}
-            <section className="bg-white rounded-lg shadow p-6" data-section="colors">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Choose Colors</h2>
-                <div className="flex items-center gap-6">
-                  {colorError && (
-                    <span className="text-red-600 text-sm font-medium animate-pulse">
-                      Please select a club or set custom colors
-                    </span>
-                  )}
-                  {/* Color mode selection */}
-                  <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="colorMode"
-                      value="club"
-                      checked={colorMode === 'club'}
-                      onChange={(e) => {
-                        setColorMode(e.target.value as 'club' | 'custom')
-                        setColorError(false)
-                      }}
-                      className="mr-2"
-                    />
-                    <span>Use Club Colors</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="colorMode"
-                      value="custom"
-                      checked={colorMode === 'custom'}
-                      onChange={(e) => {
-                        setColorMode(e.target.value as 'club' | 'custom')
-                        setColorError(false)
-                      }}
-                      className="mr-2"
-                    />
-                    <span>Custom Colors</span>
-                  </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-
-                {/* Club Colors Mode */}
-                {colorMode === 'club' && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
-                      Select a Club
-                    </h3>
-                    {clubsLoading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                        {[...Array(5)].map((_, i) => (
-                          <div
-                            key={i}
-                            className="h-20 bg-gray-200 rounded-md animate-pulse"
-                          ></div>
-                        ))}
-                      </div>
-                    ) : clubs && clubs.length > 0 ? (
-                      <div className="max-h-64 pr-4 custom-scrollbar">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                          {clubs.map((club) => (
-                            <div
-                              key={club.id}
-                              className={`generate-club-card ${
-                                selectedClubId === club.id ? 'selected' : ''
-                              }`}
-                              onClick={() => {
-                                // Allow deselection if clicking the same club
-                                if (selectedClubId === club.id) {
-                                  setSelectedClubId('')
-                                  // Reset colors to default when deselecting
-                                  setPrimaryColor('#FFFFFF')
-                                  setSecondaryColor('#FFFFFF')
-                                } else {
-                                  setSelectedClubId(club.id)
-                                  setPrimaryColor(club.primaryColor)
-                                  setSecondaryColor(club.secondaryColor)
-                                }
-                                setColorError(false)
-                              }}
-                            >
-                              <div className="flex items-center gap-2 mb-2">
-                                {club.logoUrl && (
-                                  <img
-                                    src={club.logoUrl}
-                                    alt={`${club.name} logo`}
-                                    className="w-6 h-6 object-contain flex-shrink-0"
-                                  />
-                                )}
-                                <h4 className="font-medium text-gray-900 text-sm leading-tight min-h-[2.5rem] flex items-center justify-center text-center overflow-hidden">
-                                  <span
-                                    className="overflow-hidden text-center"
-                                    style={{
-                                      display: '-webkit-box',
-                                      WebkitLineClamp: 2,
-                                      WebkitBoxOrient: 'vertical',
-                                      wordBreak: 'break-word'
-                                    }}
-                                  >
-                                    {club.name}
-                                  </span>
-                                </h4>
-                              </div>
-                              <div className="flex items-center gap-1 justify-between">
-                                <div className="flex items-center gap-1">
-                                  <div
-                                    className="w-4 h-4 rounded border border-gray-300"
-                                    style={{ backgroundColor: club.primaryColor }}
-                                  />
-                                  <span className="text-xs text-gray-600 truncate">
-                                    {club.primaryColor}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <div
-                                    className="w-4 h-4 rounded border border-gray-300"
-                                    style={{
-                                      backgroundColor: club.secondaryColor,
-                                    }}
-                                  />
-                                  <span className="text-xs text-gray-600 truncate">
-                                    {club.secondaryColor}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        <p>
-                          No clubs found. Create clubs first to use club colors.
-                        </p>
-                        <a
-                          href="/clubs"
-                          className="text-blue-600 hover:text-blue-700 font-medium mt-2 inline-block"
-                        >
-                          Go to Clubs →
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Custom Colors Mode */}
-                {colorMode === 'custom' && (
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <label className="block text-sm font-semibold text-gray-800 mb-3">
-                        Primary Color
-                      </label>
-                      <div className="flex gap-3 items-center">
-                        <div className="relative">
-                          <div
-                            className="w-14 h-14 rounded-lg border-2 border-white shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-                            style={{ backgroundColor: primaryColor }}
-                          ></div>
-                          <input
-                            type="color"
-                            value={primaryColor}
-                            onChange={(e) => {
-                              setPrimaryColor(e.target.value)
-                              setColorError(false)
-                            }}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          />
-                          <div className="absolute inset-0 rounded-lg border border-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            value={primaryColor}
-                            onChange={(e) => {
-                              setPrimaryColor(e.target.value)
-                              setColorError(false)
-                            }}
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                            placeholder="#000000"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <label className="block text-sm font-semibold text-gray-800 mb-3">
-                        Secondary Color
-                      </label>
-                      <div className="flex gap-3 items-center">
-                        <div className="relative">
-                          <div
-                            className="w-14 h-14 rounded-lg border-2 border-white shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-                            style={{ backgroundColor: secondaryColor }}
-                          ></div>
-                          <input
-                            type="color"
-                            value={secondaryColor}
-                            onChange={(e) => {
-                              setSecondaryColor(e.target.value)
-                              setColorError(false)
-                            }}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          />
-                          <div className="absolute inset-0 rounded-lg border border-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            value={secondaryColor}
-                            onChange={(e) => {
-                              setSecondaryColor(e.target.value)
-                              setColorError(false)
-                            }}
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                            placeholder="#FFFFFF"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            </section>
 
             {/* Template Selection */}
             <section className="bg-white rounded-lg shadow p-6" data-section="template">
