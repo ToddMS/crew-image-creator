@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useLocation } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import './create-crew.css'
@@ -38,6 +38,7 @@ const boatClassToBoatType = (boatClass: string) => {
 
 function CreateCrewPage() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Get the first user from the database - in production this would come from auth context
   const { data: users } = trpc.user.getAll.useQuery()
@@ -66,6 +67,10 @@ function CreateCrewPage() {
   // Get existing clubs for the dropdown
   const { data: existingClubs = [] } = trpc.club.getAll.useQuery()
 
+  // Check if we're editing an existing crew
+  const isEditing = !!location.state?.editingCrew?.id
+  const editingCrewId = location.state?.editingCrew?.id
+
   const createCrewMutation = trpc.crew.create.useMutation({
     onSuccess: () => {
       alert(`Crew "${boatName}" created successfully!`)
@@ -76,6 +81,33 @@ function CreateCrewPage() {
       setSaving(false)
     },
   })
+
+  const updateCrewMutation = trpc.crew.update.useMutation({
+    onSuccess: () => {
+      alert(`Crew "${boatName}" updated successfully!`)
+      navigate({ to: '/crews' })
+    },
+    onError: (error) => {
+      alert(`Failed to update crew: ${error.message}`)
+      setSaving(false)
+    },
+  })
+
+  // Populate form when editing a crew
+  useEffect(() => {
+    const editingCrew = location.state?.editingCrew
+    if (editingCrew) {
+      setBoatClass(editingCrew.boatClass || '')
+      setClubName(editingCrew.clubName || '')
+      setRaceName(editingCrew.raceName || '')
+      setBoatName(editingCrew.boatName || '')
+      setCoxName(editingCrew.coxName || '')
+      setCrewNames(editingCrew.crewNames || [])
+      setRaceDate(editingCrew.raceDate || '')
+      setCoachName(editingCrew.coachName || '')
+      setRaceCategory(editingCrew.raceCategory || '')
+    }
+  }, [location.state])
 
   const steps = [
     {
@@ -273,18 +305,35 @@ function CreateCrewPage() {
         ...crewNames,
       ]
 
-      await createCrewMutation.mutateAsync({
-        name: boatName,
-        clubName: clubName,
-        clubId: selectedClubId || undefined,
-        raceName: raceName,
-        raceDate: raceDate.trim() || undefined,
-        boatTypeId: selectedBoatType.id,
-        crewNames: allCrewNames,
-        coachName: coachName.trim() || undefined,
-        raceCategory: raceCategory.trim() || undefined,
-        userId: user.id,
-      })
+      if (isEditing) {
+        // Update existing crew
+        await updateCrewMutation.mutateAsync({
+          id: editingCrewId,
+          name: boatName,
+          clubName: clubName,
+          raceName: raceName,
+          raceDate: raceDate.trim() || undefined,
+          boatName: boatName,
+          crewNames: allCrewNames,
+          coachName: coachName.trim() || undefined,
+          raceCategory: raceCategory.trim() || undefined,
+          boatTypeId: selectedBoatType.id,
+        })
+      } else {
+        // Create new crew
+        await createCrewMutation.mutateAsync({
+          name: boatName,
+          clubName: clubName,
+          clubId: selectedClubId || undefined,
+          raceName: raceName,
+          raceDate: raceDate.trim() || undefined,
+          boatTypeId: selectedBoatType.id,
+          crewNames: allCrewNames,
+          coachName: coachName.trim() || undefined,
+          raceCategory: raceCategory.trim() || undefined,
+          userId: user.id,
+        })
+      }
     } catch (error) {
       console.error('Error saving crew:', error)
     }
@@ -649,7 +698,7 @@ function CreateCrewPage() {
       <div className="create-crew-container">
         <div className="container">
           <div className="empty-state">
-            <h2>Create Crew</h2>
+            <h2>{isEditing ? 'Edit Crew' : 'Create Crew'}</h2>
             <p>Sign in to create and manage your crew lineups</p>
             <button className="btn btn-primary">Sign In to Create Crew</button>
           </div>
@@ -683,10 +732,10 @@ function CreateCrewPage() {
                 disabled={saving || !canProceedFromStep(activeStep)}
               >
                 {saving ? (
-                  'Saving...'
+                  isEditing ? 'Updating...' : 'Saving...'
                 ) : (
                   <>
-                    Save Crew
+                    {isEditing ? 'Update Crew' : 'Save Crew'}
                     <svg
                       width="16"
                       height="16"

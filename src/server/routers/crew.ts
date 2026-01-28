@@ -101,6 +101,7 @@ export const crewRouter = router({
         name: z.string().optional(),
         clubName: z.string().optional(),
         raceName: z.string().optional(),
+        raceDate: z.string().optional(),
         boatName: z.string().optional(),
         coachName: z.string().optional(),
         raceCategory: z.string().optional(),

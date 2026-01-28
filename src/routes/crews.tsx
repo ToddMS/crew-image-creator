@@ -440,14 +440,17 @@ function CrewsPage() {
                           clubName: crew.boatClub,
                           raceName: crew.raceName,
                           boatName: crew.boatName,
+                          raceDate: crew.raceDate,
+                          coachName: crew.coachName,
+                          raceCategory: crew.raceCategory,
                           crewNames: crew.crewMembers
                             .filter(
-                              (member: any) => member.seat !== 'Cox',
+                              (member: any) => member.seat !== 'C',
                             )
                             .map((member: any) => member.name),
                           coxName:
                             crew.crewMembers.find(
-                              (member: any) => member.seat === 'Cox',
+                              (member: any) => member.seat === 'C',
                             )?.name || '',
                         },
                       }}
