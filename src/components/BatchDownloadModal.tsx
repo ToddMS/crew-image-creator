@@ -3,7 +3,7 @@ import { useState } from 'react'
 interface BatchDownloadModalProps {
   isOpen: boolean
   onClose: () => void
-  onProceed: (mode: 'no-cover' | 'group-by-race' | 'force-single') => void
+  onProceed: (mode: 'all-together' | 'by-race' | 'by-club' | 'by-club-race' | 'covers-only' | 'images-only') => void
   analysisData: {
     totalImages: number
     raceGroups: Array<{ raceName: string; count: number }>
@@ -19,7 +19,7 @@ export function BatchDownloadModal({
   onProceed,
   analysisData
 }: BatchDownloadModalProps) {
-  const [selectedMode, setSelectedMode] = useState<'no-cover' | 'group-by-race' | 'force-single'>('no-cover')
+  const [selectedMode, setSelectedMode] = useState<'all-together' | 'by-race' | 'by-club' | 'by-club-race' | 'covers-only' | 'images-only'>('by-club-race')
 
   if (!isOpen) return null
 
@@ -51,9 +51,11 @@ export function BatchDownloadModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Choose Download Option</h2>
-              <p className="text-sm text-gray-600">{totalImages} images from {hasMixedRaces ? raceGroups.length : clubGroups.length} different {hasMixedRaces ? 'races' : 'clubs'}</p>
+              <p className="text-sm text-gray-600">
+                {totalImages} images from {hasMixedRaces && hasMixedClubs ? `${raceGroups.length} races and ${clubGroups.length} clubs` : hasMixedRaces ? `${raceGroups.length} different races` : `${clubGroups.length} different clubs`}
+              </p>
               <p className="text-xs text-amber-700 mt-1">
-                Mixed {hasMixedRaces ? 'races' : 'clubs'} make it difficult to create a meaningful cover image that represents all content
+                Mixed {hasMixedRaces && hasMixedClubs ? 'races and clubs' : hasMixedRaces ? 'races' : 'clubs'} make it difficult to create a meaningful cover image that represents all content
               </p>
             </div>
           </div>
@@ -67,97 +69,196 @@ export function BatchDownloadModal({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+          {/* Recommended: By Club + Race */}
           <label
-            htmlFor="no-cover"
+            htmlFor="by-club-race"
             className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
-              selectedMode === 'no-cover'
-                ? 'border-blue-500 bg-blue-50'
+              selectedMode === 'by-club-race'
+                ? 'border-green-500 bg-green-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
             <input
               type="radio"
-              id="no-cover"
+              id="by-club-race"
               name="download-mode"
-              value="no-cover"
-              checked={selectedMode === 'no-cover'}
-              onChange={(e) => setSelectedMode(e.target.value as 'no-cover')}
+              value="by-club-race"
+              checked={selectedMode === 'by-club-race'}
+              onChange={(e) => setSelectedMode(e.target.value as 'by-club-race')}
               className="sr-only"
             />
             <div className="flex items-center mb-2">
               <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
-                selectedMode === 'no-cover' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                selectedMode === 'by-club-race' ? 'border-green-500 bg-green-500' : 'border-gray-300'
               }`}>
-                {selectedMode === 'no-cover' && (
+                {selectedMode === 'by-club-race' && (
                   <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                 )}
               </div>
-              <div className="font-medium text-sm">Simple ZIP</div>
+              <div className="font-medium text-sm">By Club + Race</div>
+              <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Recommended</span>
             </div>
-            <div className="text-xs text-gray-600 ml-7">All images, no cover</div>
+            <div className="text-xs text-gray-600 ml-7">e.g. head-of-river-LRC.zip, bumps-CUBC.zip</div>
           </label>
 
-          {hasMixedRaces && (
+          {/* By Club Only */}
+          {hasMixedClubs && (
             <label
-              htmlFor="group-by-race"
+              htmlFor="by-club"
               className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
-                selectedMode === 'group-by-race'
+                selectedMode === 'by-club'
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <input
                 type="radio"
-                id="group-by-race"
+                id="by-club"
                 name="download-mode"
-                value="group-by-race"
-                checked={selectedMode === 'group-by-race'}
-                onChange={(e) => setSelectedMode(e.target.value as 'group-by-race')}
+                value="by-club"
+                checked={selectedMode === 'by-club'}
+                onChange={(e) => setSelectedMode(e.target.value as 'by-club')}
                 className="sr-only"
               />
               <div className="flex items-center mb-2">
                 <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
-                  selectedMode === 'group-by-race' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                  selectedMode === 'by-club' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
                 }`}>
-                  {selectedMode === 'group-by-race' && (
+                  {selectedMode === 'by-club' && (
                     <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                   )}
                 </div>
-                <div className="font-medium text-sm">Separate by Race</div>
+                <div className="font-medium text-sm">By Club</div>
               </div>
-              <div className="text-xs text-gray-600 ml-7">{raceGroups.length} ZIPs with covers</div>
+              <div className="text-xs text-gray-600 ml-7">{clubGroups.length} ZIPs: lrc-crews.zip, cubc-crews.zip</div>
             </label>
           )}
 
+          {/* By Race Only */}
+          {hasMixedRaces && (
+            <label
+              htmlFor="by-race"
+              className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
+                selectedMode === 'by-race'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="radio"
+                id="by-race"
+                name="download-mode"
+                value="by-race"
+                checked={selectedMode === 'by-race'}
+                onChange={(e) => setSelectedMode(e.target.value as 'by-race')}
+                className="sr-only"
+              />
+              <div className="flex items-center mb-2">
+                <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                  selectedMode === 'by-race' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                }`}>
+                  {selectedMode === 'by-race' && (
+                    <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                  )}
+                </div>
+                <div className="font-medium text-sm">By Race</div>
+              </div>
+              <div className="text-xs text-gray-600 ml-7">{raceGroups.length} ZIPs: head-of-river.zip, bumps.zip</div>
+            </label>
+          )}
+
+          {/* All Together */}
           <label
-            htmlFor="force-single"
+            htmlFor="all-together"
             className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
-              selectedMode === 'force-single'
+              selectedMode === 'all-together'
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
             <input
               type="radio"
-              id="force-single"
+              id="all-together"
               name="download-mode"
-              value="force-single"
-              checked={selectedMode === 'force-single'}
-              onChange={(e) => setSelectedMode(e.target.value as 'force-single')}
+              value="all-together"
+              checked={selectedMode === 'all-together'}
+              onChange={(e) => setSelectedMode(e.target.value as 'all-together')}
               className="sr-only"
             />
             <div className="flex items-center mb-2">
               <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
-                selectedMode === 'force-single' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                selectedMode === 'all-together' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
               }`}>
-                {selectedMode === 'force-single' && (
+                {selectedMode === 'all-together' && (
                   <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                 )}
               </div>
-              <div className="font-medium text-sm">Single with Cover</div>
+              <div className="font-medium text-sm">All Together</div>
             </div>
-            <div className="text-xs text-gray-600 ml-7">One ZIP, generic cover</div>
+            <div className="text-xs text-gray-600 ml-7">Single ZIP with all images + cover</div>
+          </label>
+
+          {/* Images Only */}
+          <label
+            htmlFor="images-only"
+            className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
+              selectedMode === 'images-only'
+                ? 'border-purple-500 bg-purple-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              id="images-only"
+              name="download-mode"
+              value="images-only"
+              checked={selectedMode === 'images-only'}
+              onChange={(e) => setSelectedMode(e.target.value as 'images-only')}
+              className="sr-only"
+            />
+            <div className="flex items-center mb-2">
+              <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                selectedMode === 'images-only' ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+              }`}>
+                {selectedMode === 'images-only' && (
+                  <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                )}
+              </div>
+              <div className="font-medium text-sm">Crew Images Only</div>
+            </div>
+            <div className="text-xs text-gray-600 ml-7">Lineup cards only, no covers</div>
+          </label>
+
+          {/* Covers Only */}
+          <label
+            htmlFor="covers-only"
+            className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
+              selectedMode === 'covers-only'
+                ? 'border-purple-500 bg-purple-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              id="covers-only"
+              name="download-mode"
+              value="covers-only"
+              checked={selectedMode === 'covers-only'}
+              onChange={(e) => setSelectedMode(e.target.value as 'covers-only')}
+              className="sr-only"
+            />
+            <div className="flex items-center mb-2">
+              <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                selectedMode === 'covers-only' ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+              }`}>
+                {selectedMode === 'covers-only' && (
+                  <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                )}
+              </div>
+              <div className="font-medium text-sm">Covers Only</div>
+            </div>
+            <div className="text-xs text-gray-600 ml-7">Announcement covers only</div>
           </label>
         </div>
 

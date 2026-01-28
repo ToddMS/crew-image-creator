@@ -226,7 +226,7 @@ function GalleryPage() {
     }
   }
 
-  const handleModalProceed = async (mode: 'no-cover' | 'group-by-race' | 'force-single') => {
+  const handleModalProceed = async (mode: 'all-together' | 'by-race' | 'by-club' | 'by-club-race' | 'covers-only' | 'images-only') => {
     try {
       console.log('Proceeding with batch download mode:', mode)
 

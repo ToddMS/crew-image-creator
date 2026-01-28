@@ -6,6 +6,66 @@ import JSZip from 'jszip'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
+// Helper function to generate club abbreviation from club name
+function generateClubAbbreviation(clubName: string): string {
+  // Handle common patterns
+  const cleanedName = clubName.trim()
+
+  // Common abbreviations
+  if (cleanedName.toLowerCase().includes('london') && cleanedName.toLowerCase().includes('rowing')) return 'LRC'
+  if (cleanedName.toLowerCase().includes('cambridge') && cleanedName.toLowerCase().includes('university')) return 'CUBC'
+  if (cleanedName.toLowerCase().includes('oxford') && cleanedName.toLowerCase().includes('university')) return 'OUBC'
+  if (cleanedName.toLowerCase().includes('thames') && cleanedName.toLowerCase().includes('rowing')) return 'TRC'
+  if (cleanedName.toLowerCase().includes('leander') && cleanedName.toLowerCase().includes('club')) return 'LRC'
+
+  // For other clubs, create abbreviation from significant words
+  const words = cleanedName
+    .replace(/[^\w\s]/g, '') // Remove punctuation
+    .split(/\s+/)
+    .filter(word => {
+      const lower = word.toLowerCase()
+      // Skip common words
+      return !['rowing', 'boat', 'club', 'the', 'and', 'of', 'bc', 'rc'].includes(lower)
+    })
+
+  if (words.length === 0) {
+    // Fallback: take first 4 characters of club name
+    return cleanedName.replace(/[^\w]/g, '').substring(0, 4).toUpperCase()
+  }
+
+  // Create abbreviation from first letters of significant words
+  let abbreviation = ''
+  for (const word of words) {
+    if (abbreviation.length < 4) {
+      abbreviation += word.charAt(0).toUpperCase()
+    }
+  }
+
+  // Ensure minimum length
+  if (abbreviation.length < 2) {
+    abbreviation = cleanedName.replace(/[^\w]/g, '').substring(0, 4).toUpperCase()
+  }
+
+  return abbreviation
+}
+
+// Helper function to create safe filename from boat name
+function createBoatFilename(boatName: string | null | undefined, fallbackFilename: string): string {
+  if (!boatName?.trim()) {
+    return fallbackFilename
+  }
+
+  // Clean boat name and make it safe for filename
+  const cleanBoatName = boatName
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special chars except spaces and hyphens
+    .replace(/\s+/g, '-')     // Replace spaces with hyphens
+    .toLowerCase()
+
+  // Add .png extension
+  return `${cleanBoatName}.png`
+}
+
 export const savedImageRouter = router({
   getAll: publicProcedure.query(async () => {
     return await prisma.savedImage.findMany({
@@ -621,8 +681,8 @@ export const savedImageRouter = router({
         console.log('  - Reading cover image from filesystem:', coverImagePath)
         const coverImageBuffer = await fs.readFile(coverImagePath)
 
-        // Add files to ZIP
-        const crewFilename = savedImage.filename
+        // Add files to ZIP using boat name
+        const crewFilename = createBoatFilename(savedImage.crew.boatName, savedImage.filename)
         const coverFilename = `${savedImage.crew.raceName || 'race'}-cover.png`
 
         zip.file(crewFilename, crewImageBuffer)
@@ -655,7 +715,7 @@ export const savedImageRouter = router({
   batchDownload: publicProcedure
     .input(z.object({
       savedImageIds: z.array(z.string()),
-      mode: z.enum(['auto', 'no-cover', 'group-by-race', 'force-single']).optional().default('auto')
+      mode: z.enum(['auto', 'all-together', 'by-club', 'by-race', 'by-club-race', 'covers-only', 'images-only']).optional().default('auto')
     }))
     .mutation(async ({ input }) => {
       try {
@@ -728,22 +788,25 @@ export const savedImageRouter = router({
           }
         }
 
-        // Single ZIP with all images
-        if (input.mode === 'no-cover' || (!isMixed && input.mode === 'auto')) {
+        // Mode: all-together - Single ZIP with all images and cover
+        if (input.mode === 'all-together' || (!isMixed && input.mode === 'auto')) {
           const zip = new JSZip()
 
-          // Add all crew images to ZIP
+          // Add all crew images to ZIP with boat names
           for (const image of savedImages) {
             const crewImagePath = path.join(process.cwd(), 'public', image.imageUrl)
             const crewImageBuffer = await fs.readFile(crewImagePath)
-            zip.file(image.filename, crewImageBuffer)
+
+            // Use boat name for filename, fall back to original filename
+            const boatFilename = createBoatFilename(image.crew.boatName, image.filename)
+            zip.file(boatFilename, crewImageBuffer)
           }
 
-          // Add cover image only if not mixed
-          if (!isMixed) {
+          // Add cover image if not mixed or forced
+          if (!isMixed || input.mode === 'all-together') {
             const firstImage = savedImages[0]
             const raceData = {
-              raceName: firstImage.crew.raceName || 'Race',
+              raceName: firstImage.crew.raceName || (isMixed ? 'Mixed Races' : 'Race'),
               raceDate: firstImage.crew.raceDate || undefined,
               club: firstImage.crew.club
             }
@@ -761,7 +824,7 @@ export const savedImageRouter = router({
 
             const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
             const coverImageBuffer = await fs.readFile(coverImagePath)
-            const coverFilename = `${firstImage.crew.raceName || 'race'}-cover.png`
+            const coverFilename = `${raceData.raceName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')}-cover.png`
             zip.file(coverFilename, coverImageBuffer)
 
             console.log('  - Added cover image:', coverFilename)
@@ -772,10 +835,10 @@ export const savedImageRouter = router({
           const zipBase64 = zipBuffer.toString('base64')
 
           const filename = isMixed
-            ? `multiple-races-${savedImages.length}-images.zip`
-            : `${savedImages[0].crew.raceName || 'race'}-${savedImages.length}-images.zip`
+            ? `all-selected-images.zip`
+            : `${savedImages[0].crew.raceName?.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') || 'race'}.zip`
 
-          console.log('🚀 DEBUG: Returning download data, filename:', filename, 'size:', zipBuffer.length)
+          console.log('🚀 DEBUG: Returning all-together download, filename:', filename, 'size:', zipBuffer.length)
           return {
             downloads: [{
               zipData: zipBase64,
@@ -784,18 +847,21 @@ export const savedImageRouter = router({
           }
         }
 
-        // Mode: group-by-race - Create separate ZIPs for each race
-        if (input.mode === 'group-by-race') {
+        // Mode: by-race - Create separate ZIPs for each race
+        if (input.mode === 'by-race') {
           const downloads = []
 
           for (const [raceName, raceImages] of raceGroups.entries()) {
             const zip = new JSZip()
 
-            // Add crew images for this race
+            // Add crew images for this race with boat names
             for (const image of raceImages) {
               const crewImagePath = path.join(process.cwd(), 'public', image.imageUrl)
               const crewImageBuffer = await fs.readFile(crewImagePath)
-              zip.file(image.filename, crewImageBuffer)
+
+              // Use boat name for filename, fall back to original filename
+              const boatFilename = createBoatFilename(image.crew.boatName, image.filename)
+              zip.file(boatFilename, crewImageBuffer)
             }
 
             // Add race cover image
@@ -819,13 +885,14 @@ export const savedImageRouter = router({
 
             const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
             const coverImageBuffer = await fs.readFile(coverImagePath)
-            const coverFilename = `${raceName}-cover.png`
+            const coverFilename = `${raceName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')}-cover.png`
             zip.file(coverFilename, coverImageBuffer)
 
             // Generate ZIP for this race
             const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
             const zipBase64 = zipBuffer.toString('base64')
-            const filename = `${raceName.toLowerCase().replace(/\s+/g, '-')}-${raceImages.length}-images.zip`
+            const safeRaceName = raceName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')
+            const filename = `${safeRaceName}.zip`
 
             downloads.push({
               zipData: zipBase64,
@@ -833,51 +900,206 @@ export const savedImageRouter = router({
             })
           }
 
-          console.log('🚀 DEBUG: Returning group-by-race downloads:', downloads.length, 'ZIPs')
+          console.log('🚀 DEBUG: Returning by-race downloads:', downloads.length, 'ZIPs')
           return { downloads }
         }
 
-        // Mode: force-single - Create one ZIP with cover from first race/club
-        if (input.mode === 'force-single') {
+        // Mode: by-club - Create separate ZIPs for each club
+        if (input.mode === 'by-club') {
+          const downloads = []
+
+          for (const [clubName, clubImages] of clubGroups.entries()) {
+            const zip = new JSZip()
+
+            // Add crew images for this club with boat names
+            for (const image of clubImages) {
+              const crewImagePath = path.join(process.cwd(), 'public', image.imageUrl)
+              const crewImageBuffer = await fs.readFile(crewImagePath)
+
+              // Use boat name for filename, fall back to original filename
+              const boatFilename = createBoatFilename(image.crew.boatName, image.filename)
+              zip.file(boatFilename, crewImageBuffer)
+            }
+
+            // Add club cover image using the main race or generic
+            const firstImage = clubImages[0]
+            const clubAbbr = generateClubAbbreviation(clubName)
+
+            const raceData = {
+              raceName: hasMultipleRaces ? `${clubName} Crews` : (firstImage.crew.raceName || 'Club Announcement'),
+              raceDate: firstImage.crew.raceDate || undefined,
+              club: firstImage.crew.club
+            }
+
+            const colors = {
+              primaryColor: firstImage.crew.club?.primaryColor || '#15803d',
+              secondaryColor: firstImage.crew.club?.secondaryColor || '#f9a8d4',
+            }
+
+            const coverImage = await ImageGenerationService.generateCoverImage(
+              raceData,
+              firstImage.template!,
+              colors
+            )
+
+            const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
+            const coverImageBuffer = await fs.readFile(coverImagePath)
+            const coverFilename = `${clubAbbr.toLowerCase()}-crews-cover.png`
+            zip.file(coverFilename, coverImageBuffer)
+
+            // Generate ZIP filename: CLUBABBR-crews.zip
+            const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
+            const zipBase64 = zipBuffer.toString('base64')
+            const filename = `${clubAbbr.toLowerCase()}-crews.zip`
+
+            downloads.push({
+              zipData: zipBase64,
+              filename
+            })
+          }
+
+          console.log('🚀 DEBUG: Returning by-club downloads:', downloads.length, 'ZIPs')
+          return { downloads }
+        }
+
+        // Mode: by-club-race - Create separate ZIPs for each club+race combination
+        if (input.mode === 'by-club-race') {
+          const downloads = []
+          const clubRaceCombinations = new Map<string, typeof savedImages>()
+
+          // Group by club+race combination
+          for (const image of savedImages) {
+            const clubKey = image.crew.club?.name || image.crew.clubName || 'No Club'
+            const raceKey = image.crew.raceName || 'No Race'
+            const combinationKey = `${clubKey}|${raceKey}`
+
+            if (!clubRaceCombinations.has(combinationKey)) {
+              clubRaceCombinations.set(combinationKey, [])
+            }
+            clubRaceCombinations.get(combinationKey)!.push(image)
+          }
+
+          for (const [combinationKey, combinationImages] of clubRaceCombinations.entries()) {
+            const [clubName, raceName] = combinationKey.split('|')
+            const zip = new JSZip()
+
+            // Add crew images for this club+race combination with boat names
+            for (const image of combinationImages) {
+              const crewImagePath = path.join(process.cwd(), 'public', image.imageUrl)
+              const crewImageBuffer = await fs.readFile(crewImagePath)
+
+              // Use boat name for filename, fall back to original filename
+              const boatFilename = createBoatFilename(image.crew.boatName, image.filename)
+              zip.file(boatFilename, crewImageBuffer)
+            }
+
+            // Add cover image for this specific club+race combination
+            const firstImage = combinationImages[0]
+            const raceData = {
+              raceName,
+              raceDate: firstImage.crew.raceDate || undefined,
+              club: firstImage.crew.club
+            }
+
+            const colors = {
+              primaryColor: firstImage.crew.club?.primaryColor || '#15803d',
+              secondaryColor: firstImage.crew.club?.secondaryColor || '#f9a8d4',
+            }
+
+            const coverImage = await ImageGenerationService.generateCoverImage(
+              raceData,
+              firstImage.template!,
+              colors
+            )
+
+            const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
+            const coverImageBuffer = await fs.readFile(coverImagePath)
+            const coverFilename = `${raceName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')}-cover.png`
+            zip.file(coverFilename, coverImageBuffer)
+
+            // Generate ZIP filename: race-CLUBABBR.zip
+            const clubAbbr = generateClubAbbreviation(clubName)
+            const safeRaceName = raceName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')
+            const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
+            const zipBase64 = zipBuffer.toString('base64')
+            const filename = `${safeRaceName}-${clubAbbr}.zip`
+
+            downloads.push({
+              zipData: zipBase64,
+              filename
+            })
+          }
+
+          console.log('🚀 DEBUG: Returning by-club-race downloads:', downloads.length, 'ZIPs')
+          return { downloads }
+        }
+
+        // Mode: covers-only - Create ZIP with only cover images
+        if (input.mode === 'covers-only') {
           const zip = new JSZip()
 
-          // Add all crew images
+          // Generate cover for each race
+          const processedRaces = new Set<string>()
+          for (const image of savedImages) {
+            const raceName = image.crew.raceName || 'No Race'
+            if (processedRaces.has(raceName)) continue
+            processedRaces.add(raceName)
+
+            const raceData = {
+              raceName,
+              raceDate: image.crew.raceDate || undefined,
+              club: image.crew.club
+            }
+
+            const colors = {
+              primaryColor: image.crew.club?.primaryColor || '#15803d',
+              secondaryColor: image.crew.club?.secondaryColor || '#f9a8d4',
+            }
+
+            const coverImage = await ImageGenerationService.generateCoverImage(
+              raceData,
+              image.template!,
+              colors
+            )
+
+            const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
+            const coverImageBuffer = await fs.readFile(coverImagePath)
+            const coverFilename = `${raceName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')}-cover.png`
+            zip.file(coverFilename, coverImageBuffer)
+          }
+
+          const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
+          const zipBase64 = zipBuffer.toString('base64')
+          const filename = `cover-images.zip`
+
+          console.log('🚀 DEBUG: Returning covers-only download, filename:', filename)
+          return {
+            downloads: [{
+              zipData: zipBase64,
+              filename
+            }]
+          }
+        }
+
+        // Mode: images-only - Create ZIP with only crew images (no covers)
+        if (input.mode === 'images-only') {
+          const zip = new JSZip()
+
+          // Add all crew images to ZIP with boat names
           for (const image of savedImages) {
             const crewImagePath = path.join(process.cwd(), 'public', image.imageUrl)
             const crewImageBuffer = await fs.readFile(crewImagePath)
-            zip.file(image.filename, crewImageBuffer)
+
+            // Use boat name for filename, fall back to original filename
+            const boatFilename = createBoatFilename(image.crew.boatName, image.filename)
+            zip.file(boatFilename, crewImageBuffer)
           }
 
-          // Add cover image using first image's race/club info
-          const firstImage = savedImages[0]
-          const raceData = {
-            raceName: firstImage.crew.raceName || 'Mixed Races',
-            raceDate: firstImage.crew.raceDate || undefined,
-            club: firstImage.crew.club
-          }
-
-          const colors = {
-            primaryColor: firstImage.crew.club?.primaryColor || '#15803d',
-            secondaryColor: firstImage.crew.club?.secondaryColor || '#f9a8d4',
-          }
-
-          const coverImage = await ImageGenerationService.generateCoverImage(
-            raceData,
-            firstImage.template!,
-            colors
-          )
-
-          const coverImagePath = path.join(process.cwd(), 'public', coverImage.imageUrl)
-          const coverImageBuffer = await fs.readFile(coverImagePath)
-          const coverFilename = `${raceData.raceName}-cover.png`
-          zip.file(coverFilename, coverImageBuffer)
-
-          // Generate ZIP
           const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
           const zipBase64 = zipBuffer.toString('base64')
-          const filename = `mixed-content-${savedImages.length}-images.zip`
+          const filename = `crew-images.zip`
 
-          console.log('🚀 DEBUG: Returning force-single download, filename:', filename)
+          console.log('🚀 DEBUG: Returning images-only download, filename:', filename)
           return {
             downloads: [{
               zipData: zipBase64,
