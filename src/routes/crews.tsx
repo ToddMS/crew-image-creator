@@ -2,6 +2,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { SearchBar } from '../components/SearchBar'
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
 import '../components/SearchBar.css'
 import '../components/Button.css'
 import '../dashboard.css'
@@ -26,6 +27,8 @@ function CrewsPage() {
   const [selectedClub, setSelectedClub] = useState<string>('')
   const [selectedBoatClass, setSelectedBoatClass] = useState<string>('')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<any | null>(null)
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
 
   // Mock user state for now - in the original this comes from auth context
   const user = { name: 'Demo User' }
@@ -108,16 +111,13 @@ function CrewsPage() {
   }))
 
   const handleDeleteCrew = async (crew: any) => {
-    const isConfirmed = window.confirm(
-      `Are you sure you want to delete "${crew.boatName}"?\n\nThis action cannot be undone.`,
-    )
+    setShowDeleteConfirm(crew)
+  }
 
-    if (!isConfirmed) {
-      return
-    }
-
+  const confirmDeleteCrew = async (crew: any) => {
     try {
       await deleteCrew.mutateAsync({ id: crew.id })
+      setShowDeleteConfirm(null)
     } catch (error) {
       console.error('Error deleting crew:', error)
     }
@@ -142,26 +142,17 @@ function CrewsPage() {
   }
 
   const handleBulkDelete = async () => {
-    const crewsToDelete = Array.from(selectedCrews)
-      .map((crewId) => savedCrews.find((crew) => crew.id === crewId))
-      .filter((crew) => crew !== undefined)
+    if (selectedCrews.size === 0) return
+    setShowBatchDeleteConfirm(true)
+  }
 
-    if (crewsToDelete.length === 0) return
-
-    const crewNames = crewsToDelete.map((crew) => crew.boatName).join(', ')
-    const isConfirmed = window.confirm(
-      `Are you sure you want to delete ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}?\n\nCrews: ${crewNames}\n\nThis action cannot be undone.`,
-    )
-
-    if (!isConfirmed) {
-      return
-    }
-
+  const confirmBulkDelete = async () => {
     try {
       for (const crewId of selectedCrews) {
         await deleteCrew.mutateAsync({ id: crewId })
       }
       setSelectedCrews(new Set())
+      setShowBatchDeleteConfirm(false)
     } catch (error) {
       console.error('Error in bulk delete:', error)
     }
@@ -484,6 +475,30 @@ function CrewsPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={!!showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(null)}
+        onConfirm={() => confirmDeleteCrew(showDeleteConfirm)}
+        title="Delete Crew"
+        message={`Are you sure you want to delete "${showDeleteConfirm?.boatName}"?`}
+        confirmButtonText="Delete Crew"
+      />
+
+      {/* Batch Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={showBatchDeleteConfirm}
+        onClose={() => setShowBatchDeleteConfirm(false)}
+        onConfirm={confirmBulkDelete}
+        title={selectedCrews.size === 1 ? "Delete Crew" : "Delete Crews"}
+        message={
+          selectedCrews.size === 1
+            ? `Are you sure you want to delete "${filteredCrews.find(crew => selectedCrews.has(crew.id))?.boatName}"?`
+            : `Are you sure you want to delete ${selectedCrews.size} crews?`
+        }
+        confirmButtonText={selectedCrews.size === 1 ? "Delete Crew" : "Delete Crews"}
+      />
     </div>
   )
 }

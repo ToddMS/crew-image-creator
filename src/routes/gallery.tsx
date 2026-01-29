@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
 import { SearchBar } from '../components/SearchBar'
 import { BatchDownloadModal } from '../components/BatchDownloadModal'
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
 import '../components/SearchBar.css'
 import '../components/Button.css'
 import './gallery.css'
@@ -99,6 +100,8 @@ function GalleryPage() {
   // Modal state
   const [showBatchModal, setShowBatchModal] = useState(false)
   const [batchAnalysisData, setBatchAnalysisData] = useState<any>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<SavedImage | null>(null)
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
 
   const {
     data: savedImagesRaw = [],
@@ -271,20 +274,13 @@ function GalleryPage() {
   }
 
   const handleDeleteImage = async (image: SavedImage) => {
-    const isConfirmed = window.confirm(
-      `Are you sure you want to delete "${
-        image.crew?.boatType.code === '1x'
-          ? (image.crew.crewNames[0] || image.crew.name || 'this image')
-          : (image.crew?.name || 'this image')
-      }"?\n\nThis action cannot be undone.`,
-    )
+    setShowDeleteConfirm(image)
+  }
 
-    if (!isConfirmed) {
-      return
-    }
-
+  const confirmDeleteImage = async (image: SavedImage) => {
     try {
       await deleteImageMutation.mutateAsync({ id: image.id })
+      setShowDeleteConfirm(null)
     } catch (error) {
       console.error('Error deleting image:', error)
     }
@@ -292,19 +288,21 @@ function GalleryPage() {
 
   const handleBatchDelete = async () => {
     if (selectedImages.size === 0) return
+    setShowBatchDeleteConfirm(true)
+  }
+
+  const confirmBatchDelete = async () => {
     const selectedImagesList = savedImages.filter((img) =>
       selectedImages.has(img.id),
     )
-    const confirmMessage = `Are you sure you want to delete ${selectedImagesList.length} images? This action cannot be undone.`
-    if (window.confirm(confirmMessage)) {
-      try {
-        for (const image of selectedImagesList) {
-          await deleteImageMutation.mutateAsync({ id: image.id })
-        }
-        setSelectedImages(new Set())
-      } catch (error) {
-        console.error('Error deleting images:', error)
+    try {
+      for (const image of selectedImagesList) {
+        await deleteImageMutation.mutateAsync({ id: image.id })
       }
+      setSelectedImages(new Set())
+      setShowBatchDeleteConfirm(false)
+    } catch (error) {
+      console.error('Error deleting images:', error)
     }
   }
 
@@ -574,6 +572,41 @@ function GalleryPage() {
             analysisData={batchAnalysisData}
           />
         )}
+
+        {/* Single Image Delete Confirmation Modal */}
+        <ConfirmDeleteModal
+          isOpen={!!showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(null)}
+          onConfirm={() => confirmDeleteImage(showDeleteConfirm!)}
+          title="Delete Image"
+          message={`Are you sure you want to delete "${
+            showDeleteConfirm?.crew?.boatType.code === '1x'
+              ? (showDeleteConfirm.crew.crewNames[0] || showDeleteConfirm.crew.name || 'this image')
+              : (showDeleteConfirm?.crew?.name || 'this image')
+          }"?`}
+          confirmButtonText="Delete Image"
+        />
+
+        {/* Batch Delete Confirmation Modal */}
+        <ConfirmDeleteModal
+          isOpen={showBatchDeleteConfirm}
+          onClose={() => setShowBatchDeleteConfirm(false)}
+          onConfirm={confirmBatchDelete}
+          title={selectedImages.size === 1 ? "Delete Image" : "Delete Images"}
+          message={
+            selectedImages.size === 1
+              ? (() => {
+                  const selectedImage = filteredImages?.find(img => selectedImages.has(img.id))
+                  return `Are you sure you want to delete "${
+                    selectedImage?.crew?.boatType.code === '1x'
+                      ? (selectedImage.crew.crewNames[0] || selectedImage.crew.name || 'this image')
+                      : (selectedImage?.crew?.name || 'this image')
+                  }"?`
+                })()
+              : `Are you sure you want to delete ${selectedImages.size} images?`
+          }
+          confirmButtonText={selectedImages.size === 1 ? "Delete Image" : "Delete Images"}
+        />
 
       </div>
     </div>

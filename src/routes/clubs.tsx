@@ -4,6 +4,7 @@ import { trpc } from '../lib/trpc-client'
 import { ImageUpload } from '../components/ImageUpload'
 import { useAuth } from '../lib/auth-context'
 import { SearchBar } from '../components/SearchBar'
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
 import '../components/SearchBar.css'
 import '../components/Button.css'
 import '../dashboard.css'
@@ -40,6 +41,7 @@ function ClubsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null,
   )
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredClubs, setFilteredClubs] = useState<Array<any>>([])
   const [selectedClubs, setSelectedClubs] = useState<Set<string>>(new Set())
@@ -151,14 +153,12 @@ function ClubsPage() {
 
   const handleBulkDelete = async () => {
     if (selectedClubs.size === 0) return
+    setShowBatchDeleteConfirm(true)
+  }
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedClubs.size} club${selectedClubs.size > 1 ? 's' : ''}? This action cannot be undone.`
-    )
-
-    if (confirmed) {
-      bulkDeleteMutation.mutate({ ids: Array.from(selectedClubs) })
-    }
+  const confirmBulkDelete = async () => {
+    bulkDeleteMutation.mutate({ ids: Array.from(selectedClubs) })
+    setShowBatchDeleteConfirm(false)
   }
 
   const handleClubSelection = (clubId: string, checked: boolean) => {
@@ -719,31 +719,28 @@ function ClubsPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Delete Club</h3>
-            <p>
-              Are you sure you want to delete this club? This action cannot be
-              undone.
-            </p>
-            <div className="modal-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowDeleteConfirm(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-danger"
-                onClick={() => handleDelete(showDeleteConfirm)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        isOpen={!!showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(null)}
+        onConfirm={() => handleDelete(showDeleteConfirm!)}
+        title="Delete Club"
+        message={`Are you sure you want to delete "${filteredClubs.find(club => club.id === showDeleteConfirm)?.name}"?`}
+        confirmButtonText="Delete Club"
+      />
+
+      {/* Batch Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={showBatchDeleteConfirm}
+        onClose={() => setShowBatchDeleteConfirm(false)}
+        onConfirm={confirmBulkDelete}
+        title={selectedClubs.size === 1 ? "Delete Club" : "Delete Clubs"}
+        message={
+          selectedClubs.size === 1
+            ? `Are you sure you want to delete "${filteredClubs.find(club => selectedClubs.has(club.id))?.name}"?`
+            : `Are you sure you want to delete ${selectedClubs.size} clubs?`
+        }
+        confirmButtonText={selectedClubs.size === 1 ? "Delete Club" : "Delete Clubs"}
+      />
     </div>
   )
 }
