@@ -129,7 +129,7 @@ function ClubsPage() {
     updateMutation.mutate({
       id: club.id,
       ...editData,
-      logoUrl: editData.logoUrl || undefined,
+      logoUrl: editData.logoUrl || '',
     })
   }
 
@@ -212,7 +212,7 @@ function ClubsPage() {
 
     createMutation.mutate({
       ...newClubForm,
-      logoUrl: newClubForm.logoUrl || undefined,
+      logoUrl: newClubForm.logoUrl || '',
       userId: user.id,
     })
   }
