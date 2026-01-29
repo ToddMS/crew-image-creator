@@ -10,8 +10,8 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000,
-        refetchOnWindowFocus: false,
+        staleTime: 30 * 1000, // Reduced from 60s to 30s for faster updates
+        refetchOnWindowFocus: true, // Enable focus refetching for better sync
         retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       },

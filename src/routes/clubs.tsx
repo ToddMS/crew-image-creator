@@ -50,6 +50,7 @@ function ClubsPage() {
     {},
   )
 
+  const utils = trpc.useUtils()
   const { data: clubs = [], isLoading, refetch } = trpc.club.getAll.useQuery()
 
   const createMutation = trpc.club.create.useMutation({
@@ -61,7 +62,8 @@ function ClubsPage() {
         secondaryColor: '#1e40af',
         logoUrl: '',
       })
-      refetch()
+      utils.club.getAll.invalidate()
+      utils.crew.getAll.invalidate()
     },
     onError: (error) => {
       alert(`Failed to create club: ${error.message}`)
@@ -72,7 +74,8 @@ function ClubsPage() {
     onSuccess: () => {
       setEditingClubId(null)
       setEditForm({})
-      refetch()
+      utils.club.getAll.invalidate()
+      utils.crew.getAll.invalidate()
     },
     onError: (error) => {
       alert(`Failed to update club: ${error.message}`)
@@ -82,7 +85,8 @@ function ClubsPage() {
   const deleteMutation = trpc.club.delete.useMutation({
     onSuccess: () => {
       setShowDeleteConfirm(null)
-      refetch()
+      utils.club.getAll.invalidate()
+      utils.crew.getAll.invalidate()
     },
     onError: (error) => {
       alert(`Failed to delete club: ${error.message}`)
@@ -92,7 +96,8 @@ function ClubsPage() {
   const bulkDeleteMutation = trpc.club.bulkDelete.useMutation({
     onSuccess: () => {
       setSelectedClubs(new Set())
-      refetch()
+      utils.club.getAll.invalidate()
+      utils.crew.getAll.invalidate()
     },
     onError: (error) => {
       alert(`Failed to delete clubs: ${error.message}`)

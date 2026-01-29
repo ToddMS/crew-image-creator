@@ -59,6 +59,7 @@ function GenerateImagePage() {
   const [sortBy, setSortBy] = useState<string>('recent')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
+  const utils = trpc.useUtils()
   const { data: crews, isLoading: crewsLoading } = trpc.crew.getAll.useQuery()
   const { data: selectedCrews } = trpc.crew.getByIds.useQuery(
     { ids: selectedCrewIds },
@@ -72,6 +73,7 @@ function GenerateImagePage() {
   const generateImageMutation = trpc.savedImage.generate.useMutation({
     onSuccess: () => {
       setIsGenerating(false)
+      utils.savedImage.getAll.invalidate()
       // Navigate to gallery instead of showing toast
       navigate({ to: '/gallery' })
     },
@@ -85,6 +87,7 @@ function GenerateImagePage() {
     onSuccess: (data) => {
       setIsGenerating(false)
       setGenerationProgress({ current: 0, total: 0 })
+      utils.savedImage.getAll.invalidate()
 
       if (data.successful > 0) {
         const successMsg = `Successfully generated ${data.successful} image${data.successful === 1 ? '' : 's'}`

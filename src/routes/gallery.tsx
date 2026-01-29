@@ -103,6 +103,7 @@ function GalleryPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<SavedImage | null>(null)
   const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
 
+  const utils = trpc.useUtils()
   const {
     data: savedImagesRaw = [],
     isLoading: loading,
@@ -113,7 +114,7 @@ function GalleryPage() {
 
   const deleteImageMutation = trpc.savedImage.delete.useMutation({
     onSuccess: (): void => {
-      loadImages()
+      utils.savedImage.getAll.invalidate()
     },
     onError: (error: { message: string }): void => {
       alert(`Failed to delete image: ${error.message}`)

@@ -33,6 +33,7 @@ function CrewsPage() {
   // Mock user state for now - in the original this comes from auth context
   const user = { name: 'Demo User' }
 
+  const utils = trpc.useUtils()
   const {
     data: crews = [],
     isLoading: loading,
@@ -41,7 +42,10 @@ function CrewsPage() {
   } = trpc.crew.getAll.useQuery()
 
   const deleteCrew = trpc.crew.delete.useMutation({
-    onSuccess: () => loadCrews(),
+    onSuccess: () => {
+      utils.crew.getAll.invalidate()
+      utils.savedImage.getAll.invalidate()
+    },
   })
 
   // Transform crews data to match the old format
