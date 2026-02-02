@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
-    "build": "vite build",
+    "dev": "vinxi dev",
+    "build": "prisma generate && prisma migrate deploy && vinxi build",
     "start": "node .output/server/index.mjs",
     "preview": "vite preview",
     "test": "vitest run",
@@ -20,10 +20,13 @@
     "deploy": "npm run check && npm run build",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@auth/core": "^0.41.0",
