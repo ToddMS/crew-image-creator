@@ -5,7 +5,10 @@ nixPkgs = ["nodejs_20", "chromium"]
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npm run build"]
+cmds = [
+  "npx prisma generate",
+  "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npx vinxi build"
+]
 
 [start]
 cmd = "npm run start"
