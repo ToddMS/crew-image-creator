@@ -6,8 +6,8 @@ cmds = ["npm ci"]
 
 [phases.build]
 cmds = [
-  "npx prisma generate",
-  "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npx vinxi build"
+  "DATABASE_URL=postgresql://build:build@localhost:5432/rowgram_build npx prisma generate",
+  "DATABASE_URL=postgresql://build:build@localhost:5432/rowgram_build npx vinxi build"
 ]
 
 [start]
