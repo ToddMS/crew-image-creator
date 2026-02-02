@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
-    "build": "prisma generate && vinxi build",
+    "build": "prisma generate && npx vinxi build",
     "start": "prisma migrate deploy && node .output/server/index.mjs",
     "preview": "vite preview",
     "test": "vitest run",
@@ -66,6 +66,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^4.0.6",
     "uuid": "^13.0.0",
+    "vinxi": "^0.5.11",
     "vite-tsconfig-paths": "^5.1.4",
     "zod": "^4.1.12"
   },
@@ -82,7 +83,6 @@
     "terser": "^5.44.1",
     "tsx": "^4.20.6",
     "typescript": "^5.7.2",
-    "vinxi": "^0.5.11",
     "vite": "^7.1.7",
     "vitest": "^3.0.5",
     "web-vitals": "^5.1.0"
