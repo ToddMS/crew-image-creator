@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
-    "build": "prisma generate && prisma migrate deploy && vinxi build",
-    "start": "node .output/server/index.mjs",
+    "build": "prisma generate && vinxi build",
+    "start": "prisma migrate deploy && node .output/server/index.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
