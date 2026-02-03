@@ -48,8 +48,9 @@ USER nextjs
 
 EXPOSE 3000
 
-# Health check
+# Health check - use root path instead of non-existent /api/health
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
+    CMD curl -f http://localhost:3000/ || exit 1
 
-CMD ["node", ".output/server/index.mjs"]
+# Run migrations and start server
+CMD ["npm", "start"]
