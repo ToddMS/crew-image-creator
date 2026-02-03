@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import './Button.css'
 
 interface SearchBarProps<T> {
@@ -58,8 +58,6 @@ export function SearchBar<T>({
   actionButtons = [],
   leftActions
 }: SearchBarProps<T>) {
-  const [internalFiltered, setInternalFiltered] = useState<Array<T>>(items)
-
   // Apply all filters whenever dependencies change
   const applyAllFilters = () => {
     let filtered = [...items]
@@ -86,7 +84,6 @@ export function SearchBar<T>({
       }
     }
 
-    setInternalFiltered(filtered)
     onItemsFiltered(filtered)
   }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React from 'react'
 import { trpc } from '../lib/trpc-client'
 import '../routes/generate.css'
 
@@ -15,8 +15,6 @@ export function TemplateSelector({
   className = '',
   hideTitle = false,
 }: TemplateSelectorProps) {
-  const [selectedType, setSelectedType] = useState<string>('all')
-
   const { data: templates, isLoading, error } = trpc.template.getAll.useQuery()
 
   if (isLoading) {
@@ -120,9 +118,9 @@ export function TemplateSelector({
         ))}
       </div>
 
-      {filteredTemplates.length === 0 && selectedType !== 'all' && (
+      {filteredTemplates.length === 0 && (
         <div className="text-gray-500 p-8 text-center bg-gray-50 rounded-lg">
-          No templates found for "{selectedType}" type
+          No templates found
         </div>
       )}
     </div>

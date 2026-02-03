@@ -25,7 +25,7 @@ export default function Header() {
           <Menu size={24} />
         </button>
         <h1 className="ml-4 text-xl font-semibold">
-          <Link to="/" search={{}} className="text-white hover:text-gray-200">
+          <Link to="/" search={{ auth: '', user: '', error: '' }} className="text-white hover:text-gray-200">
             Crew Image Creator
           </Link>
         </h1>
@@ -50,7 +50,7 @@ export default function Header() {
         <nav className="flex-1 p-4 overflow-y-auto">
           <Link
             to="/"
-            search={{}}
+            search={{ auth: '', user: '', error: '' }}
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
             activeProps={{

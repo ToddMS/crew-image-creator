@@ -424,7 +424,7 @@ async function main() {
           crewMembers.push(`Cox: ${getRandomItem(coxNames)}`)
         }
 
-        const crew = await prisma.crew.create({
+        await prisma.crew.create({
           data: {
             name: crewTemplate.name,
             clubName: club.name,

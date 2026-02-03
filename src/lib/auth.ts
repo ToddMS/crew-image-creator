@@ -2,7 +2,6 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import type { AuthConfig } from '@auth/core'
-import type { Adapter } from '@auth/core/adapters'
 
 export const authConfig: AuthConfig = {
   adapter: PrismaAdapter(prisma),

@@ -31,7 +31,7 @@ export function Navigation() {
     <nav className="main-nav">
       <div className="nav-container">
         {/* Logo */}
-        <Link to="/" search={{}} className="logo">
+        <Link to="/" search={{ auth: '', user: '', error: '' }} className="logo">
           <img src="/RowGramImage.svg" alt="RowGram" className="logo-icon" />
           <span>RowGram</span>
         </Link>
@@ -181,10 +181,10 @@ export function Navigation() {
                         transition: 'background-color 0.2s',
                       }}
                       onMouseEnter={(e) =>
-                        (e.target.style.backgroundColor = '#fef2f2')
+                        ((e.target as HTMLElement).style.backgroundColor = '#fef2f2')
                       }
                       onMouseLeave={(e) =>
-                        (e.target.style.backgroundColor = 'transparent')
+                        ((e.target as HTMLElement).style.backgroundColor = 'transparent')
                       }
                     >
                       Sign Out

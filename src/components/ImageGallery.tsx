@@ -269,29 +269,40 @@ function ImageDetailsModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50 p-4">
-      {/* Header with image name and close button */}
+      {/* Header with image name and action buttons */}
       <div className="flex items-center justify-between w-full max-w-6xl mb-4">
         <h2 className="text-xl font-semibold text-white">
           {savedImage.crew.name || 'Unknown Crew'}
         </h2>
-        <button
-          onClick={onClose}
-          className="p-2 text-white hover:text-gray-300 transition-colors"
-        >
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onDownload(savedImage.imageUrl, savedImage.filename)}
+            className="p-2 text-white hover:text-blue-400 transition-colors"
+            title="Download"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </button>
+          <button
+            onClick={() => onDelete(savedImage.id)}
+            className="p-2 text-white hover:text-red-400 transition-colors"
+            title="Delete"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+          <button
+            onClick={onClose}
+            className="p-2 text-white hover:text-gray-300 transition-colors"
+            title="Close"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Full-size image */}
