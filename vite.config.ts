@@ -48,15 +48,10 @@ const config = defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          trpc: ['@trpc/client', '@trpc/server', '@trpc/react-query'],
-          tanstack: [
-            '@tanstack/react-query',
-            '@tanstack/react-router',
-            '@tanstack/react-start',
-          ],
-          utils: ['zod', 'clsx', 'tailwind-merge'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor'
+          }
         },
       },
     },
