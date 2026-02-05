@@ -3,10 +3,15 @@ import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import type { AuthConfig } from '@auth/core'
 import type { Adapter } from '@auth/core/adapters'
+import Google from '@auth/core/providers/google'
 
 export const authConfig: AuthConfig = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     {
       id: 'credentials',
       name: 'credentials',
@@ -43,7 +48,7 @@ export const authConfig: AuthConfig = {
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.avatarUrl,
+          image: user.image,
         }
       },
     },
