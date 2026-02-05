@@ -22,6 +22,7 @@ import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
 import { Route as ApiUploadClubLogoRouteImport } from './routes/api/upload/club-logo'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
@@ -93,6 +94,11 @@ const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
   path: '/api/auth/google',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoStartSsrIndexRoute = DemoStartSsrIndexRouteImport.update({
   id: '/demo/start/ssr/',
   path: '/demo/start/ssr/',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/generate': typeof GenerateRoute
   '/signup': typeof SignupRoute
   '/crews/create': typeof CrewsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/api/upload/club-logo': typeof ApiUploadClubLogoRoute
@@ -137,7 +144,7 @@ export interface FileRoutesByFullPath {
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
-  '/demo/start/ssr': typeof DemoStartSsrIndexRoute
+  '/demo/start/ssr/': typeof DemoStartSsrIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/generate': typeof GenerateRoute
   '/signup': typeof SignupRoute
   '/crews/create': typeof CrewsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/api/upload/club-logo': typeof ApiUploadClubLogoRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/generate': typeof GenerateRoute
   '/signup': typeof SignupRoute
   '/crews_/create': typeof CrewsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/api/upload/club-logo': typeof ApiUploadClubLogoRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/generate'
     | '/signup'
     | '/crews/create'
+    | '/api/auth/$'
     | '/api/auth/google'
     | '/api/trpc/$'
     | '/api/upload/club-logo'
@@ -200,7 +210,7 @@ export interface FileRouteTypes {
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
     | '/demo/start/ssr/spa-mode'
-    | '/demo/start/ssr'
+    | '/demo/start/ssr/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/generate'
     | '/signup'
     | '/crews/create'
+    | '/api/auth/$'
     | '/api/auth/google'
     | '/api/trpc/$'
     | '/api/upload/club-logo'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/generate'
     | '/signup'
     | '/crews_/create'
+    | '/api/auth/$'
     | '/api/auth/google'
     | '/api/trpc/$'
     | '/api/upload/club-logo'
@@ -251,6 +263,7 @@ export interface RootRouteChildren {
   GenerateRoute: typeof GenerateRoute
   SignupRoute: typeof SignupRoute
   CrewsCreateRoute: typeof CrewsCreateRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
   ApiUploadClubLogoRoute: typeof ApiUploadClubLogoRoute
@@ -356,10 +369,17 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthGoogleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/start/ssr/': {
       id: '/demo/start/ssr/'
       path: '/demo/start/ssr'
-      fullPath: '/demo/start/ssr'
+      fullPath: '/demo/start/ssr/'
       preLoaderRoute: typeof DemoStartSsrIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -414,6 +434,7 @@ const rootRouteChildren: RootRouteChildren = {
   GenerateRoute: GenerateRoute,
   SignupRoute: SignupRoute,
   CrewsCreateRoute: CrewsCreateRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
   ApiUploadClubLogoRoute: ApiUploadClubLogoRoute,

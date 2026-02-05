@@ -11,7 +11,8 @@ async function handler({ request }: { request: Request }) {
     method: request.method,
     headers: request.headers,
     body: request.body,
-  })
+    duplex: 'half',
+  } as RequestInit)
 
   return fetchRequestHandler({
     endpoint: '/api/trpc',
