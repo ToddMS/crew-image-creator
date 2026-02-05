@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "prisma generate && vite build",
-    "start": "node dist/server/server.js",
+    "start": "npx prisma db push && node server.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
