@@ -1,0 +1,21 @@
+[build]
+builder = "dockerfile"
+
+[deploy]
+startCommand = "npm start"
+restartPolicyType = "never"
+
+[env]
+PORT = "3000"
+NODE_ENV = "production"
+
+# Railway will automatically set these:
+# DATABASE_URL - PostgreSQL connection string
+# RAILWAY_STATIC_URL - Your app URL
+# RAILWAY_PUBLIC_DOMAIN - Public domain
+
+[healthcheck]
+path = "/"
+interval = 30
+timeout = 10
+retries = 3
