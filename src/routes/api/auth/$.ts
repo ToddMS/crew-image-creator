@@ -6,10 +6,22 @@ export const Route = createFileRoute('/api/auth/$')({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        return await Auth(request, authConfig)
+        try {
+          const response = await Auth(request, authConfig)
+          return response
+        } catch (error) {
+          console.error('Auth GET error:', error)
+          return new Response('Internal Server Error', { status: 500 })
+        }
       },
       POST: async ({ request }) => {
-        return await Auth(request, authConfig)
+        try {
+          const response = await Auth(request, authConfig)
+          return response
+        } catch (error) {
+          console.error('Auth POST error:', error)
+          return new Response('Internal Server Error', { status: 500 })
+        }
       },
     },
   },

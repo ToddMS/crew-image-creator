@@ -13,6 +13,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as GenerateRouteImport } from './routes/generate'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as CrewsRouteImport } from './routes/crews'
+import { Route as ClubsNewRouteImport } from './routes/clubs-new'
 import { Route as ClubsRouteImport } from './routes/clubs'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CrewsCreateRouteImport } from './routes/crews_.create'
@@ -47,6 +48,11 @@ const GalleryRoute = GalleryRouteImport.update({
 const CrewsRoute = CrewsRouteImport.update({
   id: '/crews',
   path: '/crews',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClubsNewRoute = ClubsNewRouteImport.update({
+  id: '/clubs-new',
+  path: '/clubs-new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClubsRoute = ClubsRouteImport.update({
@@ -128,6 +134,7 @@ const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/clubs': typeof ClubsRoute
+  '/clubs-new': typeof ClubsNewRoute
   '/crews': typeof CrewsRoute
   '/gallery': typeof GalleryRoute
   '/generate': typeof GenerateRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/clubs': typeof ClubsRoute
+  '/clubs-new': typeof ClubsNewRoute
   '/crews': typeof CrewsRoute
   '/gallery': typeof GalleryRoute
   '/generate': typeof GenerateRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/clubs': typeof ClubsRoute
+  '/clubs-new': typeof ClubsNewRoute
   '/crews': typeof CrewsRoute
   '/gallery': typeof GalleryRoute
   '/generate': typeof GenerateRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/clubs'
+    | '/clubs-new'
     | '/crews'
     | '/gallery'
     | '/generate'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/clubs'
+    | '/clubs-new'
     | '/crews'
     | '/gallery'
     | '/generate'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/clubs'
+    | '/clubs-new'
     | '/crews'
     | '/gallery'
     | '/generate'
@@ -258,6 +270,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClubsRoute: typeof ClubsRoute
+  ClubsNewRoute: typeof ClubsNewRoute
   CrewsRoute: typeof CrewsRoute
   GalleryRoute: typeof GalleryRoute
   GenerateRoute: typeof GenerateRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/crews'
       fullPath: '/crews'
       preLoaderRoute: typeof CrewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clubs-new': {
+      id: '/clubs-new'
+      path: '/clubs-new'
+      fullPath: '/clubs-new'
+      preLoaderRoute: typeof ClubsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clubs': {
@@ -429,6 +449,7 @@ const ApiAuthGoogleRouteWithChildren = ApiAuthGoogleRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClubsRoute: ClubsRoute,
+  ClubsNewRoute: ClubsNewRoute,
   CrewsRoute: CrewsRoute,
   GalleryRoute: GalleryRoute,
   GenerateRoute: GenerateRoute,

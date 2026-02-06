@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { trpc } from '../lib/trpc-client'
-import { SearchBar } from '../components/SearchBar'
+import { DataContainer } from '../components/DataContainer'
+import { ImageCard } from '../components/ImageCard'
 import { BatchDownloadModal } from '../components/BatchDownloadModal'
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
-import '../components/SearchBar.css'
-import '../components/Button.css'
+import '../components/DataContainer.css'
 import './gallery.css'
 
 export const Route = createFileRoute('/gallery')({
@@ -309,18 +309,6 @@ function GalleryPage() {
 
 
 
-  if (loading) {
-    return (
-      <div className="gallery-container">
-        <div className="container">
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <h3>Loading your image gallery...</h3>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   // Get unique clubs and boat types for filters
   const uniqueClubs = Array.from(new Set(savedImages.map(img => img.crew?.club?.name || img.crew?.clubName).filter((name): name is string => Boolean(name)))).map(club => ({
@@ -383,24 +371,27 @@ function GalleryPage() {
   }
 
   return (
-    <div className="gallery-container">
-      <div className="container">
-        <SearchBar
-          items={savedImages}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onItemsFiltered={setFilteredImages}
-          placeholder="Search images..."
-          filterFunction={filterFunction}
-          sortOptions={[
+    <>
+      <DataContainer
+        items={savedImages}
+        loading={loading}
+        error=""
+        emptyState={{
+          title: "No Images Yet",
+          message: "Start creating beautiful crew images by generating your first image",
+          actionLabel: "Generate Your First Image",
+          actionHref: "/generate"
+        }}
+        searchConfig={{
+          placeholder: "Search images...",
+          filterFunction,
+          sortOptions: [
             { value: 'recent', label: 'Latest', sortFn: (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() },
             { value: 'club', label: 'Club A→Z', sortFn: (a, b) => (a.crew?.club?.name || a.crew?.clubName || '').localeCompare(b.crew?.club?.name || b.crew?.clubName || '') },
             { value: 'boat', label: 'Boat Type', sortFn: (a, b) => (a.crew?.boatType.code || '').localeCompare(b.crew?.boatType.code || '') },
             { value: 'name', label: 'Crew Name', sortFn: (a, b) => (a.crew?.name || '').localeCompare(b.crew?.name || '') }
-          ]}
-          selectedSort={sortBy}
-          onSortChange={(sort) => setSortBy(sort as 'recent' | 'club' | 'boat' | 'name')}
-          advancedFilters={[
+          ],
+          advancedFilters: [
             {
               name: 'club',
               label: 'Club',
@@ -425,154 +416,64 @@ function GalleryPage() {
               onValueChange: handleDateRangeChange,
               filterFn: dateRangeFilterFn
             }
-          ]}
-          showAdvancedFilters={showAdvancedSearch}
-          onToggleAdvancedFilters={() => setShowAdvancedSearch(!showAdvancedSearch)}
-          resultsCount={filteredImages.length}
-          leftActions={
-            selectedImages.size > 0 && (
-              <div className="selection-actions-inline">
-                <button className="action-btn download-btn" onClick={handleBatchDownload}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7,10 12,15 17,10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  Download ({selectedImages.size})
-                </button>
-                <button className="action-btn delete-btn" onClick={handleBatchDelete}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="3,6 5,6 21,6"></polyline>
-                    <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2,2h4a2,2,0,0,1,2,2V6"></path>
-                  </svg>
-                  Delete ({selectedImages.size})
-                </button>
-              </div>
-            )
-          }
-          actionButtons={[
-            ...(selectedImages.size > 0 ? [
-              {
-                label: 'Delete',
-                onClick: handleBatchDelete,
-                variant: 'crew-danger' as const
-              },
-              {
-                label: 'Download',
-                onClick: handleBatchDownload,
-                variant: 'crew-secondary' as const
-              }
-            ] : []),
-            ...(filteredImages.length > 0 ? [{
-              label: selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All',
-              onClick: handleSelectAll,
-              variant: 'secondary' as const
-            }] : []),
-            {
-              label: 'Create New',
-              onClick: () => window.location.href = '/generate',
-              variant: 'primary' as const
-            }
-          ]}
-        />
-
-
-        {/* Gallery Content */}
-        {filteredImages.length === 0 ? (
-          <div className="empty-state">
-            <h2>No Images Yet</h2>
-            <p>
-              Start creating beautiful crew images by generating your first
-              image
-            </p>
-            <a href="/generate" className="btn btn-primary">
-              Generate Your First Image
-            </a>
-          </div>
-        ) : (
-          <div className={`gallery-grid layout-${layoutMode}`}>
-            {filteredImages.map((image) => (
-              <div
-                key={image.id}
-                className={`image-card ${selectedImages.has(image.id) ? 'selected' : ''}`}
-                onClick={() => handleImageSelect(image.id)}
-              >
-
-                <div className="image-preview">
-                  <img
-                    src={image.imageUrl}
-                    alt={`${image.crew?.name || 'Crew Image'}`}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.src = `https://via.placeholder.com/400x300/f3f4f6/6b7280?text=Image+Not+Found`
-                    }}
-                  />
-                </div>
-
-                <div className="image-info">
-                  <div className="image-header">
-                    <div className="image-title">
-                      {image.crew?.boatType.code === '1x' && image.crew.crewNames.length > 0
-                        ? image.crew.crewNames[0]
-                        : image.crew?.name || 'Unknown Crew'
-                      }
-                    </div>
-                    <span className="boat-type-badge">{image.crew?.boatType.code || 'Unknown'}</span>
-                  </div>
-                  <div className="image-subtitle">
-                    {(image.crew?.club?.name || image.crew?.clubName) || 'No Club'}
-                    {image.crew?.raceName && ` - ${image.crew.raceName}`}
-                  </div>
-
-                  {/* Created Date - Bottom Left */}
-                  <div className="image-created-date">
-                    {new Date(image.createdAt).toLocaleDateString('en-GB')}
-                  </div>
-
-                  {/* Image Actions */}
-                  <div className="crew-actions">
-                    <div className="crew-actions-left">
-                    </div>
-                    <div className="crew-actions-right">
-                      <button
-                        className="crew-action-btn secondary"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDownload(image)
-                        }}
-                      >
-                        Download
-                      </button>
-                      <button
-                        className="crew-action-btn danger"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteImage(image)
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Batch Download Modal */}
-        {batchAnalysisData && (
-          <BatchDownloadModal
-            isOpen={showBatchModal}
-            onClose={() => {
-              setShowBatchModal(false)
-              setBatchAnalysisData(null)
-            }}
-            onProceed={handleModalProceed}
-            analysisData={batchAnalysisData}
+          ]
+        }}
+        renderCard={(image, isSelected, onSelect) => (
+          <ImageCard
+            image={image}
+            isSelected={isSelected}
+            onSelect={onSelect}
+            onDownload={handleDownload}
+            onDelete={handleDeleteImage}
           />
         )}
+        className="gallery-container"
+        gridClassName="gallery-grid"
+        selectedItems={selectedImages}
+        onItemSelect={handleImageSelect}
+        onSelectAll={handleSelectAll}
+        actionButtons={[
+          ...(selectedImages.size > 0 ? [
+            {
+              label: 'Delete Selected',
+              onClick: handleBatchDelete,
+              variant: 'crew-danger' as const
+            },
+            {
+              label: 'Download Selected',
+              onClick: handleBatchDownload,
+              variant: 'crew-secondary' as const
+            }
+          ] : []),
+          {
+            label: 'Generate New Image',
+            onClick: () => window.location.href = '/generate',
+            variant: 'primary' as const
+          }
+        ]}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filteredItems={filteredImages}
+        onItemsFiltered={setFilteredImages}
+        sortBy={sortBy}
+        onSortChange={(sort) => setSortBy(sort as 'recent' | 'club' | 'boat' | 'name')}
+        showAdvancedFilters={showAdvancedSearch}
+        onToggleAdvancedFilters={() => setShowAdvancedSearch(!showAdvancedSearch)}
+      />
+
+
+      {/* Batch Download Modal */}
+      {batchAnalysisData && (
+        <BatchDownloadModal
+          isOpen={showBatchModal}
+          onClose={() => {
+            setShowBatchModal(false)
+            setBatchAnalysisData(null)
+          }}
+          onProceed={handleModalProceed}
+          analysisData={batchAnalysisData}
+        />
+      )}
 
         {/* Single Image Delete Confirmation Modal */}
         <ConfirmDeleteModal
@@ -608,8 +509,6 @@ function GalleryPage() {
           }
           confirmButtonText={selectedImages.size === 1 ? "Delete Image" : "Delete Images"}
         />
-
-      </div>
-    </div>
+    </>
   )
 }
